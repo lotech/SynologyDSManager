@@ -44,6 +44,11 @@
 		47E28BC224E6E35B00A09AB1 /* logo.png in Resources */ = {isa = PBXBuildFile; fileRef = 47E28BC124E6E35B00A09AB1 /* logo.png */; };
 		47F4D01C24E54BE500A1E222 /* Swifter in Frameworks */ = {isa = PBXBuildFile; productRef = 47F4D01B24E54BE500A1E222 /* Swifter */; };
 		47F4D01E24E54BF300A1E222 /* Webserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47F4D01D24E54BF300A1E222 /* Webserver.swift */; };
+		7E7E0010000000000000B000 /* AppLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E7E0010000000000000A000 /* AppLogger.swift */; };
+		7E7E0011000000000000B000 /* SynologyError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E7E0011000000000000A000 /* SynologyError.swift */; };
+		7E7E0012000000000000B000 /* SynologyAPIModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E7E0012000000000000A000 /* SynologyAPIModels.swift */; };
+		7E7E0013000000000000B000 /* SynologyTrustEvaluator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E7E0013000000000000A000 /* SynologyTrustEvaluator.swift */; };
+		7E7E0014000000000000B000 /* SynologyAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E7E0014000000000000A000 /* SynologyAPI.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -108,6 +113,11 @@
 		473FAC2724437FC0002F61E4 /* broom.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = broom.png; sourceTree = "<group>"; };
 		47E28BC124E6E35B00A09AB1 /* logo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = logo.png; sourceTree = "<group>"; };
 		47F4D01D24E54BF300A1E222 /* Webserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Webserver.swift; sourceTree = "<group>"; };
+		7E7E0010000000000000A000 /* AppLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLogger.swift; sourceTree = "<group>"; };
+		7E7E0011000000000000A000 /* SynologyError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SynologyError.swift; sourceTree = "<group>"; };
+		7E7E0012000000000000A000 /* SynologyAPIModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SynologyAPIModels.swift; sourceTree = "<group>"; };
+		7E7E0013000000000000A000 /* SynologyTrustEvaluator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SynologyTrustEvaluator.swift; sourceTree = "<group>"; };
+		7E7E0014000000000000A000 /* SynologyAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SynologyAPI.swift; sourceTree = "<group>"; };
 		AB01CD0100000000000000F1 /* Signing.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Signing.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -160,6 +170,7 @@
 			children = (
 				473FAC2624437F93002F61E4 /* icons */,
 				3A42ADD6241F57CE00F470ED /* ViewControllers */,
+				7E7E0001000000000000A000 /* Network */,
 				3A2D5EED23D248B500B924EE /* SynologyDSManager.entitlements */,
 				3A2D5EEF23D248B500B924EE /* AppDelegate.swift */,
 				3A2D5EF123D248B500B924EE /* Main.storyboard */,
@@ -176,6 +187,18 @@
 				47F4D01D24E54BF300A1E222 /* Webserver.swift */,
 			);
 			path = SynologyDSManager;
+			sourceTree = "<group>";
+		};
+		7E7E0001000000000000A000 /* Network */ = {
+			isa = PBXGroup;
+			children = (
+				7E7E0010000000000000A000 /* AppLogger.swift */,
+				7E7E0011000000000000A000 /* SynologyError.swift */,
+				7E7E0012000000000000A000 /* SynologyAPIModels.swift */,
+				7E7E0013000000000000A000 /* SynologyTrustEvaluator.swift */,
+				7E7E0014000000000000A000 /* SynologyAPI.swift */,
+			);
+			path = Network;
 			sourceTree = "<group>";
 		};
 		3A2D5F0123D248B700B924EE /* Frameworks */ = {
@@ -368,6 +391,11 @@
 				3A42ADD5241F56CD00F470ED /* Shared.swift in Sources */,
 				3A42ADD1241D1BBB00F470ED /* LoadableView.swift in Sources */,
 				3A42ADC9241CF39900F470ED /* Settings.swift in Sources */,
+				7E7E0010000000000000B000 /* AppLogger.swift in Sources */,
+				7E7E0011000000000000B000 /* SynologyError.swift in Sources */,
+				7E7E0012000000000000B000 /* SynologyAPIModels.swift in Sources */,
+				7E7E0013000000000000B000 /* SynologyTrustEvaluator.swift in Sources */,
+				7E7E0014000000000000B000 /* SynologyAPI.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

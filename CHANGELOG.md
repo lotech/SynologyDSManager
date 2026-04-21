@@ -12,6 +12,29 @@ commit that makes them.
 ## [Unreleased]
 
 ### Added
+- **Networking foundation (Phase 2a-1)** — a new `SynologyDSManager/Network/`
+  module landed alongside the existing Alamofire-based client, to be swapped
+  in wholesale during Phase 2a-2:
+  - `SynologyAPI.swift`: actor-isolated DSM API client built on
+    `URLSession` + `async/await`. Supports auth, task list / pause / resume /
+    delete, URL and torrent-file creates, BT search (cancellable polling),
+    directory listing, and logout. Session ID is carried as a cookie, never
+    as a `_sid=` query parameter.
+  - `SynologyAPIModels.swift`: typed `Codable`/`Sendable` DTOs for every
+    DSM response the app consumes, plus a `DSMFormBody` helper for
+    `application/x-www-form-urlencoded` POST bodies.
+  - `SynologyTrustEvaluator.swift`: `URLSessionDelegate` implementing
+    SPKI-SHA256 pinning (RFC 7469). On first contact with a self-signed
+    cert, the observed fingerprint is passed to `pendingApproval` so the UI
+    can prompt the user. Approved pins are persisted per-host in
+    `UserDefaults`. Mismatches against an existing pin are refused.
+  - `SynologyError.swift`: typed `LocalizedError` enum covering transport,
+    HTTP, decoder, DSM API, authentication, trust, and torrent-read
+    failures, with a `SynologyErrorCode.message(for:)` mapping for DSM's
+    numeric error codes.
+  - `AppLogger.swift`: shared `os.Logger` categories (`network`, `auth`,
+    `security`, `keychain`) with a documented contract that credentials,
+    OTPs, and session IDs must never appear in log messages.
 - `SECURITY.md` — private disclosure policy pointing reporters at GitHub
   Security Advisories, with a list of high-signal areas (credential
   handling, TLS, Keychain, the local HTTP bridge, URL-scheme handling,
