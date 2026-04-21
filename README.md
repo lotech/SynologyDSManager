@@ -2,8 +2,18 @@
 
 A native macOS app (and Safari extension) for managing a Synology DownloadStation remotely.
 
-This is a maintained fork of the original [skavans/SynologyDSManager](https://github.com/skavans/SynologyDSManager),
-which was archived in 2023. Goals of the fork:
+This is a maintained fork of the excellent original project by
+[**Anton (@skavans)**](https://github.com/skavans), which lived at
+[**skavans/SynologyDSManager**](https://github.com/skavans/SynologyDSManager) from
+2020 through 2023. Anton built the whole app — the DSM API client, the Cocoa
+UI, the Safari extension, the BT search flow, keychain-backed credentials,
+2FA support, and everything else you see on screen. The app was originally
+a paid product sold through Paddle, and when that payment channel stopped
+working for sellers in Russia in 2022, Anton open-sourced the project rather
+than letting it fade away. That generosity is the only reason this fork
+exists, and the only reason the code has a second life.
+
+Goals of this fork:
 
 - modernise the codebase (SwiftUI, Swift concurrency, current macOS APIs)
 - run a full security audit and fix the outstanding issues
@@ -105,7 +115,37 @@ Report security issues privately via GitHub Security Advisories rather than
 public issues, especially anything involving credential handling, TLS, the local
 HTTP bridge, or the Safari extension's URL-scheme fallback.
 
+## Acknowledgements
+
+Enormous thanks to **[Anton (@skavans)](https://github.com/skavans)** — without
+their work there would be nothing to modernise. They wrote the original macOS
+app and Safari extension over several years, shipped it as a paid product to
+real customers, incorporated customer feature requests, and then made the
+decision to release the whole thing under MIT when continuing the commercial
+side became impractical. That is not a small thing to give away.
+
+The original project — which still contains the history, context, and earlier
+user reviews — lives at:
+
+> [github.com/skavans/SynologyDSManager](https://github.com/skavans/SynologyDSManager)
+
+If you are using this fork, please keep that attribution in mind. The code
+you are running is built on years of their work.
+
+**Other credits:**
+
+- Toolbar and app icons originally by [Icons8](https://icons8.com), via
+  Anton's original `Assets.xcassets`.
+- `LoadableView.swift` is adapted from a tutorial by Gabriel Theodoropoulos
+  on Appcoda (© 2019).
+
 ## Licence
 
-MIT — see [`LICENSE`](./LICENSE). Original copyright © 2020–2023 skavans;
-modernisation work © 2024–present contributors.
+MIT — see [`LICENSE`](./LICENSE).
+
+- Original app, Safari extension, and surrounding code: © 2020–2023
+  Anton ([@skavans](https://github.com/skavans)).
+- Modernisation work (2024–present): © SynologyDSManager contributors.
+
+Both sets of work are released under the MIT licence; the `LICENSE` file in
+this repository is the authoritative copy.
