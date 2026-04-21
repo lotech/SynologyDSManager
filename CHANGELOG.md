@@ -57,6 +57,11 @@ commit that makes them.
   stepping-stone toward `complete`.
 - `README.md` rewritten for the maintained-fork state, linking the new
   `CLAUDE.md` / `MODERNIZATION_PLAN.md` / `CHANGELOG.md`.
+- `README.md`: expanded the project's pre-fork history paragraph and added a
+  dedicated *Acknowledgements* section crediting [@skavans](https://github.com/skavans)
+  as the original author of the app, Safari extension, and surrounding code.
+  Split the *Licence* section to call out both the original copyright (2020–2023)
+  and the modernisation contributors' copyright (2024–present) explicitly.
 - Marketing version bumped to `2.0.0` to signal the modernisation break;
   CFBundleShortVersionString will stay on `2.0.0-dev` until a Phase 5 release
   is cut.
