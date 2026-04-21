@@ -4,7 +4,7 @@ Living document. Tick boxes as tasks land. When all tasks in a phase are
 complete, move the phase status from **In progress** / **Planned** to
 **Shipped** with the date.
 
-Last updated: 2026-04-22
+Last updated: 2026-04-22 (Phase 2a-1 merged)
 
 ---
 
@@ -65,28 +65,55 @@ target, replacing the deprecated APIs we can do without further design work.
 - [ ] Remove the `swiftapps.skavans.ru` mailto and `synoboost.com` link from
       Settings / BT Search — Phase 4 when we rewrite those screens
 
-## Phase 2 — Networking & storage rewrite · **Planned**
+## Phase 2 — Networking & storage rewrite · **In progress**
 
 Goal: no Alamofire, no SwiftyJSON, typed models, proper TLS, properly
 scoped Keychain access.
 
-- [ ] Introduce a `SynologyAPI` actor backed by `URLSession` + `async/await`
-- [ ] Define `Codable` models for DSM responses, replacing ad-hoc
-      `JSON()` access
-- [ ] Replace `DisabledEvaluator()` with opt-in SPKI pinning of the NAS's
-      leaf certificate; on first connect, show the user the cert fingerprint
-      and ask them to trust
-- [ ] Move `_sid` out of URL query strings (use the DSM cookie jar, and/or
-      a session header); purge `print(response)` debug lines
-- [ ] Replace KeychainAccess with a small wrapper around `SecItem*`,
-      `kSecAttrAccessibleWhenUnlockedThisDeviceOnly`; stop persisting the SID
-- [ ] Remove SwiftyJSON from `Package.resolved` / project
-- [ ] Remove Alamofire from `Package.resolved` / project
+### Phase 2a-1 — Networking foundation (merged)
+
+- [x] Introduce a `SynologyAPI` actor backed by `URLSession` + `async/await`
+      (`SynologyDSManager/Network/SynologyAPI.swift`)
+- [x] Define `Codable` models for DSM responses, replacing ad-hoc
+      `JSON()` access (`SynologyDSManager/Network/SynologyAPIModels.swift`)
+- [x] Replace `DisabledEvaluator()` with opt-in SPKI pinning of the NAS's
+      leaf certificate; on first connect, hand the observed fingerprint to
+      the UI for explicit user approval, with the pin persisted thereafter
+      (`SynologyDSManager/Network/SynologyTrustEvaluator.swift`)
+- [x] Move `_sid` out of URL query strings (session cookie, form body on
+      `SYNO.API.Auth logout`)
+- [x] Typed error surface (`SynologyError`) with DSM error-code → message
+      mapping (`SynologyDSManager/Network/SynologyError.swift`)
+- [x] `os.Logger` categories for network / auth / security / keychain
+      (`SynologyDSManager/Network/AppLogger.swift`)
+
+### Phase 2a-2 — Migration (planned)
+
 - [ ] Add a `SynologyDSManagerTests` target with `URLProtocol`-based fake
       transports for the API
+- [ ] Wire `SynologyTrustEvaluator.pendingApproval` to a SwiftUI sheet that
+      shows the SPKI fingerprint and lets the user trust-or-refuse
+- [ ] Migrate `SettingsViewController` (authentication + testConnection) to
+      `SynologyAPI`
+- [ ] Migrate `DownloadsViewController` (list / pause / resume / delete /
+      cleanup loop) to `SynologyAPI`
+- [ ] Migrate `AddDownloadViewController` (URL + torrent upload paths)
+- [ ] Migrate `BTSearchController` (search + enqueue) — replace the
+      `Timer.scheduledTimer` poll with the actor's `searchTorrents`
+- [ ] Migrate `ChooseDestViewController` / `DestinationView` (directory
+      listing) to `SynologyAPI`
+- [ ] Delete `SynologyDSManager/SynologyClient.swift`
+- [ ] Remove Alamofire from `Package.resolved` + `project.pbxproj`
+- [ ] Remove SwiftyJSON from `Package.resolved` + `project.pbxproj`
 - [ ] Delete the `registerEvent(…)` stub
 - [ ] Replace remaining `print(…)` sites with `os.Logger`
-- [ ] Flip `SWIFT_STRICT_CONCURRENCY` to `complete`
+
+### Phase 2b — Credential store & strict concurrency (planned)
+
+- [ ] Replace KeychainAccess with a small wrapper around `SecItem*`,
+      `kSecAttrAccessibleWhenUnlockedThisDeviceOnly`; stop persisting the SID
+- [ ] Remove KeychainAccess from `Package.resolved` + `project.pbxproj`
+- [ ] Flip `SWIFT_STRICT_CONCURRENCY` from `minimal` to `complete`
 
 ## Phase 3 — Safari extension & webserver bridge · **Planned**
 

@@ -22,8 +22,13 @@ human, `README.md` is a better starting point.
 | File | Role |
 |---|---|
 | `AppDelegate.swift` | `@main` entry point, handles URL-scheme deep links and `.torrent` file opens. |
-| `SynologyClient.swift` | DSM API client. Currently uses Alamofire + SwiftyJSON — being rewritten in Phase 2 to `URLSession` + `async/await` + `Codable`. |
-| `Settings.swift` | Credential persistence via KeychainAccess. Target-state wraps `SecItem*` directly with proper accessibility flags. |
+| `SynologyClient.swift` | **Legacy** DSM API client (Alamofire + SwiftyJSON). Being replaced incrementally by `Network/SynologyAPI.swift`; both exist in parallel during Phase 2a, then old is deleted in Phase 2a-2. Do not add new features here. |
+| `Network/SynologyAPI.swift` | **Target-state** DSM API client. Actor-isolated, `URLSession` + `async/await`, typed errors, cookie-based session auth (no `_sid` in URLs). Add new endpoints here. |
+| `Network/SynologyAPIModels.swift` | `Codable` DTOs for DSM responses. Keep 1:1 with DSM's wire format; translate into richer app types at the call site, not here. |
+| `Network/SynologyTrustEvaluator.swift` | `URLSessionDelegate` that performs SPKI pinning (RFC 7469 "pin-sha256"). Replaces the old `DisabledEvaluator`. First-use fingerprints are handed to `pendingApproval` for UI approval (TOFU); mismatches against an existing pin are refused outright. |
+| `Network/SynologyError.swift` | Typed error surface (`SynologyError`). Add new failure modes here, not `NSError`. |
+| `Network/AppLogger.swift` | `os.Logger` categories — `network`, `auth`, `security`, `keychain`. Always use these; never `print(…)` in shipped code. |
+| `Settings.swift` | Credential persistence via KeychainAccess. Target-state (Phase 2b) wraps `SecItem*` directly with proper accessibility flags. |
 | `Shared.swift` | Global mutable singletons (`synologyClient`, `mainViewController`, `currentViewController`). To be removed when we adopt Observation in Phase 4. |
 | `Webserver.swift` | Loopback HTTP server on port 11863 used by the Safari extension to enqueue downloads. **Unauthenticated** — scheduled for removal in Phase 3 in favour of `NSXPCConnection`. |
 | `ViewControllers/` | Cocoa view controllers, one per screen. |
