@@ -12,6 +12,11 @@ commit that makes them.
 ## [Unreleased]
 
 ### Added
+- `SECURITY.md` — private disclosure policy pointing reporters at GitHub
+  Security Advisories, with a list of high-signal areas (credential
+  handling, TLS, Keychain, the local HTTP bridge, URL-scheme handling,
+  the Safari/Chrome extensions) and clear response-time expectations for
+  this hobby-maintained fork.
 - `CLAUDE.md` — orientation file for future AI-assisted work on the repo,
   now including a *Public-repo best practices* section (secrets handling,
   log redaction, release/signing rules) and a *Code signing* section.
@@ -86,6 +91,11 @@ commit that makes them.
   TLS 1.2+, forward secrecy). The narrower `localhost` exception in the
   Safari extension is kept for now and will be removed together with the
   loopback HTTP bridge in Phase 3.
+- Pinned `actions/checkout` in the CI workflow to a full commit SHA
+  (`34e114876b0b11c390a56381ad16ebd13914f8d5`, tagged `v4.3.1`) instead of
+  the mutable `@v4` tag, so an upstream repo compromise can't silently
+  change what runs in our CI. Inline comment in `.github/workflows/ci.yml`
+  documents how to bump the pin for future releases.
 
 ### Notes for users upgrading
 - If your NAS is reachable only via HTTP or weak TLS, connections will now

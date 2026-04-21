@@ -4,7 +4,7 @@ Living document. Tick boxes as tasks land. When all tasks in a phase are
 complete, move the phase status from **In progress** / **Planned** to
 **Shipped** with the date.
 
-Last updated: 2026-04-21
+Last updated: 2026-04-22
 
 ---
 
@@ -36,11 +36,12 @@ Goal: a clean, lintable, CI-backed baseline for everything that follows.
 - [x] Set up `Signing.xcconfig` + gitignored `Signing.local.xcconfig` so
       Apple Developer Team IDs stay out of the public repo, with the
       xcconfig wired as `baseConfigurationReference` in `project.pbxproj`
-- [ ] Add a `SECURITY.md` policy at the repo root referencing GitHub Security
+- [x] Add a `SECURITY.md` policy at the repo root referencing GitHub Security
       Advisories for private disclosure
+- [x] Pin third-party GitHub Actions by commit SHA (was `actions/checkout@v4`,
+      now pinned to `@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1`)
 - [ ] Flip SwiftLint / SwiftFormat CI jobs to blocking once the repo is
       fully formatted (follow-up PR)
-- [ ] Pin third-party GitHub Actions by commit SHA (currently by tag)
 
 ## Phase 1 — Platform baseline · **In progress**
 
