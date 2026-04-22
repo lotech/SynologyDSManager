@@ -20,9 +20,27 @@
 
 // ----- Defaults -----
 
+// Signing style is split per-configuration:
+//
+//   Debug   → Automatic. Xcode manages the profile against your Apple
+//             Development cert and whatever team ID is set in
+//             Signing.local.xcconfig. Works out of the box as long as
+//             you're signed into your Apple ID in Xcode.
+//
+//   Release → Manual. Developer ID Application is a distribution cert
+//             and is *not* managed by Xcode's automatic signing flow;
+//             combining Automatic + Developer ID produces the warning:
+//               "… is automatically signed for development, but a
+//                conflicting code signing identity Developer ID
+//                Application has been manually specified."
+//             Switching Release to Manual signing fixes the warning
+//             and matches how Developer-ID Mac apps are normally
+//             distributed (outside the App Store, notarised via
+//             notarytool, no provisioning profile required).
 CODE_SIGN_STYLE = Automatic
+CODE_SIGN_STYLE[config=Release] = Manual
 
-// Dev/debug builds: use a local Apple Development cert.
+// Debug/dev builds: use a local Apple Development cert.
 CODE_SIGN_IDENTITY[sdk=macosx*][config=Debug] = Apple Development
 
 // Distribution builds: use a Developer ID Application cert.
