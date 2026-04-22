@@ -4,7 +4,7 @@ Living document. Tick boxes as tasks land. When all tasks in a phase are
 complete, move the phase status from **In progress** / **Planned** to
 **Shipped** with the date.
 
-Last updated: 2026-04-22 (Phase 2a-2d test target pushed)
+Last updated: 2026-04-22 (Phase 2a-2d test target wired + CI test job)
 
 ---
 
@@ -152,11 +152,16 @@ scoped Keychain access.
       `URLSessionConfiguration` so tests can register
       `URLProtocolStub.self` as a `protocolClass` without touching
       the production code path
-- [ ] **Maintainer action:** wire the `SynologyDSManagerTests` target
-      into the Xcode project via File → New → Target → Unit Testing
-      Bundle (instructions in `CLAUDE.md`); commit the resulting
-      pbxproj change
-- [ ] Add a CI job that runs `xcodebuild test`
+- [x] Wire the `SynologyDSManagerTests` target into the Xcode project.
+      Target reshaped as a pure-macOS unit-test bundle (`SDKROOT = macosx`,
+      `SUPPORTED_PLATFORMS = macosx`, `SUPPORTS_MACCATALYST = NO`,
+      `MACOSX_DEPLOYMENT_TARGET = 14.0` for XCTest), `TEST_HOST` +
+      `BUNDLE_LOADER` pointing at the app binary, `PBXTargetDependency`
+      on the app, scheme updated to build both targets for Test. Also
+      stripped five `DEVELOPMENT_TEAM = <team-id>` lines Xcode had
+      injected during target creation — signing now inherits from the
+      `Signing.xcconfig` cascade.
+- [x] Add a CI job that runs `xcodebuild test`.
 
 ### Phase 2a-2d — Cleanup (planned, after 2a-2c)
 
