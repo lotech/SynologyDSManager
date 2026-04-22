@@ -157,11 +157,35 @@ class DownloadsViewController: NSViewController, NSWindowDelegate {
 
         start_webserver()
 
-        self.refreshDownloads()
-
-        Timer.scheduledTimer(withTimeInterval: 3, repeats: true, block: { timer in
-            self.refreshDownloads()
-        })
+        // The legacy `SynologyClient` needs its own `authenticate()` to
+        // populate `settings.sid` before any of its request methods run
+        // — each of them force-unwraps `settings.sid!`. Before Phase
+        // 2a-2a, `SettingsViewController` authenticated via the legacy
+        // client so the SID was present in the settings struct by the
+        // time `doWork` received it. Now `SettingsViewController`
+        // authenticates via `SynologyAPI` (cookie-based), so the legacy
+        // client arrives SID-less and must re-authenticate here.
+        //
+        // Only after a successful legacy-client auth do we kick off the
+        // refresh loop; otherwise every pause/resume/delete/list call
+        // would crash with "unexpectedly found nil" on `settings.sid!`.
+        // This whole block goes away in Phase 2a-2b when the refresh
+        // loop moves to `SynologyAPI` and `settings.sid` stops being
+        // force-unwrapped anywhere we can reach.
+        synologyClient?.authenticate { success, error in
+            DispatchQueue.main.async {
+                guard success else {
+                    AppLogger.auth.error(
+                        "Legacy SynologyClient auth failed in doWork: \(error?.localizedDescription ?? "unknown", privacy: .public)"
+                    )
+                    return
+                }
+                self.refreshDownloads()
+                Timer.scheduledTimer(withTimeInterval: 3, repeats: true) { _ in
+                    self.refreshDownloads()
+                }
+            }
+        }
     }
     
     public func downloadByURLFromExtension(URL: String) {

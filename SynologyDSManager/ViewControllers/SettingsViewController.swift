@@ -173,7 +173,22 @@ class SettingsViewController: NSViewController {
             if !workStarted {
                 mainMethod?(legacySettings)
             } else {
+                // App is already running; user is changing credentials. The
+                // old legacy SID is invalid against the new credentials, and
+                // the new settings arrive SID-less from the SynologyAPI auth
+                // path. Re-authenticate the legacy client so its request
+                // methods (which all force-unwrap `settings.sid!`) don't
+                // crash on the next timer tick. Removed in Phase 2a-2b when
+                // the legacy client stops being the source of truth for the
+                // rest of the app.
                 synologyClient?.settings = legacySettings
+                synologyClient?.authenticate { ok, err in
+                    if !ok {
+                        AppLogger.auth.error(
+                            "Legacy SynologyClient re-auth after settings change failed: \(err?.localizedDescription ?? "unknown", privacy: .public)"
+                        )
+                    }
+                }
             }
 
             alert.messageText = "Success"
