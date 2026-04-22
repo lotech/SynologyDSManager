@@ -115,7 +115,7 @@ actor SynologyAPI {
 
         AppLogger.auth.notice("Authenticating to \(self.credentials.host, privacy: .private)")
 
-        let envelope: DSMResponse<AuthSuccessData> = try await post(url: url, body: body)
+        let envelope: DSMResponse<AuthSuccessData> = try await post(url: url, body: body, authenticated: false)
         guard envelope.success, let sid = envelope.data?.sid else {
             let code = envelope.error?.code ?? 100
             AppLogger.auth.error("Authentication failed (DSM code \(code))")
@@ -336,21 +336,23 @@ actor SynologyAPI {
         guard sessionID != nil else { throw SynologyError.notAuthenticated }
     }
 
-    /// Set the `id=<sid>` cookie on the session's cookie jar so subsequent
-    /// requests authenticate without ever serialising the SID into a URL.
+    /// Set the `id=<sid>` cookie on the session's cookie jar so any
+    /// endpoint that prefers cookie-based auth sees it. Not authoritative
+    /// for us — see the `post(…)` docstring for why we also pass `_sid`
+    /// in the POST body — but belt and braces.
     private func installSessionCookie(sid: String) {
-        guard let url = credentials.baseURL else { return }
         let props: [HTTPCookiePropertyKey: Any] = [
             .name: "id",
             .value: sid,
             .domain: credentials.host,
             .path: "/",
-            .secure: "TRUE",
+            .secure: true,
         ]
-        if let cookie = HTTPCookie(properties: props) {
-            session.configuration.httpCookieStorage?.setCookie(cookie)
+        guard let cookie = HTTPCookie(properties: props) else {
+            AppLogger.auth.error("Failed to construct session cookie for \(self.credentials.host, privacy: .private)")
+            return
         }
-        _ = url  // silence unused if cookie setup fails silently
+        session.configuration.httpCookieStorage?.setCookie(cookie)
     }
 
     private func clearSessionCookies() {
@@ -360,14 +362,35 @@ actor SynologyAPI {
     }
 
     /// POST with a form-encoded body and decode the response envelope.
+    ///
+    /// When `authenticated` is `true` (the default) and a session ID is
+    /// available, `_sid=<sid>` is appended to the body. DSM accepts the
+    /// session identifier via three channels — a `Cookie: id=<sid>`
+    /// header, a `_sid=<sid>` query parameter, or a `_sid` field in the
+    /// POST body — and behaves inconsistently across versions about
+    /// which of them it treats as authoritative. In practice sending it
+    /// in the POST body is the most reliable for DSM 6.2+ and 7.x, and
+    /// has the critical security property of not leaking into URLs /
+    /// referer headers / crash reports / proxy logs the way a query
+    /// parameter would. We also install a session cookie in
+    /// `installSessionCookie(sid:)` as belt-and-braces for any endpoint
+    /// that prefers the cookie path.
+    ///
+    /// `authenticate()` passes `authenticated: false` because that call
+    /// is what *creates* the session in the first place.
     private func post<T: Decodable & Sendable>(
         url: URL,
-        body: DSMFormBody
+        body: DSMFormBody,
+        authenticated: Bool = true
     ) async throws -> DSMResponse<T> {
+        var actualBody = body
+        if authenticated, let sid = sessionID {
+            actualBody.set("_sid", sid)
+        }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-        request.httpBody = body.encoded()
+        request.httpBody = actualBody.encoded()
         return try await perform(request)
     }
 

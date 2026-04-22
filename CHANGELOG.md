@@ -35,6 +35,18 @@ commit that makes them.
   the second and subsequent Test Connections, as originally intended.
 
 ### Fixed
+- **Phase 2a-2b regression: empty task list after migrated Downloads screen
+  connected to DSM**. `SynologyAPI` was authenticating fine (and storing
+  a session cookie), but DSM returned a successful-but-empty task list
+  because URLSession's cookie jar was not sending the `id=<sid>` cookie
+  in a form DSM treats as authoritative. Fix: pass `_sid=<sid>` in the
+  POST body of every authenticated request via an `authenticated: Bool`
+  parameter on `SynologyAPI.post()` (defaults to `true`; `authenticate()`
+  explicitly passes `false`). The cookie is still installed as a
+  secondary channel. This also keeps the SID out of URL query strings,
+  which was the original motivation for not reusing the old Alamofire
+  path — `_sid` in the body doesn't leak into referer headers, proxy
+  logs, or crash reports the way a URL parameter would.
 - **Phase 2a-2a regression: crash on first refresh after Test Connection**
   — `SynologyClient.getDownloads` and siblings force-unwrap
   `settings.sid!`. Before Phase 2a-2a, `SettingsViewController`
