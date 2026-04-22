@@ -5,7 +5,8 @@
 # Run from the repo root:  ./deploy.sh
 # Options are single-key; no Enter required.
 #
-#   p   Pull `main` from origin into local `main`
+#   p   Pull `main` from origin into local `main`; offers to stash /
+#       discard / cancel if the working tree has uncommitted changes
 #   o   Open the Xcode project
 #   s   Configure code signing (creates Signing.local.xcconfig from template)
 #   i   Build Release and install to /Applications
@@ -91,32 +92,108 @@ read_marketing_version() {
 # ----- Actions -------------------------------------------------------------
 
 action_pull_main() {
-    info "Fetching origin/main and fast-forwarding local main…"
+    info "Fetching origin/main…"
     local current_branch
     current_branch="$(git rev-parse --abbrev-ref HEAD)"
 
-    # Warn about uncommitted changes; don't touch them.
-    if ! git diff --quiet || ! git diff --cached --quiet; then
-        warn "You have uncommitted changes on '${current_branch}'. They will be left alone."
+    if ! git fetch origin main; then
+        err "git fetch origin main failed — check network / auth and try again."
+        return 1
     fi
 
-    git fetch origin main
-
-    if [[ "$current_branch" == "main" ]]; then
-        # On main: fast-forward-only pull.
-        if git pull --ff-only origin main; then
-            ok "Local 'main' is now up to date with origin/main."
-        else
-            err "Fast-forward pull failed. Resolve the divergence manually."
-            return 1
-        fi
-    else
-        # Not on main: fast-forward local 'main' ref without switching branches.
-        # This errors out cleanly if a fast-forward isn't possible.
+    # When not on main, the working tree is on a different branch so the
+    # fetch refspec below can fast-forward the local `main` ref without
+    # touching files on disk. No stash dance needed.
+    if [[ "$current_branch" != "main" ]]; then
         if git fetch origin main:main; then
             ok "Local 'main' updated from origin/main (you stayed on '${current_branch}')."
+            return 0
         else
             err "Could not fast-forward local 'main'. Check out 'main' and resolve manually."
+            return 1
+        fi
+    fi
+
+    # --- From here: on main. ---
+    # If there are uncommitted tracked-file changes that overlap with
+    # incoming commits, `git pull --ff-only` will refuse. Detect dirty
+    # state up-front and offer the user a clean way out.
+    local dirty=0
+    if ! git diff --quiet || ! git diff --cached --quiet; then
+        dirty=1
+    fi
+
+    local did_stash=0
+    if (( dirty )); then
+        echo
+        warn "You have uncommitted changes on 'main'."
+        echo "  ${BOLD}s${RESET}  Stash them, pull, then reapply"
+        echo "  ${BOLD}d${RESET}  Discard them (permanent) and pull"
+        echo "  ${BOLD}c${RESET}  Cancel — leave everything as-is"
+        printf "Choose [s/d/c]: "
+        local reply
+        read -rsn1 reply
+        echo
+        case "$reply" in
+            s|S)
+                info "Stashing local changes…"
+                local stash_msg="deploy.sh auto-stash: pre-pull at $(date +%H:%M:%S)"
+                if git stash push -u -m "$stash_msg" >/dev/null; then
+                    did_stash=1
+                    ok "Stashed (${stash_msg})."
+                else
+                    err "git stash failed; aborting pull."
+                    return 1
+                fi
+                ;;
+            d|D)
+                warn "This will permanently discard all uncommitted changes on 'main'."
+                printf "Are you sure? [y/N]: "
+                local confirm
+                read -rsn1 confirm
+                echo
+                if [[ "$confirm" =~ ^[Yy]$ ]]; then
+                    if git reset --hard HEAD >/dev/null; then
+                        ok "Local changes discarded."
+                    else
+                        err "git reset --hard failed; aborting."
+                        return 1
+                    fi
+                else
+                    info "Cancelled — no changes made."
+                    return 0
+                fi
+                ;;
+            *)
+                info "Cancelled — no changes made."
+                return 0
+                ;;
+        esac
+    fi
+
+    # Now safe to pull.
+    if ! git pull --ff-only origin main; then
+        err "Fast-forward pull failed. Resolve the divergence manually."
+        if (( did_stash )); then
+            warn "Your changes are safely in 'git stash' (top of the stack)."
+            warn "Reapply with:  git stash pop"
+        fi
+        return 1
+    fi
+    ok "Local 'main' is now up to date with origin/main."
+
+    # Pop the stash if we made one. `git stash pop` exits non-zero on
+    # merge conflicts (but leaves the stash intact for manual recovery).
+    if (( did_stash )); then
+        info "Reapplying stashed changes…"
+        if git stash pop >/dev/null 2>&1; then
+            ok "Stash reapplied cleanly."
+        else
+            warn "Stash pop produced conflicts — resolve manually:"
+            warn "  git status          # see conflicted files"
+            warn "  (edit files to resolve the <<<<<<< / ======= / >>>>>>> markers)"
+            warn "  git add <file>      # mark each as resolved"
+            warn "  git stash drop      # remove the now-applied stash entry"
             return 1
         fi
     fi

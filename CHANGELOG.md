@@ -82,6 +82,15 @@ commit that makes them.
   non-deprecated notification API.
 
 ### Changed
+- `deploy.sh`: the `p` (pull main) action now handles uncommitted local
+  changes cleanly. Previously the underlying `git pull --ff-only` would
+  abort with *"Your local changes to the following files would be
+  overwritten by merge"* and leave the user to work out the stash-pull-pop
+  dance themselves. The script now detects a dirty working tree up-front
+  and offers three options: **s** stash + pull + auto-reapply,
+  **d** discard (with a secondary y/N confirmation) + pull, or
+  **c** cancel. Stash-pop conflicts print a step-by-step recovery guide
+  rather than failing silently.
 - Aligned `CURRENT_PROJECT_VERSION` (CFBundleVersion) across both targets to
   `12`. The Safari extension was at `6` while the main app was at `12`,
   which Xcode flagged as a warning on build. Apple requires an app
