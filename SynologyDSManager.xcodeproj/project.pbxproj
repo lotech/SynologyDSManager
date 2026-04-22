@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 56;
+	objectVersion = 70;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -58,6 +58,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = 3A2D5EFC23D248B700B924EE;
 			remoteInfo = "SynologyDSManager Extension";
+		};
+		7E7E0020000000000000A000 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 3A2D5EE223D248B500B924EE /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 3A2D5EE923D248B500B924EE;
+			remoteInfo = SynologyDSManager;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -118,8 +125,13 @@
 		7E7E0012000000000000A000 /* SynologyAPIModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SynologyAPIModels.swift; sourceTree = "<group>"; };
 		7E7E0013000000000000A000 /* SynologyTrustEvaluator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SynologyTrustEvaluator.swift; sourceTree = "<group>"; };
 		7E7E0014000000000000A000 /* SynologyAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SynologyAPI.swift; sourceTree = "<group>"; };
+		AA714C832F9961D50068FEEC /* SynologyDSManagerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SynologyDSManagerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		AB01CD0100000000000000F1 /* Signing.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Signing.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		AA714C842F9961D50068FEEC /* SynologyDSManagerTests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = SynologyDSManagerTests; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		3A2D5EE723D248B500B924EE /* Frameworks */ = {
@@ -142,6 +154,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		AA714C802F9961D50068FEEC /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -151,6 +170,7 @@
 				AB01CD0100000000000000F1 /* Signing.xcconfig */,
 				3A2D5EEC23D248B500B924EE /* SynologyDSManager */,
 				3A2D5F0423D248B700B924EE /* SynologyDSManager Extension */,
+				AA714C842F9961D50068FEEC /* SynologyDSManagerTests */,
 				3A2D5F0123D248B700B924EE /* Frameworks */,
 				3A2D5EEB23D248B500B924EE /* Products */,
 			);
@@ -161,6 +181,7 @@
 			children = (
 				3A2D5EEA23D248B500B924EE /* SynologyDSManager.app */,
 				3A2D5EFD23D248B700B924EE /* SynologyDSManager Extension.appex */,
+				AA714C832F9961D50068FEEC /* SynologyDSManagerTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -187,18 +208,6 @@
 				47F4D01D24E54BF300A1E222 /* Webserver.swift */,
 			);
 			path = SynologyDSManager;
-			sourceTree = "<group>";
-		};
-		7E7E0001000000000000A000 /* Network */ = {
-			isa = PBXGroup;
-			children = (
-				7E7E0010000000000000A000 /* AppLogger.swift */,
-				7E7E0011000000000000A000 /* SynologyError.swift */,
-				7E7E0012000000000000A000 /* SynologyAPIModels.swift */,
-				7E7E0013000000000000A000 /* SynologyTrustEvaluator.swift */,
-				7E7E0014000000000000A000 /* SynologyAPI.swift */,
-			);
-			path = Network;
 			sourceTree = "<group>";
 		};
 		3A2D5F0123D248B700B924EE /* Frameworks */ = {
@@ -250,6 +259,18 @@
 			path = icons;
 			sourceTree = "<group>";
 		};
+		7E7E0001000000000000A000 /* Network */ = {
+			isa = PBXGroup;
+			children = (
+				7E7E0010000000000000A000 /* AppLogger.swift */,
+				7E7E0011000000000000A000 /* SynologyError.swift */,
+				7E7E0012000000000000A000 /* SynologyAPIModels.swift */,
+				7E7E0013000000000000A000 /* SynologyTrustEvaluator.swift */,
+				7E7E0014000000000000A000 /* SynologyAPI.swift */,
+			);
+			path = Network;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -298,6 +319,29 @@
 			productReference = 3A2D5EFD23D248B700B924EE /* SynologyDSManager Extension.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
+		AA714C822F9961D50068FEEC /* SynologyDSManagerTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AA714C892F9961D50068FEEC /* Build configuration list for PBXNativeTarget "SynologyDSManagerTests" */;
+			buildPhases = (
+				AA714C7F2F9961D50068FEEC /* Sources */,
+				AA714C802F9961D50068FEEC /* Frameworks */,
+				AA714C812F9961D50068FEEC /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				7E7E0020000000000000B000 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				AA714C842F9961D50068FEEC /* SynologyDSManagerTests */,
+			);
+			name = SynologyDSManagerTests;
+			packageProductDependencies = (
+			);
+			productName = SynologyDSManagerTests;
+			productReference = AA714C832F9961D50068FEEC /* SynologyDSManagerTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -305,7 +349,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastSwiftUpdateCheck = 1520;
+				LastSwiftUpdateCheck = 2640;
 				LastUpgradeCheck = 1520;
 				TargetAttributes = {
 					3A2D5EE923D248B500B924EE = {
@@ -313,6 +357,9 @@
 					};
 					3A2D5EFC23D248B700B924EE = {
 						CreatedOnToolsVersion = 11.3.1;
+					};
+					AA714C822F9961D50068FEEC = {
+						CreatedOnToolsVersion = 26.4.1;
 					};
 				};
 			};
@@ -335,6 +382,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
+				AA714C822F9961D50068FEEC /* SynologyDSManagerTests */,
 				3A2D5EE923D248B500B924EE /* SynologyDSManager */,
 				3A2D5EFC23D248B700B924EE /* SynologyDSManager Extension */,
 			);
@@ -367,6 +415,13 @@
 				3A2D5F1023D248B700B924EE /* ToolbarItemIcon.pdf in Resources */,
 				3A2D5F0B23D248B700B924EE /* SafariExtensionViewController.xib in Resources */,
 				3A2D5F0E23D248B700B924EE /* script.js in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AA714C812F9961D50068FEEC /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -408,6 +463,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		AA714C7F2F9961D50068FEEC /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -415,6 +477,11 @@
 			isa = PBXTargetDependency;
 			target = 3A2D5EFC23D248B700B924EE /* SynologyDSManager Extension */;
 			targetProxy = 3A2D5EFF23D248B700B924EE /* PBXContainerItemProxy */;
+		};
+		7E7E0020000000000000B000 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 3A2D5EE923D248B500B924EE /* SynologyDSManager */;
+			targetProxy = 7E7E0020000000000000A000 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -637,7 +704,46 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.skavans.synologyDSManager;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=macosx*]" = "";
 				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		AA714C872F9961D50068FEEC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_ENABLE_MODULES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.skavans.SynologyDSManagerTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SynologyDSManager.app/Contents/MacOS/SynologyDSManager";
+			};
+			name = Debug;
+		};
+		AA714C882F9961D50068FEEC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_ENABLE_MODULES = YES;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.skavans.SynologyDSManagerTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SynologyDSManager.app/Contents/MacOS/SynologyDSManager";
 			};
 			name = Release;
 		};
@@ -667,6 +773,15 @@
 			buildConfigurations = (
 				3A2D5F1923D248B700B924EE /* Debug */,
 				3A2D5F1A23D248B700B924EE /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AA714C892F9961D50068FEEC /* Build configuration list for PBXNativeTarget "SynologyDSManagerTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA714C872F9961D50068FEEC /* Debug */,
+				AA714C882F9961D50068FEEC /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
