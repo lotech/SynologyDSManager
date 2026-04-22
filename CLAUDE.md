@@ -85,8 +85,44 @@ swiftlint
 swiftformat --lint .
 ```
 
-There are **no automated tests yet**. A test target is added in Phase 2
-alongside the networking rewrite.
+### Running the tests
+
+Automated tests live in `SynologyDSManagerTests/` and cover `SynologyAPI`
+using a `URLProtocol`-based fake transport (no network, no real NAS
+required). Run from the command line:
+
+```sh
+xcodebuild test -project SynologyDSManager.xcodeproj \
+  -scheme SynologyDSManager \
+  -destination 'platform=macOS'
+```
+
+Or from Xcode: ⌘U.
+
+### Adding the test target (one-time, per fresh clone)
+
+If you clone fresh and don't see a `SynologyDSManagerTests` target in the
+scheme picker, the pbxproj has the test sources on disk but the test
+*target* hasn't been wired into the Xcode project yet. Takes 30 seconds:
+
+1. Open the project in Xcode (`./deploy.sh` → `o`).
+2. **File → New → Target…** → pick **Unit Testing Bundle** (under macOS).
+3. Name: `SynologyDSManagerTests`. Target to be tested:
+   `SynologyDSManager`. Finish.
+4. In the Project navigator, find the auto-generated
+   `SynologyDSManagerTests` group + default `*.swift` file Xcode created.
+   Delete the default file (move to trash).
+5. Drag the existing `SynologyDSManagerTests/` folder from Finder into
+   the `SynologyDSManagerTests` group. In the "Add to target" sheet
+   tick **only** `SynologyDSManagerTests` (not the main app).
+6. ⌘U to run. All tests in `SynologyAPITests.swift` should pass.
+7. Commit the resulting `project.pbxproj` change to a new branch and PR.
+
+The reason we don't include the test target in the pbxproj by default is
+hand-editing pbxproj for unit-test targets is error-prone — Xcode's UI
+does it cleanly in seconds. Once a maintainer has wired it up and merged
+the resulting pbxproj change, subsequent clones inherit it
+automatically.
 
 ## Code signing
 

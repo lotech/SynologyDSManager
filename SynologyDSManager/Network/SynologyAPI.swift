@@ -61,22 +61,43 @@ actor SynologyAPI {
 
     // MARK: - Construction
 
+    /// Create a DSM API client.
+    ///
+    /// - Parameters:
+    ///   - credentials: host/port/credentials.
+    ///   - trustEvaluator: TLS trust evaluator handling the self-signed
+    ///     first-use flow. In production pass the shared
+    ///     `synologyTrustEvaluator`; in tests the default-constructed
+    ///     evaluator with no approval handler is fine because the test
+    ///     transport bypasses TLS entirely.
+    ///   - configuration: optional pre-built `URLSessionConfiguration`. If
+    ///     `nil` (production), we build an ephemeral config with an empty
+    ///     in-memory cookie jar and sane timeouts. Tests pass a config
+    ///     with `protocolClasses = [URLProtocolStub.self]` so every
+    ///     request is intercepted in-process instead of hitting the
+    ///     network.
     init(credentials: Credentials,
-         trustEvaluator: SynologyTrustEvaluator = SynologyTrustEvaluator()) {
+         trustEvaluator: SynologyTrustEvaluator = SynologyTrustEvaluator(),
+         configuration: URLSessionConfiguration? = nil) {
         self.credentials = credentials
         self.trustEvaluator = trustEvaluator
 
-        let config = URLSessionConfiguration.ephemeral
-        // An ephemeral configuration has its own HTTPCookieStorage, so the
-        // DSM session cookie lives only in memory. We do not want to
-        // persist the `id` cookie between app launches; the user's
-        // keychain-stored password re-authenticates each time instead.
-        config.httpCookieStorage = HTTPCookieStorage()
-        config.httpCookieAcceptPolicy = .always
-        config.httpShouldSetCookies = true
-        config.urlCache = nil
-        config.requestCachePolicy = .reloadIgnoringLocalAndRemoteCacheData
-        config.timeoutIntervalForRequest = 30
+        let config: URLSessionConfiguration
+        if let configuration {
+            config = configuration
+        } else {
+            config = URLSessionConfiguration.ephemeral
+            // An ephemeral configuration has its own HTTPCookieStorage, so
+            // the DSM session cookie lives only in memory. We do not want
+            // to persist the `id` cookie between app launches; the user's
+            // keychain-stored password re-authenticates each time instead.
+            config.httpCookieStorage = HTTPCookieStorage()
+            config.httpCookieAcceptPolicy = .always
+            config.httpShouldSetCookies = true
+            config.urlCache = nil
+            config.requestCachePolicy = .reloadIgnoringLocalAndRemoteCacheData
+            config.timeoutIntervalForRequest = 30
+        }
 
         self.session = URLSession(
             configuration: config,

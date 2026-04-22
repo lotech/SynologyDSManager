@@ -62,6 +62,30 @@ commit that makes them.
   `SynologyAPI`.
 
 ### Added
+- **Unit test scaffolding (Phase 2a-2d — test target)** — a
+  `SynologyDSManagerTests/` directory with:
+  - `URLProtocolStub.swift`: `URLProtocol` subclass that intercepts
+    `URLSession` requests during tests, serves canned responses, and
+    captures request bodies so tests can assert on what was actually
+    sent. Supports queued multi-step response sequences for flows like
+    authenticate → listTasks → pause, and form-field parsing helpers.
+  - `SynologyAPITests.swift`: XCTest suite covering authenticate
+    success/failure, listTasks typed decoding, URL shape, pause /
+    resume / delete payloads, HTTP / decoding / transport error paths,
+    updateCredentials session invalidation, logout, and
+    SynologyErrorCode mapping. Two explicit regression-guard tests for
+    the 2a-2b bugs: one asserts `_sid` is always in the POST body for
+    authenticated requests; another asserts SID never appears in URL
+    query strings — either would have failed immediately against the
+    pre-fix implementation.
+- `SynologyAPI.init` now accepts an optional `URLSessionConfiguration`
+  (defaults to `nil`) so tests can register `URLProtocolStub.self` as
+  a `protocolClass` without touching production construction.
+- Test-running instructions and one-time test-target wiring steps
+  added to `CLAUDE.md`. Adding the test *target* itself is a File →
+  New → Target → Unit Testing Bundle operation in Xcode; the
+  resulting pbxproj change should land as a follow-up PR after this
+  one merges.
 - **Settings migration & SPKI approval UI (Phase 2a-2a)** — the
   authentication flow in `SettingsViewController.testConnectionButtonClicked`
   now uses the new `SynologyAPI` (URLSession + async/await) rather than

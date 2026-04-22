@@ -4,7 +4,7 @@ Living document. Tick boxes as tasks land. When all tasks in a phase are
 complete, move the phase status from **In progress** / **Planned** to
 **Shipped** with the date.
 
-Last updated: 2026-04-22 (Phase 2a-2b pushed)
+Last updated: 2026-04-22 (Phase 2a-2d test target pushed)
 
 ---
 
@@ -137,15 +137,38 @@ scoped Keychain access.
 - [ ] `ChooseDestViewController` / `DestinationView`: migrate directory
       listing to `SynologyAPI.listDirectories`
 
-### Phase 2a-2d — Cleanup (planned)
+### Phase 2a-2d — Test target (in progress; moved ahead of 2a-2c)
 
-- [ ] Add a `SynologyDSManagerTests` target with `URLProtocol`-based fake
-      transports for `SynologyAPI`
+- [x] Add `SynologyDSManagerTests/URLProtocolStub.swift` (request
+      interception + form-body capture + multi-step response queueing)
+- [x] Add `SynologyDSManagerTests/SynologyAPITests.swift` covering
+      authenticate success/failure, listTasks typed decoding,
+      pause/resume/delete payload shape, HTTP/decoding/transport error
+      paths, updateCredentials session invalidation, logout, and
+      SynologyErrorCode mapping. Includes explicit regression guards
+      for the two 2a-2b regressions (`_sid` must be in POST body; SID
+      must NEVER appear in a URL query string)
+- [x] Make `SynologyAPI.init` accept an optional
+      `URLSessionConfiguration` so tests can register
+      `URLProtocolStub.self` as a `protocolClass` without touching
+      the production code path
+- [ ] **Maintainer action:** wire the `SynologyDSManagerTests` target
+      into the Xcode project via File → New → Target → Unit Testing
+      Bundle (instructions in `CLAUDE.md`); commit the resulting
+      pbxproj change
+- [ ] Add a CI job that runs `xcodebuild test`
+
+### Phase 2a-2d — Cleanup (planned, after 2a-2c)
+
 - [ ] Delete `SynologyDSManager/SynologyClient.swift`
 - [ ] Remove Alamofire from `Package.resolved` + `project.pbxproj`
 - [ ] Remove SwiftyJSON from `Package.resolved` + `project.pbxproj`
+- [ ] Remove the transitional `synologyClient.authenticate` call in
+      `DownloadsViewController.doWork` (safe once Phase 2a-2c has
+      migrated the final three legacy callers)
 - [ ] Delete the `registerEvent(…)` stub
 - [ ] Replace remaining `print(…)` sites with `os.Logger`
+- [ ] Flip `SWIFT_STRICT_CONCURRENCY` from `minimal` to `complete`
 
 ### Phase 2b — Credential store & strict concurrency (planned)
 
