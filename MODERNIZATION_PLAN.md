@@ -4,7 +4,7 @@ Living document. Tick boxes as tasks land. When all tasks in a phase are
 complete, move the phase status from **In progress** / **Planned** to
 **Shipped** with the date.
 
-Last updated: 2026-04-22 (Phase 2a-2a merged)
+Last updated: 2026-04-22 (Phase 2a-2b pushed)
 
 ---
 
@@ -107,16 +107,26 @@ scoped Keychain access.
 - [x] `DownloadsViewController.doWork` now initialises both
       `synologyClient` and `synologyAPI` from the same settings
 
-### Phase 2a-2b — DownloadsViewController migration (planned)
+### Phase 2a-2b — DownloadsViewController migration (merged)
 
-- [ ] Replace `SynologyClient.getDownloads` call with
-      `SynologyAPI.listTasks()` in the 3-second refresh loop
-- [ ] Replace `pauseDownload` / `resumeDownload` / `deleteDownload` call
+- [x] Replace `SynologyClient.getDownloads` call with
+      `SynologyAPI.listTasks()` in the refresh loop
+- [x] Replace `pauseDownload` / `resumeDownload` / `deleteDownload` call
       sites with `pauseTask` / `resumeTask` / `deleteTask`
-- [ ] Stop iterating `JSON?` in `refreshDownloads`; use typed `[DSMTask]`
-      end-to-end
-- [ ] Move the refresh timer off `Timer.scheduledTimer` onto an `async`
-      polling loop we can cancel cleanly
+- [x] Stop iterating `JSON?` in `refreshDownloads`; use typed `[DSMTask]`
+      end-to-end (and drop `import SwiftyJSON` from
+      `DownloadsViewController.swift`)
+- [x] Move the refresh timer off `Timer.scheduledTimer` onto an `async`
+      polling loop (`refreshTask: Task<Void, Never>?`) that obeys
+      `Task.isCancelled` and re-cancels on repeat `doWork` calls
+- [x] Set `workStarted = true` at the end of `doWork` so repeat
+      credentials changes take the Settings else-branch rather than
+      re-invoking `doWork` (was a latent bug: the flag was never set,
+      so every Test Connection re-created the client and stacked a
+      fresh 3-second timer)
+- [x] Mirror the Settings else-branch on `SynologyAPI`:
+      `updateCredentials` + `authenticate` after a credentials change,
+      not just on the legacy client
 
 ### Phase 2a-2c — Add / Search / Destination view controllers (planned)
 
