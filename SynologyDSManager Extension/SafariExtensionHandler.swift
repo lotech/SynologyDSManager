@@ -30,7 +30,7 @@ class SafariExtensionHandler: SFSafariExtensionHandler {
                 switch resp.result {
                 case .success(let res):
                     print(res)
-                case .failure(let _):
+                case .failure:
                     let url = URL(string: "synologydsmanager://download?downloadURL=\((userInfo!["URL"] as! String).addingPercentEncoding(withAllowedCharacters: .letters) ?? "")")
                     NSWorkspace.shared.open(url!)
                 }
