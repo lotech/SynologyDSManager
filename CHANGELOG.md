@@ -11,6 +11,21 @@ commit that makes them.
 
 ## [Unreleased]
 
+### Fixed
+- **Phase 2a-2a regression: crash on first refresh after Test Connection**
+  — `SynologyClient.getDownloads` and siblings force-unwrap
+  `settings.sid!`. Before Phase 2a-2a, `SettingsViewController`
+  authenticated via the legacy client, which populated the SID on the
+  `ConnectionSettings` struct passed to `DownloadsViewController.doWork`.
+  Phase 2a-2a moved auth to `SynologyAPI`, which uses a cookie jar
+  internally rather than writing to the legacy struct, so the legacy
+  client arrived in `doWork` SID-less and crashed on the first timer
+  tick. Fix: `doWork` now calls `synologyClient.authenticate` itself
+  and only starts the refresh loop on success; the `SettingsViewController`
+  "already running, credentials changed" branch does the same. Both
+  code paths go away in Phase 2a-2b when the refresh loop moves to
+  `SynologyAPI`.
+
 ### Added
 - **Settings migration & SPKI approval UI (Phase 2a-2a)** — the
   authentication flow in `SettingsViewController.testConnectionButtonClicked`
