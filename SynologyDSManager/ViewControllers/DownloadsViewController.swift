@@ -192,6 +192,13 @@ class DownloadsViewController: NSViewController, NSWindowDelegate {
             trustEvaluator: synologyTrustEvaluator
         )
 
+        // Capture the instance we just assigned to the global so the
+        // refresh loop below holds a stable reference, independent of
+        // any later reassignment of the `synologyAPI` global (e.g. if
+        // Settings changes credentials during a re-auth — we want the
+        // currently-running loop to keep using the current client).
+        guard let api = synologyAPI else { return }
+
         start_webserver()
 
         // Legacy SynologyClient still drives Add / Search / ChooseDest
@@ -210,7 +217,7 @@ class DownloadsViewController: NSViewController, NSWindowDelegate {
         // polls listTasks every 3 seconds until cancelled. Cancellation
         // happens when doWork is called again or the app quits.
         refreshTask = Task { [weak self] in
-            guard let self, let api = self.synologyAPI else { return }
+            guard let self else { return }
             do {
                 _ = try await api.authenticate()
             } catch {
