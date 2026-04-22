@@ -4,7 +4,7 @@ Living document. Tick boxes as tasks land. When all tasks in a phase are
 complete, move the phase status from **In progress** / **Planned** to
 **Shipped** with the date.
 
-Last updated: 2026-04-22 (Phase 2a-1 merged)
+Last updated: 2026-04-22 (Phase 2a-2a merged)
 
 ---
 
@@ -87,21 +87,50 @@ scoped Keychain access.
 - [x] `os.Logger` categories for network / auth / security / keychain
       (`SynologyDSManager/Network/AppLogger.swift`)
 
-### Phase 2a-2 — Migration (planned)
+### Phase 2a-2a — Settings migration + cert-approval UI (merged)
+
+- [x] Hoist the TLS trust evaluator to a shared `synologyTrustEvaluator`
+      singleton in `Shared.swift`, so pins persist across reconstructions
+      of the client and the approval callback can be installed once
+- [x] Replace `SynologyTrustEvaluator.pendingApproval` with a blocking
+      `firstUseDecision` callback that the evaluator awaits on the
+      URLSession delegate queue before completing the trust challenge
+- [x] Install an `NSAlert`-based first-use approval handler in
+      `AppDelegate.applicationWillFinishLaunching`; dialog shows the
+      fingerprint and offers Trust / Cancel
+- [x] Add a parallel `synologyAPI: SynologyAPI?` global in `Shared.swift`
+      so migration can proceed call-site by call-site
+- [x] Migrate `SettingsViewController.testConnectionButtonClicked` to use
+      `SynologyAPI.authenticate()` via `Task { @MainActor … }`; the
+      legacy client is still bootstrapped after a successful test so the
+      rest of the app keeps working
+- [x] `DownloadsViewController.doWork` now initialises both
+      `synologyClient` and `synologyAPI` from the same settings
+
+### Phase 2a-2b — DownloadsViewController migration (planned)
+
+- [ ] Replace `SynologyClient.getDownloads` call with
+      `SynologyAPI.listTasks()` in the 3-second refresh loop
+- [ ] Replace `pauseDownload` / `resumeDownload` / `deleteDownload` call
+      sites with `pauseTask` / `resumeTask` / `deleteTask`
+- [ ] Stop iterating `JSON?` in `refreshDownloads`; use typed `[DSMTask]`
+      end-to-end
+- [ ] Move the refresh timer off `Timer.scheduledTimer` onto an `async`
+      polling loop we can cancel cleanly
+
+### Phase 2a-2c — Add / Search / Destination view controllers (planned)
+
+- [ ] `AddDownloadViewController`: migrate URL + torrent upload paths
+- [ ] `BTSearchController`: replace the nested `Timer.scheduledTimer` poll
+      with the actor's `searchTorrents`; drop `searchResultsJSON` in
+      favour of `[BTSearchResult]`
+- [ ] `ChooseDestViewController` / `DestinationView`: migrate directory
+      listing to `SynologyAPI.listDirectories`
+
+### Phase 2a-2d — Cleanup (planned)
 
 - [ ] Add a `SynologyDSManagerTests` target with `URLProtocol`-based fake
-      transports for the API
-- [ ] Wire `SynologyTrustEvaluator.pendingApproval` to a SwiftUI sheet that
-      shows the SPKI fingerprint and lets the user trust-or-refuse
-- [ ] Migrate `SettingsViewController` (authentication + testConnection) to
-      `SynologyAPI`
-- [ ] Migrate `DownloadsViewController` (list / pause / resume / delete /
-      cleanup loop) to `SynologyAPI`
-- [ ] Migrate `AddDownloadViewController` (URL + torrent upload paths)
-- [ ] Migrate `BTSearchController` (search + enqueue) — replace the
-      `Timer.scheduledTimer` poll with the actor's `searchTorrents`
-- [ ] Migrate `ChooseDestViewController` / `DestinationView` (directory
-      listing) to `SynologyAPI`
+      transports for `SynologyAPI`
 - [ ] Delete `SynologyDSManager/SynologyClient.swift`
 - [ ] Remove Alamofire from `Package.resolved` + `project.pbxproj`
 - [ ] Remove SwiftyJSON from `Package.resolved` + `project.pbxproj`

@@ -47,13 +47,21 @@ final class SynologyTrustEvaluator: NSObject, URLSessionDelegate, @unchecked Sen
     private let defaultsKey = "synologyPinnedSPKIs"
     private let queue = DispatchQueue(label: "com.skavans.synologyDSManager.trust")
 
-    /// Callback invoked on the main queue when a host presents a
-    /// previously-unseen cert and requires user approval. UI should call
-    /// `approve(host:spki:)` or leave alone to refuse.
+    /// Synchronous decision callback invoked when a host presents a
+    /// previously-unseen self-signed certificate. The callback is called
+    /// on `URLSession`'s delegate queue (NOT the main queue), so if it
+    /// needs to show UI it must dispatch to the main queue and block
+    /// until the user has decided — e.g. via `NSAlert.runModal()` inside
+    /// `DispatchQueue.main.sync { … }`.
     ///
-    /// The closure is retained weakly by convention — the evaluator has
-    /// app lifetime, so set this once from `AppDelegate` or equivalent.
-    var pendingApproval: (@Sendable (_ host: String, _ spkiBase64: String) -> Void)?
+    /// Return `true` to trust this certificate for this host; the pin is
+    /// then persisted automatically and subsequent requests succeed
+    /// without prompting. Return `false` to refuse — the originating
+    /// request fails with `.cancelAuthenticationChallenge`.
+    ///
+    /// If `firstUseDecision` is unset, first-use certificates are
+    /// always refused (the safe default).
+    var firstUseDecision: (@Sendable (_ host: String, _ spkiBase64: String) -> Bool)?
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
@@ -138,17 +146,18 @@ final class SynologyTrustEvaluator: NSObject, URLSessionDelegate, @unchecked Sen
             return
         }
 
-        // Step 3: first time we've seen this host — hand off to UI for
-        // approval. Refuse this particular request so the network call
-        // fails loudly; if the user approves, the next attempt will
-        // succeed because the pin will be stored.
-        AppLogger.security.notice("First-use cert for \(host, privacy: .private) — deferring to UI")
-        if let handler = pendingApproval {
-            DispatchQueue.main.async {
-                handler(host, spki)
-            }
+        // Step 3: first time we've seen this host. Ask the UI for a
+        // decision. The callback blocks until the user responds (it's
+        // expected to run an NSAlert modally); if the user approves we
+        // persist the pin and accept the challenge, otherwise we refuse.
+        AppLogger.security.notice("First-use cert for \(host, privacy: .private) — asking user")
+        if let decide = firstUseDecision, decide(host, spki) {
+            approve(host: host, spki: spki)
+            completionHandler(.useCredential, URLCredential(trust: serverTrust))
+        } else {
+            AppLogger.security.notice("First-use cert refused for \(host, privacy: .private)")
+            completionHandler(.cancelAuthenticationChallenge, nil)
         }
-        completionHandler(.cancelAuthenticationChallenge, nil)
     }
 
     // MARK: - Fingerprint extraction

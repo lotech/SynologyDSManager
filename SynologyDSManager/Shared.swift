@@ -12,7 +12,23 @@ import Cocoa
 import Alamofire
 
 
+/// Legacy Alamofire-based client. Still in use by the download list,
+/// add-download, BT search, and destination-picker view controllers.
+/// Scheduled for deletion once Phase 2a-2b/c/d migrate the remaining
+/// call sites — do not add new usage.
 var synologyClient: SynologyClient?
+
+/// Target-state DSM client (URLSession + async/await). Created in parallel
+/// with `synologyClient` so Phase 2a-2 can migrate call sites one by one.
+/// Only `SettingsViewController.testConnection` uses this as of 2a-2a.
+var synologyAPI: SynologyAPI?
+
+/// Shared TLS trust evaluator. App-wide so the first-use approval callback
+/// installed by `AppDelegate` survives across reconstructions of
+/// `synologyAPI` (e.g. when the user changes credentials). The evaluator
+/// also owns the persisted pin store, so a single instance means pins are
+/// consistent across every connection the app makes.
+let synologyTrustEvaluator = SynologyTrustEvaluator()
 
 var workStarted = false
 var mainMethod: ((SynologyClient.ConnectionSettings) -> Void)? = nil

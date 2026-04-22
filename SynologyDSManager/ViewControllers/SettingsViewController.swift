@@ -98,38 +98,103 @@ class SettingsViewController: NSViewController {
     
     @IBAction func testConnectionButtonClicked(_ sender: Any) {
         self.showLoader()
-        
-        let testClient = SynologyClient(host: hostTextField.stringValue,
-                                        port: portTextField.stringValue,
-                                        username: usernameTextField.stringValue,
-                                        password: passwordSecureTextField.stringValue,
-                                        otpCode: otpSecureTextField.stringValue)
-        testClient.authenticate(completion: {success, error in
-            let alert: NSAlert
-            alert = NSAlert()
-            if success {
-                storeSettings(settings: testClient.settings)
-                if !workStarted {
-                    mainMethod!(testClient.settings)
-                } else {
-                    synologyClient!.settings = testClient.settings
-                }
-                alert.messageText = "Success"
-                alert.informativeText = "Connection attempt is successful. Your connection settings is saved now so you don't need to enter the credentials manually anymore."
-            } else {
-                alert.alertStyle = NSAlert.Style.critical
-                alert.messageText = "Error"
-                alert.informativeText = error!.localizedDescription
+
+        // Build the target-state typed credentials from the text fields.
+        let host = hostTextField.stringValue
+        let portString = portTextField.stringValue
+        let username = usernameTextField.stringValue
+        let password = passwordSecureTextField.stringValue
+        let otpCode = otpSecureTextField.stringValue
+        let port = Int(portString) ?? 5001
+
+        let credentials = SynologyAPI.Credentials(
+            host: host,
+            port: port,
+            username: username,
+            password: password,
+            otp: otpCode.isEmpty ? nil : otpCode
+        )
+
+        // Temporary SynologyAPI for validation only. On success we'll
+        // also hand the original-shape `ConnectionSettings` to the legacy
+        // client so the rest of the app keeps working until Phase 2a-2b
+        // migrates the remaining view controllers.
+        let testAPI = SynologyAPI(credentials: credentials,
+                                  trustEvaluator: synologyTrustEvaluator)
+
+        Task { @MainActor in
+            let outcome: Result<Void, Error>
+            do {
+                _ = try await testAPI.authenticate()
+                outcome = .success(())
+            } catch {
+                outcome = .failure(error)
             }
-            
-            alert.beginSheetModal(for: self.view.window!, completionHandler: {resp in
-                self.hideLoader()
-                if success {
-                    self.view.window?.close()
-                }
-            })
-        })
-        
+            self.presentTestConnectionOutcome(outcome,
+                                              host: host,
+                                              portString: portString,
+                                              username: username,
+                                              password: password,
+                                              otpCode: otpCode)
+        }
+    }
+
+    /// Handle the authenticate() result on the main actor: store settings,
+    /// bootstrap or update the legacy client, and surface a success /
+    /// failure sheet to the user. Split out so the Task closure above
+    /// stays readable.
+    @MainActor
+    private func presentTestConnectionOutcome(
+        _ outcome: Result<Void, Error>,
+        host: String,
+        portString: String,
+        username: String,
+        password: String,
+        otpCode: String
+    ) {
+        let alert = NSAlert()
+        let success: Bool
+
+        switch outcome {
+        case .success:
+            success = true
+            // Persist credentials and kick off (or update) the legacy
+            // client used by the rest of the app. This keeps the existing
+            // Downloads view / BT search / etc. working unchanged.
+            let legacySettings = SynologyClient.ConnectionSettings(
+                host: host,
+                port: portString,
+                username: username,
+                password: password,
+                otp: otpCode
+            )
+            storeSettings(settings: legacySettings)
+
+            if !workStarted {
+                mainMethod?(legacySettings)
+            } else {
+                synologyClient?.settings = legacySettings
+            }
+
+            alert.messageText = "Success"
+            alert.informativeText = """
+            Connection attempt is successful. Your connection settings are \
+            saved so you don't need to enter the credentials manually again.
+            """
+
+        case .failure(let error):
+            success = false
+            alert.alertStyle = .critical
+            alert.messageText = "Error"
+            alert.informativeText = error.localizedDescription
+        }
+
+        alert.beginSheetModal(for: self.view.window!) { _ in
+            self.hideLoader()
+            if success {
+                self.view.window?.close()
+            }
+        }
     }
     
     override func viewDidDisappear() {
