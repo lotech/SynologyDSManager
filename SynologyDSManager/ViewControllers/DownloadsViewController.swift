@@ -139,12 +139,27 @@ class DownloadsViewController: NSViewController, NSWindowDelegate {
     
     private func doWork(settings: SynologyClient.ConnectionSettings) {
         synologyClient = SynologyClient(settings: settings)
-                
+
+        // Parallel modern client. During Phase 2a-2 the legacy
+        // `synologyClient` still drives every view controller except
+        // Settings; subsequent sub-PRs migrate them one by one.
+        let port = Int(settings.port) ?? 5001
+        synologyAPI = SynologyAPI(
+            credentials: SynologyAPI.Credentials(
+                host: settings.host,
+                port: port,
+                username: settings.username,
+                password: settings.password,
+                otp: settings.otp.isEmpty ? nil : settings.otp
+            ),
+            trustEvaluator: synologyTrustEvaluator
+        )
+
         start_webserver()
-        
+
         self.refreshDownloads()
-        
-        Timer.scheduledTimer(withTimeInterval: 3, repeats: true, block: {timer in
+
+        Timer.scheduledTimer(withTimeInterval: 3, repeats: true, block: { timer in
             self.refreshDownloads()
         })
     }

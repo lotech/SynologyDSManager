@@ -12,6 +12,19 @@ commit that makes them.
 ## [Unreleased]
 
 ### Added
+- **Settings migration & SPKI approval UI (Phase 2a-2a)** — the
+  authentication flow in `SettingsViewController.testConnectionButtonClicked`
+  now uses the new `SynologyAPI` (URLSession + async/await) rather than
+  the legacy Alamofire-based `SynologyClient`. First-use of a self-signed
+  Synology certificate now shows an `NSAlert` with the SHA-256 SPKI
+  fingerprint and asks the user to explicitly trust it — the old
+  silent-accept-anything `DisabledEvaluator` bypass is gone. Approved
+  pins are persisted per-host and reused silently on subsequent
+  connections; mismatches against an existing pin are refused outright.
+  `synologyAPI` is now available as a parallel global alongside the
+  legacy `synologyClient`; both are initialised from the same settings
+  in `DownloadsViewController.doWork`. Remaining view controllers are
+  still on the legacy client — they migrate in Phase 2a-2b / c.
 - **Networking foundation (Phase 2a-1)** — a new `SynologyDSManager/Network/`
   module landed alongside the existing Alamofire-based client, to be swapped
   in wholesale during Phase 2a-2:
