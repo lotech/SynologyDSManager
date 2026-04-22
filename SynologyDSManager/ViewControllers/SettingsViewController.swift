@@ -174,18 +174,35 @@ class SettingsViewController: NSViewController {
                 mainMethod?(legacySettings)
             } else {
                 // App is already running; user is changing credentials. The
-                // old legacy SID is invalid against the new credentials, and
-                // the new settings arrive SID-less from the SynologyAPI auth
-                // path. Re-authenticate the legacy client so its request
-                // methods (which all force-unwrap `settings.sid!`) don't
-                // crash on the next timer tick. Removed in Phase 2a-2b when
-                // the legacy client stops being the source of truth for the
-                // rest of the app.
+                // old session on *both* clients is now invalid: the legacy
+                // SynologyClient's SID is tied to the old user/password, and
+                // SynologyAPI's session cookie likewise. Re-authenticate
+                // both so the downloads list (on SynologyAPI) and the
+                // still-legacy Add/Search/ChooseDest paths keep working.
                 synologyClient?.settings = legacySettings
                 synologyClient?.authenticate { ok, err in
                     if !ok {
                         AppLogger.auth.error(
                             "Legacy SynologyClient re-auth after settings change failed: \(err?.localizedDescription ?? "unknown", privacy: .public)"
+                        )
+                    }
+                }
+
+                let port = Int(portString) ?? 5001
+                let newCredentials = SynologyAPI.Credentials(
+                    host: host,
+                    port: port,
+                    username: username,
+                    password: password,
+                    otp: otpCode.isEmpty ? nil : otpCode
+                )
+                Task {
+                    await synologyAPI?.updateCredentials(newCredentials)
+                    do {
+                        _ = try await synologyAPI?.authenticate()
+                    } catch {
+                        AppLogger.auth.error(
+                            "SynologyAPI re-auth after settings change failed: \(error.localizedDescription, privacy: .public)"
                         )
                     }
                 }

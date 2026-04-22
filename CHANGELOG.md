@@ -11,6 +11,29 @@ commit that makes them.
 
 ## [Unreleased]
 
+### Changed
+- **Downloads migration (Phase 2a-2b)** — the main download list, the
+  pause-all / resume-all / clear-finished toolbar actions, the per-row
+  pause/resume/delete buttons, and the 3-second refresh loop now all run
+  on `SynologyAPI` (URLSession + async/await + typed `[DSMTask]`)
+  instead of the legacy Alamofire-backed `SynologyClient`. SwiftyJSON is
+  no longer imported in `DownloadsViewController.swift`. The polling
+  loop is now an `async Task` (`refreshTask`) that honours
+  `Task.isCancelled` and auto-cancels on repeat `doWork` invocations,
+  replacing the old `Timer.scheduledTimer` which (combined with a
+  latent `workStarted` bug) could stack multiple concurrent timers
+  after credential changes.
+- `SettingsViewController`'s "already running, credentials changed"
+  branch now also calls `SynologyAPI.updateCredentials` + `authenticate`
+  so the downloads refresh keeps working after the user switches NAS
+  or rotates passwords (it was previously only re-authing the legacy
+  client).
+- `doWork` now sets `workStarted = true` at the end. The flag was
+  declared in the original codebase but never written, so every Test
+  Connection re-entered `doWork`, stacking a new legacy client and a
+  new refresh timer each time. Now the Settings else-branch fires on
+  the second and subsequent Test Connections, as originally intended.
+
 ### Fixed
 - **Phase 2a-2a regression: crash on first refresh after Test Connection**
   — `SynologyClient.getDownloads` and siblings force-unwrap
