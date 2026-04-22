@@ -69,6 +69,10 @@ commit that makes them.
   non-deprecated notification API.
 
 ### Changed
+- Aligned `CURRENT_PROJECT_VERSION` (CFBundleVersion) across both targets to
+  `12`. The Safari extension was at `6` while the main app was at `12`,
+  which Xcode flagged as a warning on build. Apple requires an app
+  extension's bundle version to match its containing parent app's.
 - Minimum supported macOS raised from 10.13 (High Sierra) to 13 (Ventura).
 - Xcode project format bumped: `objectVersion` 52 → 56, `compatibilityVersion`
   Xcode 9.3 → Xcode 14.0, `LastUpgradeCheck` / `LastSwiftUpdateCheck` →
