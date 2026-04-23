@@ -11,7 +11,45 @@ commit that makes them.
 
 ## [Unreleased]
 
+### Removed
+- **Phase 2a-2d cleanup.** End of the Phase 2a migration:
+  - Deleted `SynologyClient.swift` — the legacy Alamofire-backed DSM
+    client (~300 lines). Every caller migrated over the course of 2a-2a
+    through 2a-2c.
+  - Removed **Alamofire** and **SwiftyJSON** from the project's Swift
+    Package Manager dependencies (both targets) and from
+    `Package.resolved`. First-clean-build time should drop noticeably
+    — Alamofire alone is ~70k LoC.
+  - Migrated `SafariExtensionHandler.swift` off Alamofire onto
+    `URLSession`. Same fallback behaviour: POST to the loopback
+    webserver, fall back to the custom URL scheme. Whole extension
+    gets replaced in Phase 3.
+  - Replaced `SynologyClient.ConnectionSettings` with a new top-level
+    `StoredCredentials` struct in `Settings.swift`. Codable, port
+    stays `String`-typed for backward compatibility with existing
+    installs, with a computed `apiCredentials` convenience that
+    produces the typed `SynologyAPI.Credentials` the actor expects.
+    Unknown keys (like the old `sid` field) decode cleanly — no
+    explicit migration needed.
+  - Deleted the `registerEvent(…)` no-op stub and its call sites in
+    `DownloadsViewController`.
+  - Removed the unused `synologyClient: SynologyClient?` global from
+    `Shared.swift`.
+
 ### Changed
+- **Strict concurrency flipped from `minimal` to `complete`.** Swift's
+  full concurrency checking is now on. Remaining globals in
+  `Shared.swift` (`synologyAPI`, `workStarted`, `mainMethod`,
+  `mainViewController`, `currentViewController`) are annotated as
+  `nonisolated(unsafe)` — an honest acknowledgement that they're
+  thread-unsafe mutable state the current architecture treats as
+  main-thread-only by convention. Phase 4 (SwiftUI + Observation)
+  replaces them with a proper `@Observable` app model.
+- **`Settings.swift` rewritten on `JSONEncoder` / `JSONDecoder`** —
+  the Keychain blob format is byte-compatible with the old SwiftyJSON
+  output, so existing installs don't need a migration. A legacy path
+  for installs where credentials still live in `UserDefaults` (from
+  pre-Keychain releases) migrates them into the Keychain on first read.
 - **Add / Search / Destination migration (Phase 2a-2c)** — the last
   three legacy-client-backed screens now run on `SynologyAPI`:
   - `AddDownloadViewController` enqueues downloads via

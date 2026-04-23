@@ -156,20 +156,20 @@ class SettingsViewController: NSViewController {
         switch outcome {
         case .success:
             success = true
-            // Persist credentials and kick off (or update) the legacy
-            // client used by the rest of the app. This keeps the existing
-            // Downloads view / BT search / etc. working unchanged.
-            let legacySettings = SynologyClient.ConnectionSettings(
+            // Persist credentials. `doWork` (run on first-time setup) or
+            // the else-branch below (when already running) picks them up
+            // and drives `synologyAPI`.
+            let storedCredentials = StoredCredentials(
                 host: host,
                 port: portString,
                 username: username,
                 password: password,
                 otp: otpCode
             )
-            storeSettings(settings: legacySettings)
+            storeSettings(storedCredentials)
 
             if !workStarted {
-                mainMethod?(legacySettings)
+                mainMethod?(storedCredentials)
             } else {
                 // App is already running; user is changing credentials. The
                 // cached session on the SynologyAPI actor is now invalid

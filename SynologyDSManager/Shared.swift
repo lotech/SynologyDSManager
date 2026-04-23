@@ -2,44 +2,35 @@
 //  Shared.swift
 //  SynologyDSManager
 //
-//  Created by Антон on 16.03.2020.
-//  Copyright © 2020 skavans. All rights reserved.
+//  Global mutable state used across view controllers. These are
+//  intentionally `nonisolated(unsafe)` — we know they're main-thread-only
+//  in practice but the compiler can't prove it under strict concurrency.
+//  Phase 4 (SwiftUI + Observation) replaces this file with a proper
+//  `@Observable` app model.
 //
 
 import Foundation
 import Cocoa
 
-import Alamofire
 
+/// The DSM API client. Created in `DownloadsViewController.doWork` once
+/// settings are available. View controllers read this lazily — a nil
+/// value means "not signed in yet, Settings should be showing".
+nonisolated(unsafe) var synologyAPI: SynologyAPI?
 
-/// Legacy Alamofire-based client. Still in use by the download list,
-/// add-download, BT search, and destination-picker view controllers.
-/// Scheduled for deletion once Phase 2a-2b/c/d migrate the remaining
-/// call sites — do not add new usage.
-var synologyClient: SynologyClient?
-
-/// Target-state DSM client (URLSession + async/await). Created in parallel
-/// with `synologyClient` so Phase 2a-2 can migrate call sites one by one.
-/// Only `SettingsViewController.testConnection` uses this as of 2a-2a.
-var synologyAPI: SynologyAPI?
-
-/// Shared TLS trust evaluator. App-wide so the first-use approval callback
-/// installed by `AppDelegate` survives across reconstructions of
-/// `synologyAPI` (e.g. when the user changes credentials). The evaluator
-/// also owns the persisted pin store, so a single instance means pins are
-/// consistent across every connection the app makes.
+/// Shared TLS trust evaluator. App-wide so the first-use approval
+/// callback installed by `AppDelegate` survives across reconstructions
+/// of `synologyAPI` (e.g. when the user changes credentials). The
+/// evaluator also owns the persisted pin store, so a single instance
+/// means pins are consistent across every connection the app makes.
 let synologyTrustEvaluator = SynologyTrustEvaluator()
 
-var workStarted = false
-var mainMethod: ((SynologyClient.ConnectionSettings) -> Void)? = nil
+nonisolated(unsafe) var workStarted = false
+nonisolated(unsafe) var mainMethod: ((StoredCredentials) -> Void)?
 
-var mainViewController: DownloadsViewController? = nil
+nonisolated(unsafe) var mainViewController: DownloadsViewController?
 
-var currentViewController: NSViewController? = nil
-
-
-func registerEvent(type: String, unique: Bool) {
-}
+nonisolated(unsafe) var currentViewController: NSViewController?
 
 
 func prettifyBytesCount(bytesCount: Double) -> String {
@@ -58,7 +49,7 @@ func prettifyBytesCount(bytesCount: Double) -> String {
         factor = 1024
         unit = "KB"
     }
-    
+
     return "\((bytesCount / factor).round(to: 2)) \(unit)"
 }
 
@@ -79,6 +70,6 @@ func prettifySpeed(speed: Double) -> String {
         factor = 1024
         unit = "KB/s"
     }
-    
+
     return "\((speed / factor).round(to: 2)) \(unit)"
 }

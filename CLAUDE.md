@@ -21,35 +21,37 @@ human, `README.md` is a better starting point.
 
 | File | Role |
 |---|---|
-| `AppDelegate.swift` | `@main` entry point, handles URL-scheme deep links and `.torrent` file opens. |
-| `SynologyClient.swift` | **Legacy** DSM API client (Alamofire + SwiftyJSON). Being replaced incrementally by `Network/SynologyAPI.swift`; both exist in parallel during Phase 2a, then old is deleted in Phase 2a-2. Do not add new features here. |
-| `Network/SynologyAPI.swift` | **Target-state** DSM API client. Actor-isolated, `URLSession` + `async/await`, typed errors, cookie-based session auth (no `_sid` in URLs). Add new endpoints here. |
+| `AppDelegate.swift` | `@main` entry point, handles URL-scheme deep links and `.torrent` file opens. Also installs the TLS first-use approval handler. |
+| `Network/SynologyAPI.swift` | DSM API client. Actor-isolated, `URLSession` + `async/await`, typed errors, `_sid` in POST body (never URL). Add new endpoints here. |
 | `Network/SynologyAPIModels.swift` | `Codable` DTOs for DSM responses. Keep 1:1 with DSM's wire format; translate into richer app types at the call site, not here. |
-| `Network/SynologyTrustEvaluator.swift` | `URLSessionDelegate` that performs SPKI pinning (RFC 7469 "pin-sha256"). Replaces the old `DisabledEvaluator`. First-use fingerprints are handed to `pendingApproval` for UI approval (TOFU); mismatches against an existing pin are refused outright. |
-| `Network/SynologyError.swift` | Typed error surface (`SynologyError`). Add new failure modes here, not `NSError`. |
+| `Network/SynologyTrustEvaluator.swift` | `URLSessionDelegate` that performs SPKI pinning (RFC 7469 "pin-sha256"). First-use fingerprints are handed to `firstUseDecision` for UI approval (TOFU); mismatches against an existing pin are refused outright. |
+| `Network/SynologyError.swift` | Typed error surface (`SynologyError`) plus DSM-error-code→message mapping. Add new failure modes here, not `NSError`. |
 | `Network/AppLogger.swift` | `os.Logger` categories — `network`, `auth`, `security`, `keychain`. Always use these; never `print(…)` in shipped code. |
-| `Settings.swift` | Credential persistence via KeychainAccess. Target-state (Phase 2b) wraps `SecItem*` directly with proper accessibility flags. |
-| `Shared.swift` | Global mutable singletons (`synologyClient`, `mainViewController`, `currentViewController`). To be removed when we adopt Observation in Phase 4. |
+| `Settings.swift` | `StoredCredentials` type + Keychain persistence (via KeychainAccess). Phase 2b replaces KeychainAccess with a direct `SecItem*` wrapper. |
+| `Shared.swift` | Global mutable state (`synologyAPI`, `mainViewController`, `currentViewController`, etc.), annotated `nonisolated(unsafe)` under complete concurrency. Replaced by an `@Observable` app model in Phase 4. |
 | `Webserver.swift` | Loopback HTTP server on port 11863 used by the Safari extension to enqueue downloads. **Unauthenticated** — scheduled for removal in Phase 3 in favour of `NSXPCConnection`. |
 | `ViewControllers/` | Cocoa view controllers, one per screen. |
 | `DestinationView.swift`, `DownloadsCellView.swift`, `LoadableView.swift` | Custom `NSView` subclasses loaded from XIB. |
 
-## Conventions (target-state)
+## Conventions
 
-- **No `print` for diagnostics** — use `os.Logger` with a subsystem of
-  `com.skavans.synologyDSManager`.
+- **No `print` for diagnostics** — use `os.Logger` via `AppLogger` with a
+  subsystem of `com.skavans.synologyDSManager`.
 - **No force-unwraps / force-tries** on network data. Validate at system
   boundaries, propagate typed errors upward. SwiftLint is configured to warn
   on `!` and `try!` (`force_unwrapping`, `force_try`).
-- **No SwiftyJSON in new code** — use `Codable`. Existing SwiftyJSON use is
-  being removed incrementally; do not introduce new call sites.
-- **No Alamofire in new code** — use `URLSession` with `async/await`.
+- **No Alamofire / SwiftyJSON** — both were removed in Phase 2a-2d. Use
+  `URLSession` + `async/await` and `Codable`.
 - **Keychain access** must use `.whenUnlockedThisDeviceOnly` accessibility at
   minimum. Never persist session IDs across launches.
-- **TLS**: no `DisabledEvaluator`. Self-signed NAS certs are handled via
-  explicit, user-confirmed SPKI pinning (Phase 2 design).
+- **TLS**: never disable trust evaluation. Self-signed NAS certs are handled
+  via explicit, user-confirmed SPKI pinning in `SynologyTrustEvaluator`.
 - **Logging**: never log passwords, OTP codes, session IDs, or full request
-  URLs containing `_sid`.
+  URLs / bodies containing `_sid`.
+- **Concurrency**: `SWIFT_STRICT_CONCURRENCY = complete`. Actor-isolated
+  state lives inside `SynologyAPI`; the rest of the app is effectively
+  main-thread-only. Globals in `Shared.swift` are `nonisolated(unsafe)` —
+  don't add more.
 
 ## Commands
 

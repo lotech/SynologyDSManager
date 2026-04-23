@@ -170,7 +170,7 @@ class DownloadsViewController: NSViewController, NSWindowDelegate {
 
     // MARK: - Setup
 
-    private func doWork(settings: SynologyClient.ConnectionSettings) {
+    private func doWork(settings: StoredCredentials) {
         // Cancel any previous refresh loop. Defensive: with `workStarted`
         // being set below, a repeat Test Connection takes the else-branch
         // in SettingsViewController and doesn't re-enter doWork. This
@@ -178,15 +178,8 @@ class DownloadsViewController: NSViewController, NSWindowDelegate {
         refreshTask?.cancel()
         refreshTask = nil
 
-        let port = Int(settings.port) ?? 5001
         synologyAPI = SynologyAPI(
-            credentials: SynologyAPI.Credentials(
-                host: settings.host,
-                port: port,
-                username: settings.username,
-                password: settings.password,
-                otp: settings.otp.isEmpty ? nil : settings.otp
-            ),
+            credentials: settings.apiCredentials,
             trustEvaluator: synologyTrustEvaluator
         )
 
@@ -222,8 +215,7 @@ class DownloadsViewController: NSViewController, NSWindowDelegate {
     }
 
     public func downloadByURLFromExtension(URL url: String) {
-        registerEvent(type: "firstExtensionUse", unique: true)
-        guard let api = synologyAPI else { return }
+guard let api = synologyAPI else { return }
 
         let content = UNMutableNotificationContent()
         content.title = "Download started"
@@ -302,8 +294,6 @@ class DownloadsViewController: NSViewController, NSWindowDelegate {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-
-        registerEvent(type: "firstOpen", unique: true)
 
         mainViewController = self
         mainMethod = self.doWork
