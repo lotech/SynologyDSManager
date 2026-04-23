@@ -22,7 +22,7 @@ import Foundation
 /// `NSObject` + `@objc` because `NSXPCConnection` requires it.
 final class SynologyBridgeService: NSObject, SynologyBridgeProtocol {
 
-    func enqueueDownload(url: String, reply: @escaping (Bool, String?) -> Void) {
+    func enqueueDownload(url: String, reply: @Sendable @escaping (Bool, String?) -> Void) {
         // Reject obviously-bad input up front so we don't bother the
         // main actor / DSM on trivially invalid requests.
         guard let trimmed = Self.sanitised(url) else {

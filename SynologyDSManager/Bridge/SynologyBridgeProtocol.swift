@@ -39,6 +39,9 @@ import Foundation
     ///     the download request was handed to `SynologyAPI` — not that
     ///     DSM has acknowledged it yet. `errorMessage` is non-nil only
     ///     when `accepted == false` and is safe to show to the user
-    ///     (no internal state / session IDs).
-    func enqueueDownload(url: String, reply: @escaping (Bool, String?) -> Void)
+    ///     (no internal state / session IDs). `@Sendable` because
+    ///     `NSXPCConnection` may invoke it on its private queue and
+    ///     the service implementation hops to its own `Task` before
+    ///     calling it — so the closure crosses isolation boundaries.
+    func enqueueDownload(url: String, reply: @Sendable @escaping (Bool, String?) -> Void)
 }
