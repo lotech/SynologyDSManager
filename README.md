@@ -62,12 +62,21 @@ and write it to `Signing.local.xcconfig`, which is gitignored so your Team ID
 never ends up in the public repo. All subsequent builds (both from Xcode and
 from `deploy.sh`) pick it up automatically via the `Signing.xcconfig` cascade.
 
-Swift Package dependencies are resolved automatically by Xcode. The only
-remaining third-party dependency is **Swifter**, which backs the
-unauthenticated loopback HTTP bridge used by the Safari App Extension.
-It goes away in Phase 3 along with the whole extension-to-XPC migration.
-(Alamofire + SwiftyJSON were removed in Phase 2a-2d; KeychainAccess in
-Phase 2b.)
+### Dependencies
+
+Phase 2 of the modernisation plan removed every security-sensitive
+third-party Swift package. The app's DSM client, TLS pinning, Keychain
+access, and all response parsing are now done against Apple's own
+SDKs. One third-party dep remains — **Swifter** — used by
+`Webserver.swift` to host the loopback HTTP bridge to the Safari
+extension. Phase 3 replaces the whole bridge with an `NSXPCConnection`
++ Safari Web Extension pairing, at which point Swifter comes out too
+and the project has zero third-party runtime dependencies.
+
+Dropped during modernisation:
+- Alamofire, SwiftyJSON — replaced by `URLSession` + `async/await` +
+  `Codable` in Phase 2a
+- KeychainAccess — replaced by a direct `SecItem*` wrapper in Phase 2b
 
 ### Signing & distribution
 
@@ -91,14 +100,25 @@ Phase 2b.)
 
 ```
 SynologyDSManager/            # Main macOS app target
-  AppDelegate.swift
-  SynologyClient.swift        # DSM API client (to be rewritten in Phase 2)
-  Settings.swift              # Keychain-backed credential store
-  Webserver.swift             # Local HTTP bridge (to be removed in Phase 3)
-  ViewControllers/            # Cocoa controllers (to be ported to SwiftUI in Phase 4)
+  AppDelegate.swift           # @main entry point; installs SPKI approval handler
+  Network/                    # DSM API client (Phase 2a)
+    SynologyAPI.swift         #   Actor, URLSession + async/await
+    SynologyAPIModels.swift   #   Codable DTOs
+    SynologyTrustEvaluator.swift # SPKI pinning (RFC 7469)
+    SynologyError.swift       #   Typed error surface + DSM code mapping
+    AppLogger.swift           #   os.Logger categories
+  KeychainStore.swift         # SecItem* wrapper (Phase 2b)
+  Settings.swift              # StoredCredentials + Keychain persistence
+  Shared.swift                # Module-level state (Phase 4 replaces this)
+  Webserver.swift             # Loopback HTTP bridge — removed in Phase 3
+  ViewControllers/            # Cocoa controllers — ported to SwiftUI in Phase 4
   Base.lproj/Main.storyboard
 
-SynologyDSManager Extension/  # Legacy Safari App Extension (to be migrated in Phase 3)
+SynologyDSManager Extension/  # Legacy Safari App Extension — replaced in Phase 3
+
+SynologyDSManagerTests/       # macOS unit-test bundle hosted by the app
+  URLProtocolStub.swift       # In-memory URLSession fake
+  SynologyAPITests.swift      # 23 tests, including regression-guards
 ```
 
 ## Contributing

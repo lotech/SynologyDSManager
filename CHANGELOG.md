@@ -117,6 +117,23 @@ commit that makes them.
   the second and subsequent Test Connections, as originally intended.
 
 ### Fixed
+- **Final two strict-concurrency warnings cleared**, completing the
+  zero-warning goal after `SWIFT_STRICT_CONCURRENCY = complete` landed
+  in Phase 2a-2d:
+  - `Settings.swift`: the module-level `userDefaults` global was flagged
+    because `UserDefaults` isn't formally `Sendable`. Annotated with
+    `nonisolated(unsafe)` (same pattern as `Shared.swift`'s globals)
+    and switched `UserDefaults()` to `.standard` which is the idiomatic
+    spelling for the shared instance.
+  - `Webserver.swift`: Swifter's HTTP handler runs on a background
+    queue but called `DownloadsViewController.downloadByURLFromExtension`
+    which is `@MainActor`-isolated. Wrapped the call in
+    `Task { @MainActor in … }`, passing the URL String (a `Sendable`
+    value) across. Same runtime behaviour (still lands on main), now
+    provably correct to the compiler. This fix is a stop-gap — the
+    whole file is deleted in Phase 3 when the unauthenticated loopback
+    bridge is replaced with a Safari Web Extension + native messaging
+    host bridge.
 - **Phase 2a-2b regression: empty task list after migrated Downloads screen
   connected to DSM**. `SynologyAPI` was authenticating fine (and storing
   a session cookie), but DSM returned a successful-but-empty task list

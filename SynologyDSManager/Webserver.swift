@@ -21,9 +21,18 @@ private func handle_new_download_task(request: HttpRequest) -> HttpResponse {
     let request_data = request_body.data(using: .utf8)!
     let decoder = JSONDecoder()
     let data = try! decoder.decode(message.self, from: request_data)
-    
-    mainViewController!.downloadByURLFromExtension(URL: data.url)
-    
+
+    // Swifter invokes this handler on its own background dispatch queue,
+    // but `downloadByURLFromExtension` is a main-actor-isolated method
+    // on DownloadsViewController. Hop to the main actor explicitly.
+    // (Whole file is scheduled for deletion in Phase 3 when the
+    // unauthenticated loopback bridge is replaced with NSXPCConnection;
+    // this is a warnings-clean-up stop-gap.)
+    let url = data.url
+    Task { @MainActor in
+        mainViewController?.downloadByURLFromExtension(URL: url)
+    }
+
     return HttpResponse.raw(200, "OK", ["Access-Control-Allow-Origin": "*"], {try! $0.write("OK".data(using: String.Encoding.utf8)!)})
 }
 

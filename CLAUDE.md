@@ -3,19 +3,40 @@
 Orientation file for future Claude Code sessions working on this repo. If you're a
 human, `README.md` is a better starting point.
 
+## Modernisation status snapshot
+
+- ✅ **Phase 0** — project hygiene, CI, SHA-pinned Actions, SECURITY.md
+- ✅ **Phase 1** — macOS 13 floor, deprecated-API migration, `@main`
+- ✅ **Phase 2** — all networking + storage rewritten: `SynologyAPI` actor on
+  `URLSession`+`async/await`, typed Codable DTOs, SPKI pinning (TOFU),
+  SecItem-based Keychain wrapper. Alamofire + SwiftyJSON + KeychainAccess
+  all gone from `Package.resolved`. `SWIFT_STRICT_CONCURRENCY = complete`
+  and the project builds warning-free. 23 unit tests run in CI on every PR.
+- ⏳ **Phase 3** — Safari Web Extension + XPC bridge replacing the
+  unauthenticated loopback HTTP server; Swifter dep goes with it.
+- ⏳ **Phase 4** — SwiftUI + Observation; retire `Shared.swift` globals.
+- ⏳ **Phase 5** — release engineering (Sparkle, notarised DMGs via CI).
+
+See `MODERNIZATION_PLAN.md` for the per-phase task checklist.
+
 ## Project at a glance
 
 - **Product**: native macOS app + Safari extension that drives a Synology NAS's
   Download Station over its HTTP API.
 - **Language / UI**: Swift 5.9, AppKit + Storyboards (plus one XIB-based
-  `NSTableCellView`). No SwiftUI yet — moving there in Phase 4 of the plan.
-- **Min OS**: macOS 13 (raised from 10.13 in the Phase 1 modernisation).
+  `NSTableCellView`). No SwiftUI yet — moving there in Phase 4.
+- **Min OS**: macOS 13 (app) / macOS 14 (test bundle, because Xcode 16's
+  XCTest framework needs it).
 - **Build system**: Xcode project (`SynologyDSManager.xcodeproj`), SwiftPM for
-  dependencies. No `Package.swift`, no CocoaPods.
+  dependencies. No `Package.swift`, no CocoaPods. Only remaining
+  third-party SPM dep: **Swifter** (goes with `Webserver.swift` in Phase 3).
 - **Targets**:
   - `SynologyDSManager` — main app
-  - `SynologyDSManager Extension` — legacy Safari App Extension (deprecated
-    format; migration to Safari Web Extension scheduled in Phase 3)
+  - `SynologyDSManager Extension` — legacy Safari App Extension
+    (deprecated format; replaced by a Safari Web Extension + native
+    messaging host in Phase 3)
+  - `SynologyDSManagerTests` — macOS unit-test bundle hosted by the main
+    app, `URLProtocol`-based fake transport, 23 tests of `SynologyAPI`
 
 ## Core files (main target)
 

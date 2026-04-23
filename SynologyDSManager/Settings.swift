@@ -36,7 +36,12 @@ struct StoredCredentials: Codable, Equatable {
 }
 
 
-let userDefaults = UserDefaults()
+/// Shared `UserDefaults` handle. Marked `nonisolated(unsafe)` to tell
+/// strict concurrency we're aware the type isn't formally `Sendable`;
+/// Apple documents `UserDefaults` as safe to use from any thread and
+/// this process only ever reads/writes preferences from the main actor
+/// in practice anyway.
+nonisolated(unsafe) let userDefaults = UserDefaults.standard
 private let credentialsKey = "syno_conn_settings"
 
 
