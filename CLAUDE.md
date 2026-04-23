@@ -14,13 +14,12 @@ human, `README.md` is a better starting point.
   and the project builds warning-free. 23 unit tests run in CI on every PR.
 - 🚧 **Phase 3** — Safari Web Extension + XPC bridge replacing the
   unauthenticated loopback HTTP server; Swifter dep goes with it.
-  **3a + 3b-1 + 3b-2a shipped**: XPC scaffolding, the Web Extension
-  source tree, and the main-app-side Mach service wiring — listener
-  swapped from `.anonymous()` to `machServiceName:`, `AppDelegate`
-  registers the LaunchAgent via `SMAppService`, the LaunchAgent plist
-  ships inside `Contents/Library/LaunchAgents/`. Still waiting on
-  Phase 3b-2b (new Web Extension Xcode target + target membership
-  sharing for the protocol) before the bridge actually lights up.
+  **3a + 3b shipped**: XPC scaffolding, the Web Extension source tree,
+  the main-app-side Mach service wiring, the Web Extension Xcode target
+  itself, and the bundled toolbar icons. End-to-end path
+  (Safari → extension handler → XPC → main app → DSM) is functional.
+  Phase 3c retires the legacy `SynologyDSManager Extension` target and
+  `Webserver.swift` once 3b's in real-world use.
 - ⏳ **Phase 4** — SwiftUI + Observation; retire `Shared.swift` globals.
 - ⏳ **Phase 5** — release engineering (Sparkle, notarised DMGs via CI).
 
@@ -42,7 +41,8 @@ See `MODERNIZATION_PLAN.md` for the per-phase task checklist.
   - `SynologyDSManager Extension` — legacy Safari App Extension
     (deprecated format; retires in Phase 3c)
   - `SynologyDSManager WebExtension` — Safari Web Extension (source
-    tree at `WebExtension/`; Xcode target lands in Phase 3b-2)
+    tree at `WebExtension/`, compiled as of Phase 3b-2b; bundle ID
+    `com.skavans.synologyDSManager.bridge`)
   - `SynologyDSManagerTests` — macOS unit-test bundle hosted by the main
     app, `URLProtocol`-based fake transport, 23 tests of `SynologyAPI`
 
@@ -51,9 +51,9 @@ See `MODERNIZATION_PLAN.md` for the per-phase task checklist.
 | File | Role |
 |---|---|
 | `AppDelegate.swift` | `@main` entry point, handles URL-scheme deep links and `.torrent` file opens. Installs the TLS first-use approval handler. Retains the `SynologyBridgeListener`. |
-| `Bridge/SynologyBridgeProtocol.swift` | `@objc` protocol exposed over XPC to the Safari Web Extension's `SafariWebExtensionHandler`. Currently one method: `enqueueDownload(url:reply:)`. Kept deliberately minimal so the wire surface stays easy to audit. Shared target membership with the Web Extension (once 3b-2 lands). |
+| `Bridge/SynologyBridgeProtocol.swift` | `@objc` protocol exposed over XPC to the Safari Web Extension's `SafariWebExtensionHandler`. Currently one method: `enqueueDownload(url:reply:)`. Kept deliberately minimal so the wire surface stays easy to audit. Target-membership-shared with the Web Extension target so both sides compile against the same `@objc` definition. |
 | `Bridge/SynologyBridgeService.swift` | `NSObject` implementation of `SynologyBridgeProtocol`. Validates incoming URLs (scheme allowlist, length cap), hops to `@MainActor` to read the global `synologyAPI`, and forwards to `SynologyAPI.createTask(url:)`. |
-| `Bridge/SynologyBridgeListener.swift` | `NSXPCListener` + `NSXPCListenerDelegate`. Anonymous listener in Phase 3a (not externally reachable); Phase 3b swaps to `NSXPCListener(machServiceName:)` once the LaunchAgent plist is bundled. |
+| `Bridge/SynologyBridgeListener.swift` | `NSXPCListener` + `NSXPCListenerDelegate` on the named Mach service `com.skavans.synologyDSManager.bridge`. Published to launchd via a bundled LaunchAgent plist + `SMAppService.agent(plistName:)` registration at launch. |
 | `Bridge/ClientAuthorization.swift` | Peer code-signature validation via `auditToken` + `SecCodeCopyGuestWithAttributes` + `SecRequirementCreateWithString`. Refuses connections whose peer isn't our own native messaging host signed by our Team ID. |
 | `Network/SynologyAPI.swift` | DSM API client. Actor-isolated, `URLSession` + `async/await`, typed errors, `_sid` in POST body (never URL). Add new endpoints here. |
 | `Network/SynologyAPIModels.swift` | `Codable` DTOs for DSM responses. Keep 1:1 with DSM's wire format; translate into richer app types at the call site, not here. |
@@ -66,12 +66,12 @@ See `MODERNIZATION_PLAN.md` for the per-phase task checklist.
 | `Webserver.swift` | Loopback HTTP server on port 11863 used by the Safari extension to enqueue downloads. **Unauthenticated** — scheduled for removal in Phase 3 in favour of `NSXPCConnection`. |
 | `ViewControllers/` | Cocoa view controllers, one per screen. |
 | `DestinationView.swift`, `DownloadsCellView.swift`, `LoadableView.swift` | Custom `NSView` subclasses loaded from XIB. |
-| `LaunchAgents/com.skavans.synologyDSManager.bridge.plist` | launchd plist bundled at `Contents/Library/LaunchAgents/` that advertises the bridge's Mach service name. Registered programmatically via `SMAppService.agent(plistName:)` at first launch (wiring lands in Phase 3b-2). |
+| `LaunchAgents/com.skavans.synologyDSManager.bridge.plist` | launchd plist bundled at `Contents/Library/LaunchAgents/` that advertises the bridge's Mach service name. Registered programmatically via `SMAppService.agent(plistName:)` at first launch. |
 
 ## Web Extension source (`WebExtension/`)
 
-Source tree for the Safari Web Extension target (which Phase 3b-2
-will compile). See `WebExtension/README.md` for detail. Headlines:
+Source tree for the Safari Web Extension target. See
+`WebExtension/README.md` for detail. Headlines:
 
 - `SafariWebExtensionHandler.swift` — the extension's
   `NSExtensionPrincipalClass`. Opens an `NSXPCConnection` to the main

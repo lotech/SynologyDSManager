@@ -11,6 +11,32 @@ commit that makes them.
 
 ## [Unreleased]
 
+### Added
+- **Phase 3b-2b — Web Extension Xcode target.** The missing half of
+  Phase 3b: the `SynologyDSManager WebExtension` target itself, which
+  compiles the source tree that shipped in 3b-1 and embeds the
+  resulting `.appex` into the main app's `Contents/PlugIns/` next to
+  the legacy extension. With 3b-2a's Mach service listener already
+  live, this is the point at which the end-to-end bridge path becomes
+  functional — a right-click on a link in Safari reaches
+  `SafariWebExtensionHandler`, opens an `NSXPCConnection` to
+  `com.skavans.synologyDSManager.bridge`, and ends up at
+  `SynologyAPI.createTask(url:)` in the main app. Credentials never
+  cross the XPC boundary; the extension only ever sees URLs. The
+  legacy `SynologyDSManager Extension` target stays enabled in
+  parallel so existing users aren't broken while the new path gets
+  real-world exercise; Phase 3c retires it and `Webserver.swift`.
+  - Target bundle ID `com.skavans.synologyDSManager.bridge` — matches
+    `ClientAuthorization.allowedPeerBundleIdentifier` so the main app
+    accepts the XPC peer.
+  - `SynologyBridgeProtocol.swift` is target-membership-shared
+    between the main app and the Web Extension; both sides compile
+    the same `@objc` protocol, and `NSXPCConnection` matches on
+    Obj-C runtime name so the wire format stays in sync.
+  - Three toolbar PNGs (48 / 96 / 128) rasterised from the legacy
+    extension's `ToolbarItemIcon.pdf` and wired into the target's
+    Copy Bundle Resources phase.
+
 ### Fixed
 - **Web Extension target's signing diverged from the main app.** Xcode's
   "Safari Web Extension" wizard had hardcoded a handful of settings at

@@ -4,7 +4,7 @@ Living document. Tick boxes as tasks land. When all tasks in a phase are
 complete, move the phase status from **In progress** / **Planned** to
 **Shipped** with the date.
 
-Last updated: 2026-04-23 (Phase 3b-2a pushed — Mach service wiring)
+Last updated: 2026-04-23 (Phase 3b-2b pushed — Web Extension target landed; bridge now end-to-end functional)
 
 ---
 
@@ -250,7 +250,7 @@ scoped Keychain access.
 - [x] Flipped `SWIFT_STRICT_CONCURRENCY` from `minimal` to `complete`
       — already done in Phase 2a-2d.
 
-## Phase 3 — Safari extension & webserver bridge · **In progress** (3a + 3b-1 + 3b-2a shipped)
+## Phase 3 — Safari extension & webserver bridge · **In progress** (3a + 3b-1 + 3b-2 shipped)
 
 Goal: eliminate the two remaining Phase-0 audit findings around the
 extension ↔ main-app bridge:
@@ -290,7 +290,7 @@ wiring that lets Phase 3b cut over.
       authorisation denial needs a second signed binary, so it's
       deferred to Phase 3b integration testing.
 
-### Phase 3b — Safari Web Extension (in progress; 3b-1 pushed)
+### Phase 3b — Safari Web Extension · **Shipped 2026-04-23**
 
 Goal: replace the deprecated `SafariExtensionHandler` with a modern
 Safari Web Extension that reaches the main app over XPC. Architecture
@@ -356,23 +356,44 @@ being approved by the user.
       build phase on the main target that bundles the plist into
       `Contents/Library/LaunchAgents/` at build time.
 
-#### Phase 3b-2b — Web Extension Xcode target (planned)
+#### Phase 3b-2b — Web Extension Xcode target · **Shipped 2026-04-23**
 
 The pieces that need Xcode's "New Target" wizard rather than
-pbxproj surgery. See `WebExtension/README.md` for the step-by-step.
+pbxproj surgery. See `WebExtension/README.md` for the step-by-step
+(kept as reference for anyone redoing this on a fork).
 
-- [ ] Add a `SynologyDSManager WebExtension` target (Xcode's "Safari
+- [x] Added a `SynologyDSManager WebExtension` target (Xcode's "Safari
       Extension App (Web Extension)" template). Bundle ID
       `com.skavans.synologyDSManager.bridge` (matches
-      `ClientAuthorization.allowedPeerBundleIdentifier`). Point its
-      sources at `WebExtension/` rather than the template's stubs.
-- [ ] Share `SynologyDSManager/Bridge/SynologyBridgeProtocol.swift`
-      with the Web Extension target (target-membership checkbox).
-- [ ] Verify the main app's Copy Files build phase embeds the
-      extension into `Contents/PlugIns/`.
-- [ ] Generate the three toolbar PNGs (`sips` one-liner in
-      `WebExtension/Resources/icons/README.md`).
-- [ ] The legacy `SynologyDSManager Extension` target stays enabled
+      `ClientAuthorization.allowedPeerBundleIdentifier`). Deleted the
+      template's auto-generated stubs and pointed the target at the
+      existing `WebExtension/` source tree (`SafariWebExtensionHandler.swift`,
+      `Info.plist`, entitlements, `Resources/`).
+- [x] Shared `SynologyDSManager/Bridge/SynologyBridgeProtocol.swift`
+      with the Web Extension target via target-membership checkbox.
+      `@objc` protocols match over XPC by Obj-C runtime name, so both
+      compiled copies agree on the wire format.
+- [x] Verified the main app's "Embed App Extensions" Copy Files phase
+      carries the new `.appex` into `Contents/PlugIns/`, next to the
+      legacy extension.
+- [x] Generated the three toolbar PNGs from the legacy PDF
+      (`WebExtension/Resources/icons/toolbar-{48,96,128}.png`) and wired
+      them into the WebExtension target's Copy Bundle Resources phase.
+- [x] Normalised the target's build settings to match the main app's
+      signing cascade — stripped the wizard-injected
+      `CODE_SIGN_IDENTITY` / `CODE_SIGN_STYLE` target-level overrides
+      so the `Signing.xcconfig` per-configuration logic drives signing
+      the same way it drives the main app; dropped
+      `GENERATE_INFOPLIST_FILE = YES` and stale `INFOPLIST_KEY_*` keys
+      so our hand-authored `WebExtension/Info.plist` is used verbatim;
+      normalised `MACOSX_DEPLOYMENT_TARGET`, `CURRENT_PROJECT_VERSION`,
+      and `MARKETING_VERSION` to match the app.
+- [x] Rewrote `SafariWebExtensionHandler.swift` around
+      `withCheckedContinuation` to keep the `@Sendable` XPC reply from
+      capturing `NSExtensionContext` / `NSXPCConnection` / `self`
+      across an isolation boundary; both are instead passed into the
+      outer `Task` via a private `@unchecked Sendable` envelope.
+- [x] The legacy `SynologyDSManager Extension` target stays enabled
       throughout 3b so existing users keep working; retired in 3c.
 
 ### Phase 3c — Delete the loopback bridge (planned)
