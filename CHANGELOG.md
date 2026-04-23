@@ -11,6 +11,33 @@ commit that makes them.
 
 ## [Unreleased]
 
+### Changed
+- **`deploy.sh` flow.** Three related fixes, one commit:
+  - **Fixed a silent `i` (install) failure** where the built app never
+    made it to `/Applications/` but the script still printed
+    *"✓ Installed"*. Root cause: `info`/`ok` log helpers wrote to
+    stdout, so a function like `_build_release` that both logged
+    progress *and* returned a path via `echo "$built"` leaked the
+    log line into the caller's `$()` capture. `cp -R "$built" "$dest"`
+    then tried to copy a garbled multi-line source and failed, but
+    `action_install` runs under `|| true` in the menu (which, per a
+    bash quirk, suppresses `set -e` inside the function), so the
+    error went unchecked. Routed `info`/`ok` to stderr, added an
+    explicit `cp` exit check, and report the installed size so the
+    copy visibly landed.
+  - **Menu no longer requires pressing a key between actions.** The
+    per-action `pause` prompts are gone and `clear` no longer runs
+    inside `print_menu`, so the last action's output stays visible
+    above a fresh menu render and the user flows straight to the
+    next command.
+  - **Build output more human-readable.** Dropped `xcbeautify`'s
+    `--quiet` flag so stage headers ("Compiling…", "Linking…",
+    "Signing…") make it through; report total build time on
+    completion; and switched the Release build's destination to
+    `generic/platform=macOS`, which silences the "multiple matching
+    destinations" warning on Apple Silicon Macs and leaves arch
+    selection to `ARCHS` as intended.
+
 ### Added
 - **Phase 3b-2b — Web Extension Xcode target.** The missing half of
   Phase 3b: the `SynologyDSManager WebExtension` target itself, which
