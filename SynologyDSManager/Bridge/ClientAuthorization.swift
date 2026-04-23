@@ -21,6 +21,20 @@ import Foundation
 import Security
 
 
+/// `NSXPCConnection.auditToken` exists — it's declared in
+/// `<Foundation/NSXPCConnection_Private.h>` and has been stable since
+/// macOS 10.7 — but Swift doesn't import SPI headers, so the property
+/// isn't visible on the Swift type. The canonical workaround (used by
+/// Apple's own sample code and every serious open-source XPC helper)
+/// is to redeclare the selector on a private `@objc` protocol and
+/// `unsafeBitCast` the connection to it. This is a Developer ID app,
+/// not Mac App Store, so calling SPI here is acceptable; an equivalent
+/// `xpc_connection_get_audit_token` path exists but is equally SPI.
+@objc private protocol _NSXPCConnectionAuditToken {
+    var auditToken: audit_token_t { get }
+}
+
+
 enum ClientAuthorization {
 
     /// Bundle identifier of the only process we expect to connect to
@@ -40,8 +54,9 @@ enum ClientAuthorization {
     static func isTrusted(connection: NSXPCConnection) -> Bool {
         // Extract the peer's audit token — `auditToken` is a fixed
         // identifier for the peer process that can't be race-confused
-        // the way a PID can be reused after exit.
-        var token = connection.auditToken
+        // the way a PID can be reused after exit. Reached via the
+        // `_NSXPCConnectionAuditToken` protocol cast above.
+        var token = unsafeBitCast(connection, to: _NSXPCConnectionAuditToken.self).auditToken
         let tokenData = withUnsafePointer(to: &token) {
             Data(bytes: $0, count: MemoryLayout<audit_token_t>.size)
         }
