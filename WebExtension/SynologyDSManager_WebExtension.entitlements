@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>com.apple.security.app-sandbox</key>
+	<true/>
+
+	<!--
+	The Web Extension runs in its own sandboxed process. To open an
+	NSXPCConnection to the main app's LaunchAgent-registered Mach
+	service we need an explicit allow entry — sandboxed processes
+	can't look up arbitrary global Mach names.
+	-->
+	<key>com.apple.security.temporary-exception.mach-lookup.global-name</key>
+	<array>
+		<string>com.skavans.synologyDSManager.bridge</string>
+	</array>
+</dict>
+</plist>

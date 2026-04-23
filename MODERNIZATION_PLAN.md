@@ -4,7 +4,7 @@ Living document. Tick boxes as tasks land. When all tasks in a phase are
 complete, move the phase status from **In progress** / **Planned** to
 **Shipped** with the date.
 
-Last updated: 2026-04-23 (Phase 3a pushed — XPC scaffolding)
+Last updated: 2026-04-23 (Phase 3b-1 pushed — Safari Web Extension scaffolding)
 
 ---
 
@@ -250,7 +250,7 @@ scoped Keychain access.
 - [x] Flipped `SWIFT_STRICT_CONCURRENCY` from `minimal` to `complete`
       — already done in Phase 2a-2d.
 
-## Phase 3 — Safari extension & webserver bridge · **In progress** (3a shipped)
+## Phase 3 — Safari extension & webserver bridge · **In progress** (3a + 3b-1 shipped)
 
 Goal: eliminate the two remaining Phase-0 audit findings around the
 extension ↔ main-app bridge:
@@ -290,23 +290,76 @@ wiring that lets Phase 3b cut over.
       authorisation denial needs a second signed binary, so it's
       deferred to Phase 3b integration testing.
 
-### Phase 3b — Safari Web Extension (planned)
+### Phase 3b — Safari Web Extension (in progress; 3b-1 pushed)
 
-Goal: replace the deprecated `SafariExtensionHandler` with a modern Web
-Extension + native messaging host.
+Goal: replace the deprecated `SafariExtensionHandler` with a modern
+Safari Web Extension that reaches the main app over XPC. Architecture
+revision relative to the original plan: there is **no separate native-
+messaging-host CLI**. Safari Web Extensions communicate with their
+containing app via `browser.runtime.sendNativeMessage`, which arrives
+at a `SafariWebExtensionHandler` subclass in the extension's own
+`.appex` — that subclass is the XPC client, running in the extension's
+sandboxed process.
 
-- [ ] New `SynologyDSManager WebExtension` target (Xcode's "Safari
-      Extension App (Web Extension)" template). MV3 `manifest.json`,
-      service worker, content script, toolbar icon.
-- [ ] New `SynologyDSManagerBridge` native-messaging-host target: a small
-      Swift CLI bundled inside the app. stdin JSON messages in, stdout
-      JSON replies out. Internally opens an `NSXPCConnection` to the main
-      app's listener from 3a and forwards the enqueue requests.
-- [ ] Migrate `script.js`'s "Download with Synology DS Manager"
-      context-menu handler over to the Web Extension's message-dispatch
-      shape.
-- [ ] The old Safari App Extension target stays during 3b so users with
-      it enabled keep working; removed in 3c.
+#### Phase 3b-1 — source scaffolding · **Shipped 2026-04-23**
+
+All new code, zero changes to existing compiled surface. Ships the
+files the 3b-2 Xcode target will compile.
+
+- [x] `WebExtension/SafariWebExtensionHandler.swift` — `NSExtensionRequestHandling`
+      subclass that opens `NSXPCConnection(machServiceName:)` to the
+      main app, dispatches one call per message, and replies with
+      `{ok, error?}`. One-shot connections — no long-lived state in
+      the sandboxed process.
+- [x] `WebExtension/Resources/manifest.json` — MV3 manifest declaring
+      the `contextMenus` + `nativeMessaging` permissions and the
+      background service worker.
+- [x] `WebExtension/Resources/background.js` — registers the right-
+      click context-menu item (`contexts: ["link"]`) and forwards the
+      chosen URL to the native handler. Content-script-free: Safari
+      resolves the enclosing `<a>` automatically.
+- [x] `WebExtension/Resources/_locales/en/messages.json` — i18n
+      strings (extension name, description, menu item).
+- [x] `WebExtension/Info.plist` + `SynologyDSManager_WebExtension.entitlements`
+      — extension-point wiring and sandbox entitlements (with a
+      `mach-lookup.global-name` exception for the bridge's Mach
+      service, since sandboxed processes can't look up arbitrary
+      global Mach names).
+- [x] `SynologyDSManager/LaunchAgents/com.skavans.synologyDSManager.bridge.plist`
+      — launchd plist that advertises the `com.skavans.synologyDSManager.bridge`
+      Mach service name. On-demand (no `Program`/`ProgramArguments`) —
+      the service is reachable whenever the main app is running but
+      launchd never starts the app itself.
+- [x] Updated Phase 3a code comments in `ClientAuthorization.swift`
+      and `SynologyBridgeListener.swift` to reflect the finalized
+      architecture (Web Extension as peer, not a separate CLI host).
+
+#### Phase 3b-2 — Xcode target wiring (planned)
+
+All the Xcode-side surgery to turn the scaffolding into compiled
+products. See `WebExtension/README.md` for the step-by-step.
+
+- [ ] Add a `SynologyDSManager WebExtension` target (Xcode's "Safari
+      Extension App (Web Extension)" template). Bundle ID
+      `com.skavans.synologyDSManager.bridge` (matches
+      `ClientAuthorization.allowedPeerBundleIdentifier`). Point its
+      sources at `WebExtension/` rather than the template's stubs.
+- [ ] Share `SynologyDSManager/Bridge/SynologyBridgeProtocol.swift`
+      with the Web Extension target (target-membership checkbox).
+- [ ] Verify the main app's Copy Files build phase embeds the
+      extension into `Contents/PlugIns/`.
+- [ ] Add the LaunchAgent plist to the main target's Copy Files build
+      phase with destination `Contents/Library/LaunchAgents/`.
+- [ ] Register the agent on first launch with
+      `SMAppService.agent(plistName:).register()` in `AppDelegate`;
+      surface `.requiresApproval` as a modal pointing the user at
+      System Settings → General → Login Items.
+- [ ] Swap `NSXPCListener.anonymous()` → `NSXPCListener(machServiceName:)`
+      in `SynologyBridgeListener`.
+- [ ] Generate the three toolbar PNGs (`sips` one-liner in
+      `WebExtension/Resources/icons/README.md`).
+- [ ] The legacy `SynologyDSManager Extension` target stays enabled
+      throughout 3b so existing users keep working; retired in 3c.
 
 ### Phase 3c — Delete the loopback bridge (planned)
 

@@ -38,8 +38,10 @@ import Security
 enum ClientAuthorization {
 
     /// Bundle identifier of the only process we expect to connect to
-    /// the bridge. The native-messaging-host binary bundled inside
-    /// the main app (Phase 3b) uses this identifier.
+    /// the bridge. Phase 3b's Safari Web Extension target (a
+    /// `Contents/PlugIns/*.appex` inside the main app) is signed with
+    /// this identifier; its `SafariWebExtensionHandler` subclass is
+    /// the XPC client on the other end of the listener.
     static let allowedPeerBundleIdentifier = "com.skavans.synologyDSManager.bridge"
 
     /// Check whether the peer of the given `NSXPCConnection` is

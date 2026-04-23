@@ -1,0 +1,14 @@
+{
+  "extension_name": {
+    "message": "Synology DS Manager",
+    "description": "Display name of the Safari Web Extension."
+  },
+  "extension_description": {
+    "message": "Right-click any link in Safari to send it to your Synology Download Station.",
+    "description": "One-line summary shown in Safari's Extensions preferences."
+  },
+  "context_menu_download": {
+    "message": "Download with Synology DS Manager",
+    "description": "Label of the right-click menu item injected into link elements."
+  }
+}

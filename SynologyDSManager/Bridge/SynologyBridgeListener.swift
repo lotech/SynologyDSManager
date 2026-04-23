@@ -2,19 +2,22 @@
 //  SynologyBridgeListener.swift
 //  SynologyDSManager
 //
-//  Owns the `NSXPCListener` that accepts connections from the native
-//  messaging host. Validates each incoming connection via
-//  `ClientAuthorization` before exporting the bridge API; refused
-//  peers never see a protocol method.
+//  Owns the `NSXPCListener` that accepts connections from the Safari
+//  Web Extension's `SafariWebExtensionHandler`. Validates each
+//  incoming connection via `ClientAuthorization` before exporting the
+//  bridge API; refused peers never see a protocol method.
 //
 //  Phase 3a state: the listener is started in anonymous mode. Nothing
 //  outside the app can reach it because no Mach service name is
 //  registered. It's there ready for Phase 3b, which:
 //
-//    * Adds the native messaging host target (small Swift CLI bundled
-//      inside the app).
-//    * Adds a `LaunchAgent` plist bundled in the app that registers a
-//      Mach service name pointing at the main-app binary.
+//    * Adds the Safari Web Extension target (a
+//      `Contents/PlugIns/*.appex` inside the main app). Its
+//      `SafariWebExtensionHandler` subclass is the XPC client.
+//    * Bundles a `LaunchAgent` plist inside the main app that
+//      advertises a Mach service name to launchd, and registers it
+//      programmatically via `SMAppService.agent(plistName:)` at first
+//      launch.
 //    * Swaps the anonymous listener below for one created via
 //      `NSXPCListener(machServiceName:)` — same delegate, same
 //      authorisation, same service object, just reachable
