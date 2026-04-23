@@ -42,13 +42,23 @@ else
     BOLD=""; DIM=""; RED=""; GREEN=""; YELLOW=""; BLUE=""; RESET=""
 fi
 
-info()  { echo "${BLUE}==>${RESET} $*"; }
-ok()    { echo "${GREEN}✓${RESET}  $*"; }
+info()  { echo "${BLUE}==>${RESET} $*" >&2; }
+ok()    { echo "${GREEN}✓${RESET}  $*" >&2; }
 warn()  { echo "${YELLOW}!${RESET}  $*" >&2; }
 err()   { echo "${RED}✗${RESET}  $*" >&2; }
 fatal() { err "$*"; exit 1; }
 
 pause() { printf "\n${DIM}Press any key to return to the menu…${RESET}"; read -rsn1 _; echo; }
+
+# Human-readable duration for an elapsed-seconds integer. 67 → "1m 7s".
+fmt_duration() {
+    local secs=$1
+    if (( secs < 60 )); then
+        echo "${secs}s"
+    else
+        echo "$((secs / 60))m $((secs % 60))s"
+    fi
+}
 
 # ----- Sanity checks -------------------------------------------------------
 
@@ -256,26 +266,47 @@ _build_release() {
     local team="$1"
     mkdir -p "$BUILD_DIR"
 
-    info "Building Release for Team ID ${team}…"
+    info "Building Release for Team ID ${team} (this takes a minute or two)…"
+    local started=$SECONDS
+
+    # Pipe through `xcbeautify` for readable progress when it's installed,
+    # otherwise fall back to xcodebuild's raw output. `set -o pipefail`
+    # propagates xcodebuild's exit status through the pipe.
     # NB: Signing settings come from Signing.xcconfig + Signing.local.xcconfig,
     # which are wired as baseConfigurationReference in the Xcode project.
-    xcodebuild \
-        -project "$PROJECT" \
-        -scheme "$SCHEME" \
-        -configuration Release \
-        -destination 'platform=macOS' \
-        -derivedDataPath "$DERIVED_DATA" \
-        DEVELOPMENT_TEAM="$team" \
-        build \
-        | xcbeautify --quiet 2>/dev/null || true
-    # The `|| true` + xcbeautify fallback keeps output usable even if xcbeautify
-    # isn't installed. If the build actually failed, the next check catches it.
+    #
+    # All diagnostic output goes to stderr. Only the final path goes to stdout
+    # so the caller's `$(_build_release …)` capture gets a clean path.
+    local build_log
+    if command -v xcbeautify >/dev/null 2>&1; then
+        xcodebuild \
+            -project "$PROJECT" \
+            -scheme "$SCHEME" \
+            -configuration Release \
+            -destination 'generic/platform=macOS' \
+            -derivedDataPath "$DERIVED_DATA" \
+            DEVELOPMENT_TEAM="$team" \
+            build \
+            2>&1 | xcbeautify >&2
+    else
+        xcodebuild \
+            -project "$PROJECT" \
+            -scheme "$SCHEME" \
+            -configuration Release \
+            -destination 'generic/platform=macOS' \
+            -derivedDataPath "$DERIVED_DATA" \
+            DEVELOPMENT_TEAM="$team" \
+            build >&2
+    fi
 
     local built="${DERIVED_DATA}/Build/Products/Release/${APP_NAME}"
     if [[ ! -d "$built" ]]; then
         err "Build did not produce ${built}."
         return 1
     fi
+
+    local elapsed=$((SECONDS - started))
+    ok "Build finished in $(fmt_duration "$elapsed")."
     echo "$built"
 }
 
@@ -294,12 +325,18 @@ action_install() {
     fi
 
     info "Copying built app to ${dest}…"
-    cp -R "$built" "$dest"
+    if ! cp -R "$built" "$dest"; then
+        err "Copy failed: ${built} → ${dest}"
+        return 1
+    fi
 
     # Clear the quarantine attribute so Gatekeeper doesn't prompt after install.
     xattr -dr com.apple.quarantine "$dest" 2>/dev/null || true
 
-    ok "Installed: ${dest}"
+    # Report the installed size so it's clear the copy actually landed.
+    local size
+    size="$(du -sh "$dest" 2>/dev/null | awk '{print $1}')"
+    ok "Installed ${dest} (${size:-unknown size})."
     printf "Launch now? [y/N] "
     local reply
     read -rsn1 reply
@@ -382,7 +419,10 @@ print_menu() {
         status_line="${GREEN}signing: Team ${team_id}${RESET}"
     fi
 
-    clear
+    # No `clear` here — output from the last action stays visible above the
+    # menu, so the user can read build logs, error messages, etc. without
+    # needing to press a key first.
+    echo
     cat <<EOF
 ${BOLD}SynologyDSManager — deploy.sh${RESET}
 ${DIM}$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo '(no git branch)') · ${status_line}${DIM}${RESET}
@@ -405,12 +445,18 @@ main_loop() {
         local key
         read -rsn1 key
         echo
+        # Actions print their own status. We don't `pause` between actions
+        # any more — the menu just reprints (with a blank line above it) so
+        # the user flows from command to command without pressing Enter.
+        # `|| true` keeps the shell alive if an action fails, and suppresses
+        # `set -e` inside the action; each `action_*` therefore needs to
+        # check its own critical return codes and surface errors explicitly.
         case "$key" in
-            p|P) action_pull_main        || true; pause ;;
-            o|O) action_open_xcode       || true; pause ;;
-            s|S) action_configure_signing|| true; pause ;;
-            i|I) action_install          || true; pause ;;
-            d|D) action_dmg              || true; pause ;;
+            p|P) action_pull_main         || true ;;
+            o|O) action_open_xcode        || true ;;
+            s|S) action_configure_signing || true ;;
+            i|I) action_install           || true ;;
+            d|D) action_dmg               || true ;;
             q|Q) echo "Bye."; exit 0 ;;
             "")  ;;  # stray newline
             *)   warn "Unknown option: $key"; sleep 0.5 ;;
