@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    LaunchAgent plist bundled inside the main app at
+
+        SynologyDSManager.app/Contents/Library/LaunchAgents/
+            com.skavans.synologyDSManager.bridge.plist
+
+    Phase 3b-2 will register this agent programmatically at first
+    launch via `SMAppService.agent(plistName:).register()` (macOS 13+).
+
+    Role
+    ----
+    Advertises the `com.skavans.synologyDSManager.bridge` Mach service
+    name to launchd. Once registered, the sandboxed Safari Web
+    Extension can open an `NSXPCConnection(machServiceName:)` to the
+    main app. `SynologyBridgeListener` in the main target then swaps
+    its `NSXPCListener.anonymous()` (Phase 3a) for
+    `NSXPCListener(machServiceName:)` on the same name.
+
+    Why not ProgramArguments / Program
+    ----------------------------------
+    Neither `Program` nor `ProgramArguments` is present because the
+    agent is "on-demand": launchd should NOT start the main app in
+    the background, it should only advertise the name so that when
+    the app IS running, the service is reachable. Any connection
+    attempt made while the app is not running simply fails — which
+    is the correct behaviour for a GUI-app-hosted service.
+
+    `OnDemand = true` is the default for `MachServices` agents, but
+    we set it explicitly to document intent.
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>com.skavans.synologyDSManager.bridge</string>
+
+	<key>MachServices</key>
+	<dict>
+		<key>com.skavans.synologyDSManager.bridge</key>
+		<true/>
+	</dict>
+
+	<key>LimitLoadToSessionType</key>
+	<string>Aqua</string>
+
+	<key>OnDemand</key>
+	<true/>
+</dict>
+</plist>

@@ -12,6 +12,51 @@ commit that makes them.
 ## [Unreleased]
 
 ### Added
+- **Phase 3b-1 — Safari Web Extension source scaffolding.** Source
+  tree for the replacement Safari extension, in the new
+  `WebExtension/` directory. No compiled-code changes yet — this
+  ships only the files that Phase 3b-2 will bring into an Xcode
+  target. The existing legacy `SynologyDSManager Extension` keeps
+  working and stays enabled throughout Phase 3b.
+  - `SafariWebExtensionHandler.swift` — the extension's
+    `NSExtensionPrincipalClass`, running in its own sandboxed
+    process. On each message from JS it opens a one-shot
+    `NSXPCConnection(machServiceName:)` to the main app, forwards
+    a single `enqueueDownload(url:)`, and replies with a small
+    `{ ok, error? }` payload. Credentials never cross this
+    boundary — the handler only sees URLs to enqueue.
+  - `Resources/manifest.json` — MV3 manifest declaring the
+    `contextMenus` + `nativeMessaging` permissions, a background
+    service worker, and Safari 16.4 as the minimum version (first
+    Safari release with complete MV3 support).
+  - `Resources/background.js` — service worker that registers a
+    right-click context-menu on links (`contexts: ["link"]`) and
+    dispatches the chosen URL to the native handler. No content
+    script needed — Safari resolves the enclosing `<a>` for us,
+    replacing the old extension's walk-up-from-click-target
+    JavaScript.
+  - `Resources/_locales/en/messages.json` — i18n strings for the
+    extension name, description, and the context-menu item.
+  - `Info.plist` + `SynologyDSManager_WebExtension.entitlements` —
+    declares the `com.apple.Safari.web-extension` extension point
+    and sandbox settings. Includes an explicit
+    `mach-lookup.global-name` exception for the bridge's Mach
+    service, because sandboxed processes can't look up arbitrary
+    global Mach names.
+  - `SynologyDSManager/LaunchAgents/com.skavans.synologyDSManager.bridge.plist`
+    — launchd plist that will be bundled inside the main app's
+    `Contents/Library/LaunchAgents/`. On-demand by design (no
+    `Program`/`ProgramArguments`): the Mach service name is
+    advertised to launchd whenever the main app is running, and
+    launchd never starts the app itself. Registered
+    programmatically via `SMAppService.agent(plistName:)` in 3b-2.
+  - `WebExtension/README.md` documents the step-by-step Xcode work
+    remaining for Phase 3b-2 (new target creation, target
+    membership sharing for the bridge protocol, Copy Files phases
+    for the `.appex` and the LaunchAgent plist, the
+    `SMAppService.register()` call, and the flip from
+    `NSXPCListener.anonymous()` to `NSXPCListener(machServiceName:)`).
+
 - **Phase 3a — XPC bridge scaffolding.** Introduced a new `Bridge/`
   module that sets up the wire and trust boundary the future Safari
   Web Extension will talk across. No user-visible behaviour yet; the
@@ -80,6 +125,13 @@ commit that makes them.
     `Shared.swift`.
 
 ### Changed
+- **Phase 3a code-comment clarifications.** Tightened two comments
+  in `ClientAuthorization.swift` and `SynologyBridgeListener.swift`
+  that described the Phase 3b peer as a "native messaging host
+  binary". It's actually the Safari Web Extension's
+  `SafariWebExtensionHandler` subclass, running in an `.appex`
+  bundled at `Contents/PlugIns/`. Behaviour unchanged; the comments
+  now match the finalized architecture.
 - **Strict concurrency flipped from `minimal` to `complete`.** Swift's
   full concurrency checking is now on. Remaining globals in
   `Shared.swift` (`synologyAPI`, `workStarted`, `mainMethod`,
