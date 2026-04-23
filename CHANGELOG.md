@@ -12,6 +12,40 @@ commit that makes them.
 ## [Unreleased]
 
 ### Changed
+- **Add / Search / Destination migration (Phase 2a-2c)** — the last
+  three legacy-client-backed screens now run on `SynologyAPI`:
+  - `AddDownloadViewController` enqueues downloads via
+    `createTask(url:)` and `createTask(torrentFile:)` in a detached
+    Task so the sheet can close immediately. Errors log via
+    `AppLogger.network`; the downloads list refresh surfaces what
+    actually landed.
+  - `BTSearchController` is now built on the actor's
+    `searchTorrents` (cancellable polling inside the actor, not a
+    nested `Timer.scheduledTimer`). Typed `[BTSearchResult]` replaces
+    `JSON?`; checkbox state is tracked separately in a `Set<String>`
+    so the DTO stays pure. Cancels any in-flight search when the
+    window closes.
+  - `ChooseDestViewController` uses `listDirectories`. The `RemoteDir`
+    tree-node class moved from `SynologyClient.swift` into the view
+    controller (it's the right abstraction for `NSOutlineView` but
+    nothing else needs it).
+  - `DestinationView` dropped `import SwiftyJSON` — the
+    `downloadDestinations` UserDefaults blob is now encoded/decoded
+    via `JSONEncoder`/`JSONDecoder` in a format backward-compatible
+    with the old SwiftyJSON output (existing installs keep working).
+  - `downloadByURLFromExtension` in `DownloadsViewController` uses
+    `createTask(url:)`.
+- **Removed the transitional legacy-client authentication** —
+  `DownloadsViewController.doWork` no longer creates or authenticates
+  a `SynologyClient`; `SettingsViewController`'s credentials-change
+  branch also stopped touching the legacy client. Nothing in the app
+  references `synologyClient` anymore except its declaration in
+  `Shared.swift`; the declaration + `SynologyClient.swift` itself
+  come out in Phase 2a-2d cleanup.
+- **New regression-guard tests** for `createTask(url:)` (payload
+  shape, nil-destination omission), `searchTorrents` (poll-until-done
+  behaviour, request order), and `listDirectories` (typed decoding,
+  null-files resilience).
 - **Downloads migration (Phase 2a-2b)** — the main download list, the
   pause-all / resume-all / clear-finished toolbar actions, the per-row
   pause/resume/delete buttons, and the 3-second refresh loop now all run

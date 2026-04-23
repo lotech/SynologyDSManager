@@ -331,6 +331,138 @@ final class SynologyAPITests: XCTestCase {
         XCTAssertNil(sid)
     }
 
+    // MARK: - createTask(url:)
+
+    func test_createTask_url_sendsCorrectRequest() async throws {
+        URLProtocolStub.respondWithJSONSequence([
+            #"{"success": true, "data": {"sid": "s"}}"#,
+            #"{"success": true}"#,
+        ])
+
+        _ = try await api.authenticate()
+        try await api.createTask(url: "magnet:?xt=urn:btih:abc", destination: "downloads")
+
+        let fields = URLProtocolStub.formFields(at: 1)
+        XCTAssertEqual(fields["api"], "SYNO.DownloadStation.Task")
+        XCTAssertEqual(fields["method"], "create")
+        XCTAssertEqual(fields["uri"], "magnet:?xt=urn:btih:abc")
+        XCTAssertEqual(fields["destination"], "downloads")
+        XCTAssertEqual(fields["_sid"], "s")
+    }
+
+    func test_createTask_url_omitsDestinationWhenNil() async throws {
+        URLProtocolStub.respondWithJSONSequence([
+            #"{"success": true, "data": {"sid": "s"}}"#,
+            #"{"success": true}"#,
+        ])
+
+        _ = try await api.authenticate()
+        try await api.createTask(url: "https://example.com/file.iso", destination: nil)
+
+        let fields = URLProtocolStub.formFields(at: 1)
+        XCTAssertNil(fields["destination"],
+            "createTask should omit `destination` entirely when nil, not send an empty value")
+    }
+
+    // MARK: - searchTorrents
+
+    func test_searchTorrents_pollsUntilDoneThenReturnsResults() async throws {
+        URLProtocolStub.respondWithJSONSequence([
+            #"{"success": true, "data": {"sid": "s"}}"#,         // authenticate
+            #"{"success": true, "data": {"id": "search-42"}}"#,  // start
+            // First poll: still running
+            #"{"success": true, "data": {"is_running": true, "results": []}}"#,
+            // Second poll: done, one result
+            """
+            {
+              "success": true,
+              "data": {
+                "is_running": false,
+                "results": [
+                  {
+                    "title": "ubuntu.iso",
+                    "size": 1000,
+                    "date": "2025-01-01",
+                    "seeds": 42,
+                    "peers": 5,
+                    "provider": "example.org",
+                    "dlurl": "magnet:?xt=abc"
+                  }
+                ]
+              }
+            }
+            """,
+        ])
+
+        _ = try await api.authenticate()
+        let results = try await api.searchTorrents(query: "ubuntu")
+
+        XCTAssertEqual(results.count, 1)
+        XCTAssertEqual(results[0].title, "ubuntu.iso")
+        XCTAssertEqual(results[0].seeds, 42)
+        XCTAssertEqual(results[0].provider, "example.org")
+        XCTAssertEqual(results[0].dlurl, "magnet:?xt=abc")
+        XCTAssertEqual(results[0].id, "magnet:?xt=abc",
+            "BTSearchResult.id is synthesised from dlurl for SwiftUI identity")
+    }
+
+    func test_searchTorrents_firstRequestStartsAndSecondPolls() async throws {
+        URLProtocolStub.respondWithJSONSequence([
+            #"{"success": true, "data": {"sid": "s"}}"#,
+            #"{"success": true, "data": {"id": "search-1"}}"#,
+            #"{"success": true, "data": {"is_running": false, "results": []}}"#,
+        ])
+
+        _ = try await api.authenticate()
+        _ = try await api.searchTorrents(query: "debian")
+
+        // Request 0: authenticate
+        // Request 1: BTSearch start
+        // Request 2: BTSearch list (poll)
+        XCTAssertEqual(URLProtocolStub.formFields(at: 1)["method"], "start")
+        XCTAssertEqual(URLProtocolStub.formFields(at: 2)["method"], "list")
+        XCTAssertEqual(URLProtocolStub.formFields(at: 2)["id"], "\"search-1\"")
+    }
+
+    // MARK: - listDirectories
+
+    func test_listDirectories_decodesTypedEntries() async throws {
+        URLProtocolStub.respondWithJSONSequence([
+            #"{"success": true, "data": {"sid": "s"}}"#,
+            """
+            {
+              "success": true,
+              "data": {
+                "files": [
+                  {"name": "downloads", "path": "/volume1/downloads", "isdir": true},
+                  {"name": "music",     "path": "/volume1/music",     "isdir": true}
+                ]
+              }
+            }
+            """,
+        ])
+
+        _ = try await api.authenticate()
+        let entries = try await api.listDirectories(root: "/volume1")
+
+        XCTAssertEqual(entries.count, 2)
+        XCTAssertEqual(entries[0].name, "downloads")
+        XCTAssertEqual(entries[0].path, "/volume1/downloads")
+        XCTAssertEqual(entries[1].name, "music")
+    }
+
+    func test_listDirectories_handlesEmptyFilesArray() async throws {
+        URLProtocolStub.respondWithJSONSequence([
+            #"{"success": true, "data": {"sid": "s"}}"#,
+            #"{"success": true, "data": {"files": null}}"#,
+        ])
+
+        _ = try await api.authenticate()
+        let entries = try await api.listDirectories(root: "/empty")
+
+        XCTAssertEqual(entries, [], "null `files` should decode to an empty list without throwing")
+    }
+
     // MARK: - SynologyErrorCode mapping
 
     func test_errorCodeMessages_coverCommonCodes() {

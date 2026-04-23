@@ -9,8 +9,6 @@
 import Foundation
 import Cocoa
 
-import SwiftyJSON
-
 
 class DestinationView: NSView, LoadableView {
     @IBOutlet var topView: NSView!
@@ -70,22 +68,29 @@ class DestinationView: NSView, LoadableView {
     }
     
     
+    /// Encode the `(title, path?)` list to a JSON string stored in
+    /// UserDefaults under `"downloadDestinations"`. The on-disk shape
+    /// matches the previous SwiftyJSON-produced format —
+    /// `[[title, path_or_null], …]` — so existing installs keep
+    /// working without a migration.
     private func valuesToJsonString(values: [(String, String?)]) -> String {
-        var arr: [[String?]] = []
-        for (title, path) in values {
-            arr.append([title, path])
+        let arr: [[String?]] = values.map { [$0.0, $0.1] }
+        guard let data = try? JSONEncoder().encode(arr),
+              let string = String(data: data, encoding: .utf8) else {
+            return "[]"
         }
-        return JSON(arr).rawString()!
+        return string
     }
-    
-    
+
     private func JsonStringToValues(jsonString: String) -> [(String, String?)] {
-        var arr: [(String, String?)] = []
-        let json = JSON.init(parseJSON: jsonString)
-        for (val) in json.arrayValue {
-            arr.append((val[0].stringValue, val[1].stringValue))
+        guard let data = jsonString.data(using: .utf8),
+              let arr = try? JSONDecoder().decode([[String?]].self, from: data) else {
+            return []
         }
-        return arr
+        return arr.compactMap { pair in
+            guard pair.count >= 2, let title = pair[0] else { return nil }
+            return (title, pair[1])
+        }
     }
     
     

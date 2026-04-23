@@ -21,13 +21,49 @@ class AddDownloadViewController: NSViewController {
     var urls: [String] = []
     
     @IBAction func startDownloadButtonClicked(_ sender: Any) {
-        for t in torrents {
-            synologyClient?.startDownload(torrentFilePath: t, destination: self.destinationView.selectedDir)
+        guard let api = synologyAPI else {
+            // Without a client there's nothing to submit to. This
+            // shouldn't be reachable from the UI flow — the Add window
+            // is only shown after Settings → Test Connection succeeds —
+            // but guarding keeps a malformed state from crashing.
+            self.view.window?.close()
+            return
         }
-        for url in urls {
-            synologyClient?.startDownload(URL: url, destination: self.destinationView.selectedDir)
-        }
+
+        // Snapshot the current input lists before closing the window so
+        // the detached task still has what it needs.
+        let torrentPaths = torrents
+        let urlStrings = urls
+        let destination = self.destinationView.selectedDir
+
+        // Close immediately — the sheet doesn't need to stay open while
+        // the enqueues happen. Errors get logged; DSM's list refresh in
+        // DownloadsViewController will show what actually landed.
         self.view.window?.close()
+
+        Task.detached { [api] in
+            for path in torrentPaths {
+                do {
+                    try await api.createTask(
+                        torrentFile: URL(fileURLWithPath: path),
+                        destination: destination
+                    )
+                } catch {
+                    AppLogger.network.error(
+                        "createTask(torrentFile:) failed: \(error.localizedDescription, privacy: .public)"
+                    )
+                }
+            }
+            for url in urlStrings {
+                do {
+                    try await api.createTask(url: url, destination: destination)
+                } catch {
+                    AppLogger.network.error(
+                        "createTask(url:) failed: \(error.localizedDescription, privacy: .public)"
+                    )
+                }
+            }
+        }
     }
     
     @IBAction func chooseTorrentFileButtonClicked(_ sender: Any) {

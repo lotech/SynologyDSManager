@@ -9,8 +9,6 @@
 import Cocoa
 import SafariServices.SFSafariApplication
 
-import SwiftyJSON
-
 
 class ModalView: NSView {
     override func mouseDown(with event: NSEvent) {}
@@ -174,20 +172,9 @@ class SettingsViewController: NSViewController {
                 mainMethod?(legacySettings)
             } else {
                 // App is already running; user is changing credentials. The
-                // old session on *both* clients is now invalid: the legacy
-                // SynologyClient's SID is tied to the old user/password, and
-                // SynologyAPI's session cookie likewise. Re-authenticate
-                // both so the downloads list (on SynologyAPI) and the
-                // still-legacy Add/Search/ChooseDest paths keep working.
-                synologyClient?.settings = legacySettings
-                synologyClient?.authenticate { ok, err in
-                    if !ok {
-                        AppLogger.auth.error(
-                            "Legacy SynologyClient re-auth after settings change failed: \(err?.localizedDescription ?? "unknown", privacy: .public)"
-                        )
-                    }
-                }
-
+                // cached session on the SynologyAPI actor is now invalid
+                // (new user/password), so point it at the new credentials
+                // and re-authenticate before the next refresh-loop tick.
                 let port = Int(portString) ?? 5001
                 let newCredentials = SynologyAPI.Credentials(
                     host: host,
