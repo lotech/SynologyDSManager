@@ -12,6 +12,16 @@ commit that makes them.
 ## [Unreleased]
 
 ### Fixed
+- **Web Extension handler tripped Swift 6 sendability checks.** The
+  trailing closure passed to `proxy.enqueueDownload` is `@Sendable`
+  (enforced by the protocol since the earlier Bridge-side fix), but
+  captured `self`, the `NSExtensionContext`, and the `NSXPCConnection`
+  — none of which are `Sendable`. Rewrote the handler to bridge the
+  XPC reply through a `CheckedContinuation`, so the `@Sendable`
+  boundary only carries `(Bool, String?)` (both `Sendable`); the
+  non-`Sendable` values travel into the outer `Task` in a tiny
+  `@unchecked Sendable` wrapper (`UncheckedBox`) whose values outlive
+  exactly one round-trip and aren't touched concurrently.
 - **Bridge LaunchAgent rejected by launchd at first launch.** The
   Phase 3b-2a plist omitted `Program`/`ProgramArguments`/`BundleProgram`
   on the theory that a pure-check-in Mach service agent doesn't need
