@@ -8,6 +8,13 @@
 
 import Cocoa
 
+/// `@MainActor`-constrained because the default `load(fromNIBNamed:)`
+/// implementation in the extension below touches AppKit APIs that are
+/// `@MainActor`-isolated (`addSubview`, layout anchors, autoresizing
+/// mask). Conformers are always `NSView` subclasses in practice, which
+/// are themselves `@MainActor`, so the annotation is accurate rather
+/// than a new constraint.
+@MainActor
 protocol LoadableView: AnyObject {
     var mainView: NSView? { get set }
     func load(fromNIBNamed nibName: String) -> Bool

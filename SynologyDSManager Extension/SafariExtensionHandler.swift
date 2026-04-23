@@ -19,8 +19,14 @@ class SafariExtensionHandler: SFSafariExtensionHandler {
     private static let loopbackURL = URL(string: "http://localhost:11863/add_download")!
 
     override func messageReceived(withName messageName: String, from page: SFSafariPage, userInfo: [String: Any]?) {
+        // Capture a string description up front. `[String: Any]?` isn't
+        // `Sendable` and `getPropertiesWithCompletionHandler`'s closure
+        // is `@Sendable` under strict concurrency — capturing the raw
+        // dictionary into the closure would warn. The string version
+        // is a plain `String` so it crosses the boundary cleanly.
+        let userInfoDescription = "\(userInfo ?? [:])"
         page.getPropertiesWithCompletionHandler { properties in
-            NSLog("The extension received a message (\(messageName)) from a script injected into (\(String(describing: properties?.url))) with userInfo (\(userInfo ?? [:]))")
+            NSLog("The extension received a message (\(messageName)) from a script injected into (\(String(describing: properties?.url))) with userInfo (\(userInfoDescription))")
         }
 
         guard messageName == "downloadURL",
@@ -47,7 +53,12 @@ class SafariExtensionHandler: SFSafariExtensionHandler {
     /// POST `{"url": urlString}` to the main app's loopback bridge.
     /// Completion: `true` on HTTP 2xx, `false` on anything else (network
     /// error, non-2xx status, the main app not running).
-    private static func postToLoopback(urlString: String, completion: @escaping (Bool) -> Void) {
+    ///
+    /// The `@Sendable` on `completion` matches URLSession's own
+    /// completion-handler type; without it strict concurrency flags
+    /// the capture of a non-Sendable closure into the `dataTask`
+    /// closure below.
+    private static func postToLoopback(urlString: String, completion: @escaping @Sendable (Bool) -> Void) {
         var request = URLRequest(url: loopbackURL)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
