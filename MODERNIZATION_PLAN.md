@@ -4,7 +4,7 @@ Living document. Tick boxes as tasks land. When all tasks in a phase are
 complete, move the phase status from **In progress** / **Planned** to
 **Shipped** with the date.
 
-Last updated: 2026-04-23 (Phase 2 complete — zero-warning build under strict concurrency)
+Last updated: 2026-04-23 (Phase 3a pushed — XPC scaffolding)
 
 ---
 
@@ -250,7 +250,7 @@ scoped Keychain access.
 - [x] Flipped `SWIFT_STRICT_CONCURRENCY` from `minimal` to `complete`
       — already done in Phase 2a-2d.
 
-## Phase 3 — Safari extension & webserver bridge · **Planned**
+## Phase 3 — Safari extension & webserver bridge · **In progress** (3a shipped)
 
 Goal: eliminate the two remaining Phase-0 audit findings around the
 extension ↔ main-app bridge:
@@ -262,21 +262,33 @@ extension ↔ main-app bridge:
 
 Both come out in this phase. Planned breakdown:
 
-### Phase 3a — XPC bridge (planned)
+### Phase 3a — XPC bridge · **Shipped 2026-04-23**
 
 Goal: a secure, code-signature-validated bridge from the Safari extension
 territory into the main app. No new user-facing behaviour yet — just the
 wiring that lets Phase 3b cut over.
 
-- [ ] Define an `@objc SynologyBridgeProtocol` with
-      `enqueueDownload(url:reply:)` and any other endpoints the Safari
-      extension needs.
-- [ ] Add a short-lived XPC listener inside the main app that advertises
-      the protocol via `NSXPCListener`, serviced on the main actor so the
-      call can hand straight to `SynologyAPI.createTask(url:)`.
-- [ ] Validate the *client's* code signature on every connection via
-      `auditToken` + `SecCodeCheckValidity` so only our own native-
-      messaging host can talk to the app, not arbitrary processes.
+- [x] Define an `@objc SynologyBridgeProtocol` with
+      `enqueueDownload(url:reply:)` — `SynologyDSManager/Bridge/SynologyBridgeProtocol.swift`.
+- [x] Add an XPC listener inside the main app that advertises the
+      protocol via `NSXPCListener`. Serviced by `SynologyBridgeService`,
+      which validates the URL (scheme allowlist + length cap), hops to
+      the main actor to read the global `synologyAPI`, and forwards to
+      `SynologyAPI.createTask(url:)`. Lifetime owned by `AppDelegate` via
+      `SynologyBridgeListener`. Anonymous listener for now; Phase 3b
+      swaps it for a Mach-service-registered one once the native
+      messaging host target exists.
+- [x] Validate the *client's* code signature on every connection via
+      `auditToken` + `SecCodeCopyGuestWithAttributes` +
+      `SecRequirementCreateWithString`. Expected peer is
+      `com.skavans.synologyDSManager.bridge` signed by our Team ID.
+      Implementation in `ClientAuthorization.swift`.
+- [x] Unit tests: URL validation matrix, success / failure reply
+      plumbing against a `URLProtocol`-stubbed `SynologyAPI`, and a
+      shape check on `ClientAuthorization.currentTeamID()` —
+      `SynologyDSManagerTests/SynologyBridgeTests.swift`. Cross-process
+      authorisation denial needs a second signed binary, so it's
+      deferred to Phase 3b integration testing.
 
 ### Phase 3b — Safari Web Extension (planned)
 
