@@ -4,7 +4,7 @@ Living document. Tick boxes as tasks land. When all tasks in a phase are
 complete, move the phase status from **In progress** / **Planned** to
 **Shipped** with the date.
 
-Last updated: 2026-04-23 (Phase 2b pushed — KeychainAccess dropped)
+Last updated: 2026-04-23 (Phase 2 complete — zero-warning build under strict concurrency)
 
 ---
 
@@ -65,7 +65,7 @@ target, replacing the deprecated APIs we can do without further design work.
 - [ ] Remove the `swiftapps.skavans.ru` mailto and `synoboost.com` link from
       Settings / BT Search — Phase 4 when we rewrite those screens
 
-## Phase 2 — Networking & storage rewrite · **In progress**
+## Phase 2 — Networking & storage rewrite · **Shipped · 2026-04-23**
 
 Goal: no Alamofire, no SwiftyJSON, typed models, proper TLS, properly
 scoped Keychain access.
@@ -216,12 +216,17 @@ scoped Keychain access.
       than pretending it's been fixed.
 - [x] Flipped `SWIFT_STRICT_CONCURRENCY` from `minimal` to `complete`.
 
-### Phase 2a-2d follow-ups (planned, minor)
+### Phase 2 final polish (merged)
 
-- [ ] Replace remaining `print(…)` sites with `os.Logger`. Most active
-      `print` usage was in the now-deleted `SynologyClient.swift`, so
-      this item is smaller than it was when planned. Remaining sites
-      are in `Webserver.swift` and will go away with the webserver
+- [x] Cleared the final two strict-concurrency warnings surfaced by
+      the `minimal → complete` flip:
+      `nonisolated(unsafe) let userDefaults = UserDefaults.standard`
+      in `Settings.swift` (matches the Shared.swift globals pattern),
+      and `Webserver.swift`'s MainActor call wrapped in
+      `Task { @MainActor in … }`. Project now builds warning-free
+      under strict concurrency.
+- [ ] Replace remaining `print(…)` sites with `os.Logger`. Remaining
+      sites are in `Webserver.swift`; they go away with the webserver
       itself in Phase 3.
 
 ### Phase 2b — Credential store (merged)
@@ -247,20 +252,75 @@ scoped Keychain access.
 
 ## Phase 3 — Safari extension & webserver bridge · **Planned**
 
-Goal: no unauthenticated local listener; no deprecated Safari App
-Extension.
+Goal: eliminate the two remaining Phase-0 audit findings around the
+extension ↔ main-app bridge:
 
-- [ ] Add a new **Safari Web Extension** target (MV3 manifest + JS service
-      worker + native messaging host)
-- [ ] Implement `NSXPCConnection` between the native messaging host and the
-      main app; define a small `@objc` protocol (`enqueueDownload(URL:)`)
-- [ ] Delete `Webserver.swift` and drop the `Swifter` package
-- [ ] Delete the `synologydsmanager://download` URL-scheme fallback in the
-      Safari extension (or lock it down to a launch-agent-signed token)
-- [ ] Remove the `localhost` ATS exception and `network.server` entitlement
-      once the webserver is gone
-- [ ] Update the Chrome extension (if kept) to use the same MV3 +
-      native-messaging shape
+1. The loopback HTTP server (`Webserver.swift`) accepts any local POST
+   with no authentication; any process on the Mac can enqueue downloads.
+2. The Safari App Extension format is deprecated (superseded by Safari
+   Web Extensions since macOS 11 / Safari 14).
+
+Both come out in this phase. Planned breakdown:
+
+### Phase 3a — XPC bridge (planned)
+
+Goal: a secure, code-signature-validated bridge from the Safari extension
+territory into the main app. No new user-facing behaviour yet — just the
+wiring that lets Phase 3b cut over.
+
+- [ ] Define an `@objc SynologyBridgeProtocol` with
+      `enqueueDownload(url:reply:)` and any other endpoints the Safari
+      extension needs.
+- [ ] Add a short-lived XPC listener inside the main app that advertises
+      the protocol via `NSXPCListener`, serviced on the main actor so the
+      call can hand straight to `SynologyAPI.createTask(url:)`.
+- [ ] Validate the *client's* code signature on every connection via
+      `auditToken` + `SecCodeCheckValidity` so only our own native-
+      messaging host can talk to the app, not arbitrary processes.
+
+### Phase 3b — Safari Web Extension (planned)
+
+Goal: replace the deprecated `SafariExtensionHandler` with a modern Web
+Extension + native messaging host.
+
+- [ ] New `SynologyDSManager WebExtension` target (Xcode's "Safari
+      Extension App (Web Extension)" template). MV3 `manifest.json`,
+      service worker, content script, toolbar icon.
+- [ ] New `SynologyDSManagerBridge` native-messaging-host target: a small
+      Swift CLI bundled inside the app. stdin JSON messages in, stdout
+      JSON replies out. Internally opens an `NSXPCConnection` to the main
+      app's listener from 3a and forwards the enqueue requests.
+- [ ] Migrate `script.js`'s "Download with Synology DS Manager"
+      context-menu handler over to the Web Extension's message-dispatch
+      shape.
+- [ ] The old Safari App Extension target stays during 3b so users with
+      it enabled keep working; removed in 3c.
+
+### Phase 3c — Delete the loopback bridge (planned)
+
+Once 3b is shipping and the Web Extension can reach the main app via
+XPC, retire the HTTP loopback path and its supporting infrastructure.
+
+- [ ] Delete `SynologyDSManager/Webserver.swift`.
+- [ ] Remove the `swifter` package from `Package.resolved` +
+      `project.pbxproj`.
+- [ ] Drop the `com.apple.security.network.server` entitlement from the
+      main app's `SynologyDSManager.entitlements`.
+- [ ] Remove the narrow `localhost` ATS exception from the Safari
+      extension's `Info.plist`.
+- [ ] Delete the legacy Safari App Extension target (`SynologyDSManager
+      Extension`, `SafariExtensionHandler.swift`, `script.js`,
+      `ToolbarItemIcon.pdf`, `Info.plist`, `entitlements`).
+- [ ] Revisit the `synologydsmanager://download?downloadURL=…` URL
+      scheme: either keep it as a general-purpose deep link for
+      third-party apps with input validation and rate limiting, or drop
+      it entirely (the Web Extension no longer needs a fallback path).
+
+### Phase 3d — Chrome companion, if we keep it (planned)
+
+Out-of-scope-until-asked. The original Chrome extension is referenced
+in the README but isn't in this repo. If a user wants it revived, it'd
+follow the same MV3 + native-messaging-host shape as 3b.
 
 ## Phase 4 — SwiftUI rewrite · **Planned**
 
