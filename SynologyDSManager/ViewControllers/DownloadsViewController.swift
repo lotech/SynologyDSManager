@@ -178,8 +178,6 @@ class DownloadsViewController: NSViewController, NSWindowDelegate {
         refreshTask?.cancel()
         refreshTask = nil
 
-        synologyClient = SynologyClient(settings: settings)
-
         let port = Int(settings.port) ?? 5001
         synologyAPI = SynologyAPI(
             credentials: SynologyAPI.Credentials(
@@ -200,18 +198,6 @@ class DownloadsViewController: NSViewController, NSWindowDelegate {
         guard let api = synologyAPI else { return }
 
         start_webserver()
-
-        // Legacy SynologyClient still drives Add / Search / ChooseDest
-        // (migrated in Phase 2a-2c). Authenticate it so those screens
-        // work; if it fails, log and continue — the downloads list
-        // below is now independent of it.
-        synologyClient?.authenticate { ok, err in
-            if !ok {
-                AppLogger.auth.error(
-                    "Legacy SynologyClient auth failed in doWork: \(err?.localizedDescription ?? "unknown", privacy: .public)"
-                )
-            }
-        }
 
         // Modern refresh loop on SynologyAPI. Authenticates once, then
         // polls listTasks every 3 seconds until cancelled. Cancellation
@@ -235,20 +221,29 @@ class DownloadsViewController: NSViewController, NSWindowDelegate {
         workStarted = true
     }
 
-    public func downloadByURLFromExtension(URL: String) {
+    public func downloadByURLFromExtension(URL url: String) {
         registerEvent(type: "firstExtensionUse", unique: true)
-        DispatchQueue.main.async {
-            let content = UNMutableNotificationContent()
-            content.title = "Download started"
-            content.subtitle = "URL content is downloading at Synology DS"
-            let request = UNNotificationRequest(
-                identifier: UUID().uuidString,
-                content: content,
-                trigger: nil
-            )
-            UNUserNotificationCenter.current().add(request, withCompletionHandler: nil)
-            let extensionDestination = userDefaults.string(forKey: "destinationSelectedPath_extension")
-            synologyClient?.startDownload(URL: URL, destination: extensionDestination)
+        guard let api = synologyAPI else { return }
+
+        let content = UNMutableNotificationContent()
+        content.title = "Download started"
+        content.subtitle = "URL content is downloading at Synology DS"
+        let request = UNNotificationRequest(
+            identifier: UUID().uuidString,
+            content: content,
+            trigger: nil
+        )
+        UNUserNotificationCenter.current().add(request, withCompletionHandler: nil)
+
+        let extensionDestination = userDefaults.string(forKey: "destinationSelectedPath_extension")
+        Task.detached { [api] in
+            do {
+                try await api.createTask(url: url, destination: extensionDestination)
+            } catch {
+                AppLogger.network.error(
+                    "createTask(url:) from extension failed: \(error.localizedDescription, privacy: .public)"
+                )
+            }
         }
     }
 

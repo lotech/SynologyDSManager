@@ -2,14 +2,9 @@
 //  BTSearchViewController.swift
 //  SynologyDSManager
 //
-//  Created by Антон on 19.04.2020.
-//  Copyright © 2020 skavans. All rights reserved.
-//
 
-import Foundation
 import Cocoa
-
-import SwiftyJSON
+import Foundation
 
 
 class BTSearchController: NSViewController {
@@ -22,146 +17,233 @@ class BTSearchController: NSViewController {
     @IBOutlet weak var downloadButton: NSButton!
     @IBOutlet weak var searchLabel: NSTextField!
     @IBOutlet weak var destinationView: DestinationView!
-    
-    
-    var searchResultsJSON: JSON? = nil
-    
-    
+
+    // MARK: - State
+
+    /// The last search's results. Empty before the first search completes.
+    private var results: [BTSearchResult] = []
+
+    /// IDs of rows the user has ticked via the first-column checkbox.
+    /// Kept alongside `results` (rather than embedding a mutable flag
+    /// on `BTSearchResult`) because the DTO is a `Codable` struct —
+    /// selection is local UI state, not part of the wire shape.
+    private var selectedIDs: Set<String> = []
+
+    /// The running search task. Stored so a second "Search" click (or
+    /// view-close) can cancel an in-flight poll cleanly.
+    private var searchTask: Task<Void, Never>?
+
+    // MARK: - Actions
+
     @IBAction func instructionsButtonClicked(_ sender: Any) {
         NSWorkspace.shared.open(URL(string: "http://www.synoboost.com/installation/")!)
     }
-    
-    
+
     @IBAction func searchButtonClicked(_ sender: Any) {
-        self.searchResultsJSON = JSON([])
-        self.resultsTableview.reloadData()
+        guard let api = synologyAPI else { return }
+
+        // Cancel any previous in-flight search before starting a new one.
+        searchTask?.cancel()
+        searchTask = nil
+
         let query = queryTextField.stringValue
-        self.queryTextField.isEditable = false
-        self.noResultsLabel.isHidden = true
-        self.searchSpinner.isHidden = false
-        self.searchLabel.isHidden = false
-        self.searchButton.isEnabled = false
-        self.searchSpinner.startAnimation(self)
-        synologyClient?.searchDownloads(query: query, completion: { results in
-            self.searchSpinner.isHidden = true
-            self.searchLabel.isHidden = true
-            self.searchButton.isEnabled = true
-            self.queryTextField.isEditable = true
-            self.searchResultsJSON = results
-            if results.count == 0 {
-                self.noResultsLabel.isHidden = false
+
+        // Enter "searching" UI state.
+        results = []
+        selectedIDs = []
+        resultsTableview.reloadData()
+        queryTextField.isEditable = false
+        noResultsLabel.isHidden = true
+        searchSpinner.isHidden = false
+        searchLabel.isHidden = false
+        searchButton.isEnabled = false
+        searchSpinner.startAnimation(self)
+
+        searchTask = Task { [weak self] in
+            let outcome: Result<[BTSearchResult], Error>
+            do {
+                let found = try await api.searchTorrents(query: query)
+                outcome = .success(found)
+            } catch is CancellationError {
+                return  // user started another search; don't touch UI
+            } catch {
+                outcome = .failure(error)
             }
-            self.resultsTableview.reloadData()
-        })
+
+            await MainActor.run {
+                guard let self else { return }
+                self.finishSearch(outcome)
+            }
+        }
     }
-    
+
+    @MainActor
+    private func finishSearch(_ outcome: Result<[BTSearchResult], Error>) {
+        searchSpinner.stopAnimation(self)
+        searchSpinner.isHidden = true
+        searchLabel.isHidden = true
+        searchButton.isEnabled = true
+        queryTextField.isEditable = true
+
+        switch outcome {
+        case .success(let newResults):
+            results = newResults
+            noResultsLabel.isHidden = !newResults.isEmpty
+        case .failure(let error):
+            AppLogger.network.error(
+                "searchTorrents failed: \(error.localizedDescription, privacy: .public)"
+            )
+            results = []
+            noResultsLabel.isHidden = false
+        }
+
+        resultsTableview.reloadData()
+        selectedResultsChanged()
+    }
+
     @IBAction func downloadButtonClicked(_ sender: Any) {
-        for elem in searchResultsJSON! {
-            let (_, json) = elem
-            if json["selected"].boolValue {
-                synologyClient?.startDownload(URL: json["dlurl"].stringValue, destination: self.destinationView.selectedDir)
+        guard let api = synologyAPI else {
+            view.window?.close()
+            return
+        }
+
+        let urlsToEnqueue = results
+            .filter { selectedIDs.contains($0.id) }
+            .map(\.dlurl)
+        let destination = destinationView.selectedDir
+
+        view.window?.close()
+
+        Task.detached { [api] in
+            for url in urlsToEnqueue {
+                do {
+                    try await api.createTask(url: url, destination: destination)
+                } catch {
+                    AppLogger.network.error(
+                        "createTask(url:) from BTSearch failed: \(error.localizedDescription, privacy: .public)"
+                    )
+                }
             }
         }
-        self.view.window?.close()
     }
-    
-    func selectedResultsChanged() {
-        var selectedCount = 0
-        var selectedSize: Double = 0
-        
-        for elem in searchResultsJSON! {
-            let (_, json) = elem
-            if json["selected"].boolValue {
-                selectedCount += 1
-                selectedSize += json["size"].doubleValue
-            }
-        }
-        
-        if selectedCount != 0 {
-            self.downloadButton.isEnabled = true
-            self.downloadButton.state = .on
-            self.downloadButton.highlight(true)
-            self.downloadButton.title = "Download \(selectedCount) torrents (\(prettifyBytesCount(bytesCount: selectedSize)))"
+
+    // MARK: - Selection UI state
+
+    private func selectedResultsChanged() {
+        let selected = results.filter { selectedIDs.contains($0.id) }
+        let selectedCount = selected.count
+        let selectedSize = selected.reduce(Int64(0)) { $0 + $1.size }
+
+        if selectedCount > 0 {
+            downloadButton.isEnabled = true
+            downloadButton.state = .on
+            downloadButton.highlight(true)
+            downloadButton.title = "Download \(selectedCount) torrents (\(prettifyBytesCount(bytesCount: Double(selectedSize))))"
         } else {
-            self.downloadButton.isEnabled = false
-            self.downloadButton.title = "Select at least one search result"
+            downloadButton.isEnabled = false
+            downloadButton.title = "Select at least one search result"
         }
     }
-    
-    func setResultsSortDescriptors() {
-        self.resultsTableview.tableColumns[1].sortDescriptorPrototype = NSSortDescriptor(key: "title", ascending: true)
-        self.resultsTableview.tableColumns[2].sortDescriptorPrototype = NSSortDescriptor(key: "size", ascending: true)
-        self.resultsTableview.tableColumns[3].sortDescriptorPrototype = NSSortDescriptor(key: "date", ascending: true)
-        self.resultsTableview.tableColumns[4].sortDescriptorPrototype = NSSortDescriptor(key: "seeds", ascending: true)
-        self.resultsTableview.tableColumns[5].sortDescriptorPrototype = NSSortDescriptor(key: "peers", ascending: true)
-        self.resultsTableview.tableColumns[6].sortDescriptorPrototype = NSSortDescriptor(key: "source", ascending: true)
+
+    // MARK: - Table view setup
+
+    private func setResultsSortDescriptors() {
+        resultsTableview.tableColumns[1].sortDescriptorPrototype = NSSortDescriptor(key: "title", ascending: true)
+        resultsTableview.tableColumns[2].sortDescriptorPrototype = NSSortDescriptor(key: "size", ascending: true)
+        resultsTableview.tableColumns[3].sortDescriptorPrototype = NSSortDescriptor(key: "date", ascending: true)
+        resultsTableview.tableColumns[4].sortDescriptorPrototype = NSSortDescriptor(key: "seeds", ascending: true)
+        resultsTableview.tableColumns[5].sortDescriptorPrototype = NSSortDescriptor(key: "peers", ascending: true)
+        resultsTableview.tableColumns[6].sortDescriptorPrototype = NSSortDescriptor(key: "source", ascending: true)
     }
-    
+
     override func viewDidLoad() {
-        self.resultsTableview.dataSource = self
-        self.setResultsSortDescriptors()
-        
+        resultsTableview.dataSource = self
+        setResultsSortDescriptors()
+
         let instructionsButtonAttributedTitle = NSAttributedString(string: "here", attributes: [
             NSAttributedString.Key.foregroundColor: NSColor.linkColor,
-            NSAttributedString.Key.cursor: NSCursor.pointingHand
+            NSAttributedString.Key.cursor: NSCursor.pointingHand,
         ])
-        self.instructionsButton.attributedTitle = instructionsButtonAttributedTitle
-        
-        self.destinationView.setSelectionSynchronizeKey(key: "main")
+        instructionsButton.attributedTitle = instructionsButtonAttributedTitle
+
+        destinationView.setSelectionSynchronizeKey(key: "main")
+    }
+
+    override func viewWillDisappear() {
+        // Abandon any in-flight search when the window closes — the
+        // actor's `searchTorrents` loop obeys `Task.isCancelled`.
+        searchTask?.cancel()
+        searchTask = nil
     }
 }
+
+// MARK: - Table view data source
 
 extension BTSearchController: NSTableViewDataSource {
     func numberOfRows(in tableView: NSTableView) -> Int {
-        searchResultsJSON?.count ?? 0
+        results.count
     }
-    
+
     func tableView(_ tableView: NSTableView, sortDescriptorsDidChange oldDescriptors: [NSSortDescriptor]) {
-        let sortDescriptor = self.resultsTableview.sortDescriptors.first!
-        let sortedSearchResults = self.searchResultsJSON?.sorted(by: {(left: (String, JSON), right: (String, JSON)) in
-            switch sortDescriptor.key! {
-            case "title", "date", "source":
-                let lhsVal = left.1[sortDescriptor.key!].stringValue
-                let rhsVal = right.1[sortDescriptor.key!].stringValue
-                return sortDescriptor.ascending ? lhsVal < rhsVal : lhsVal > rhsVal
-            case "size", "seeds", "peers":
-                let lhsVal = left.1[sortDescriptor.key!].doubleValue
-                let rhsVal = right.1[sortDescriptor.key!].doubleValue
-                return sortDescriptor.ascending ? lhsVal < rhsVal : lhsVal > rhsVal
+        guard let sortDescriptor = resultsTableview.sortDescriptors.first,
+              let key = sortDescriptor.key else { return }
+
+        // Sort typed properties rather than `JSON` subscripts.
+        results.sort { lhs, rhs in
+            switch key {
+            case "title":
+                return sortDescriptor.ascending ? lhs.title < rhs.title : lhs.title > rhs.title
+            case "date":
+                return sortDescriptor.ascending ? lhs.date < rhs.date : lhs.date > rhs.date
+            case "source":
+                return sortDescriptor.ascending ? lhs.provider < rhs.provider : lhs.provider > rhs.provider
+            case "size":
+                return sortDescriptor.ascending ? lhs.size < rhs.size : lhs.size > rhs.size
+            case "seeds":
+                return sortDescriptor.ascending ? lhs.seeds < rhs.seeds : lhs.seeds > rhs.seeds
+            case "peers":
+                return sortDescriptor.ascending ? lhs.peers < rhs.peers : lhs.peers > rhs.peers
             default:
                 return false
             }
-        })
-        self.searchResultsJSON = JSON(sortedSearchResults?.map({return $0.1}))
-        self.resultsTableview.reloadData()
-    }
-    
-    func tableView(_ tableView: NSTableView, setObjectValue object: Any?, for tableColumn: NSTableColumn?, row: Int) {
-        if self.resultsTableview.tableColumns.lastIndex(of: tableColumn!) == 0 {
-            searchResultsJSON![row]["selected"].boolValue = object as! Bool
-            
-            self.selectedResultsChanged()
         }
+        resultsTableview.reloadData()
+    }
+
+    func tableView(_ tableView: NSTableView, setObjectValue object: Any?, for tableColumn: NSTableColumn?, row: Int) {
+        // Only the first column (the checkbox) is editable.
+        guard let tableColumn,
+              resultsTableview.tableColumns.firstIndex(of: tableColumn) == 0,
+              row >= 0, row < results.count,
+              let isSelected = object as? Bool else { return }
+
+        let id = results[row].id
+        if isSelected {
+            selectedIDs.insert(id)
+        } else {
+            selectedIDs.remove(id)
+        }
+        selectedResultsChanged()
     }
 
     func tableView(_ tableView: NSTableView, objectValueFor tableColumn: NSTableColumn?, row: Int) -> Any? {
-        let elem = searchResultsJSON![row]
+        guard row >= 0, row < results.count else { return nil }
+        let result = results[row]
         switch tableColumn?.title {
         case "Name":
-            return elem["title"].stringValue
+            return result.title
         case "Size":
-            return prettifyBytesCount(bytesCount: elem["size"].doubleValue)
+            return prettifyBytesCount(bytesCount: Double(result.size))
         case "Date":
-            return elem["date"].stringValue
+            return result.date
         case "Seeds":
-            return elem["seeds"].stringValue
+            return "\(result.seeds)"
         case "Peers":
-            return elem["peers"].stringValue
+            return "\(result.peers)"
         case "Source":
-            return elem["provider"].stringValue
+            return result.provider
         default:
-            return elem["selected"].boolValue
+            return selectedIDs.contains(result.id)
         }
     }
 }
-

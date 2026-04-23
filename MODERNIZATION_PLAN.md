@@ -4,7 +4,7 @@ Living document. Tick boxes as tasks land. When all tasks in a phase are
 complete, move the phase status from **In progress** / **Planned** to
 **Shipped** with the date.
 
-Last updated: 2026-04-22 (Phase 2a-2d test target wired + CI test job)
+Last updated: 2026-04-23 (Phase 2a-2c pushed)
 
 ---
 
@@ -128,14 +128,38 @@ scoped Keychain access.
       `updateCredentials` + `authenticate` after a credentials change,
       not just on the legacy client
 
-### Phase 2a-2c — Add / Search / Destination view controllers (planned)
+### Phase 2a-2c — Add / Search / Destination view controllers (merged)
 
-- [ ] `AddDownloadViewController`: migrate URL + torrent upload paths
-- [ ] `BTSearchController`: replace the nested `Timer.scheduledTimer` poll
-      with the actor's `searchTorrents`; drop `searchResultsJSON` in
-      favour of `[BTSearchResult]`
-- [ ] `ChooseDestViewController` / `DestinationView`: migrate directory
-      listing to `SynologyAPI.listDirectories`
+- [x] `AddDownloadViewController`: migrate URL + torrent-file enqueue
+      paths to `SynologyAPI.createTask`. Actions now run in a detached
+      `Task` that survives the window closing.
+- [x] `BTSearchController`: rewrote on `SynologyAPI.searchTorrents`.
+      Dropped `import SwiftyJSON` and the `searchResultsJSON: JSON?`
+      state; now uses `[BTSearchResult]` plus a `selectedIDs: Set<String>`
+      for checkbox state. The `Timer.scheduledTimer` nested poll loop
+      is gone — the actor's own cancellable poll handles it. The
+      running search is cancelled when the window closes.
+- [x] `ChooseDestViewController`: migrated directory listing to
+      `SynologyAPI.listDirectories`. Moved the `RemoteDir` class here
+      from `SynologyClient.swift` (local to this view controller;
+      nothing else uses it).
+- [x] `DestinationView`: dropped SwiftyJSON; the persisted
+      `downloadDestinations` UserDefaults blob is now
+      encoded/decoded via `JSONEncoder`/`JSONDecoder` in a format
+      backward-compatible with the SwiftyJSON output.
+- [x] `DownloadsViewController.downloadByURLFromExtension`: migrated
+      to `SynologyAPI.createTask`. (The webserver that calls it is
+      still scheduled for removal in Phase 3.)
+- [x] Removed the transitional `synologyClient.authenticate` / settings
+      assignments in `DownloadsViewController.doWork` and
+      `SettingsViewController`. The legacy `SynologyClient` is no
+      longer reachable from any view controller; its deletion lands
+      in Phase 2a-2d.
+- [x] Added `URLProtocolStub`-backed tests for the API methods these
+      migrations depend on: `createTask(url:)` (payload shape + nil
+      destination omission), `searchTorrents` (poll-until-done
+      behaviour, request order), and `listDirectories` (typed decoding
+      + null-files resilience).
 
 ### Phase 2a-2d — Test target (in progress; moved ahead of 2a-2c)
 
