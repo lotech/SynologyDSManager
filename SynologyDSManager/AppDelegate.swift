@@ -8,8 +8,14 @@ import Cocoa
 @main
 final class AppDelegate: NSObject, NSApplicationDelegate {
 
+    /// Long-lived XPC listener that services the Safari Web Extension's
+    /// native messaging host (wired up in Phase 3b). Retained here so
+    /// its lifetime matches the app's.
+    private let bridgeListener = SynologyBridgeListener()
+
     func applicationWillFinishLaunching(_ notification: Notification) {
         installCertificateApprovalHandler()
+        bridgeListener.start()
     }
 
     /// Wire the shared TLS trust evaluator to an AppKit modal prompt so

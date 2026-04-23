@@ -11,6 +11,39 @@ commit that makes them.
 
 ## [Unreleased]
 
+### Added
+- **Phase 3a — XPC bridge scaffolding.** Introduced a new `Bridge/`
+  module that sets up the wire and trust boundary the future Safari
+  Web Extension will talk across. No user-visible behaviour yet; the
+  existing loopback webserver still handles Safari-extension enqueue
+  requests until Phase 3c retires it.
+  - `SynologyBridgeProtocol` — a deliberately small `@objc` protocol
+    with one method (`enqueueDownload(url:reply:)`), so the wire
+    surface between the app and the extension stays easy to audit.
+  - `SynologyBridgeService` — validates incoming URLs (scheme
+    allowlist + length cap to blunt buffer-stuffing tricks), hops to
+    the main actor to read the shared `SynologyAPI`, and forwards to
+    `createTask(url:)`. Errors are surfaced as an optional reply
+    message rather than leaking stack frames across the XPC boundary.
+  - `ClientAuthorization` — validates every incoming XPC peer's
+    code signature via `auditToken` + `SecCodeCopyGuestWithAttributes`
+    + a `SecRequirementCreateWithString` designated requirement. Only
+    our own native messaging host (signed by our Team ID) can ever
+    reach the exported interface; arbitrary local processes are
+    refused before any protocol method runs.
+  - `SynologyBridgeListener` — an `NSXPCListener.anonymous()` started
+    at app launch from `AppDelegate`. Anonymous for now so nothing
+    external can reach it; Phase 3b swaps it for
+    `NSXPCListener(machServiceName:)` once the native messaging host
+    target + LaunchAgent plist are in the bundle.
+  - Unit tests covering URL validation (empty, whitespace, unsupported
+    scheme, schemeless input, absurdly long input, supported schemes),
+    success / failure reply plumbing against a `URLProtocol`-stubbed
+    `SynologyAPI`, the not-signed-in branch, and a shape check on
+    `ClientAuthorization.currentTeamID()`. Cross-process peer-denial
+    needs a second signed binary, so it's deferred to Phase 3b
+    integration testing.
+
 ### Removed
 - **Phase 2b — dropped the KeychainAccess third-party package.**
   Replaced with a new `KeychainStore.swift` — a thin Swift wrapper

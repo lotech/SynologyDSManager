@@ -12,8 +12,11 @@ human, `README.md` is a better starting point.
   SecItem-based Keychain wrapper. Alamofire + SwiftyJSON + KeychainAccess
   all gone from `Package.resolved`. `SWIFT_STRICT_CONCURRENCY = complete`
   and the project builds warning-free. 23 unit tests run in CI on every PR.
-- ⏳ **Phase 3** — Safari Web Extension + XPC bridge replacing the
+- 🚧 **Phase 3** — Safari Web Extension + XPC bridge replacing the
   unauthenticated loopback HTTP server; Swifter dep goes with it.
+  **3a shipped**: XPC scaffolding — `SynologyBridgeProtocol` +
+  authorisation-gated listener in the main app, no external surface yet
+  (Mach service name + native messaging host land in 3b).
 - ⏳ **Phase 4** — SwiftUI + Observation; retire `Shared.swift` globals.
 - ⏳ **Phase 5** — release engineering (Sparkle, notarised DMGs via CI).
 
@@ -42,13 +45,18 @@ See `MODERNIZATION_PLAN.md` for the per-phase task checklist.
 
 | File | Role |
 |---|---|
-| `AppDelegate.swift` | `@main` entry point, handles URL-scheme deep links and `.torrent` file opens. Also installs the TLS first-use approval handler. |
+| `AppDelegate.swift` | `@main` entry point, handles URL-scheme deep links and `.torrent` file opens. Installs the TLS first-use approval handler. Retains the `SynologyBridgeListener`. |
+| `Bridge/SynologyBridgeProtocol.swift` | `@objc` protocol exposed over XPC to the (future) native messaging host. Currently one method: `enqueueDownload(url:reply:)`. Kept deliberately minimal so the wire surface stays easy to audit. |
+| `Bridge/SynologyBridgeService.swift` | `NSObject` implementation of `SynologyBridgeProtocol`. Validates incoming URLs (scheme allowlist, length cap), hops to `@MainActor` to read the global `synologyAPI`, and forwards to `SynologyAPI.createTask(url:)`. |
+| `Bridge/SynologyBridgeListener.swift` | `NSXPCListener` + `NSXPCListenerDelegate`. Anonymous listener in Phase 3a (not externally reachable); Phase 3b swaps to `NSXPCListener(machServiceName:)` once the LaunchAgent plist is bundled. |
+| `Bridge/ClientAuthorization.swift` | Peer code-signature validation via `auditToken` + `SecCodeCopyGuestWithAttributes` + `SecRequirementCreateWithString`. Refuses connections whose peer isn't our own native messaging host signed by our Team ID. |
 | `Network/SynologyAPI.swift` | DSM API client. Actor-isolated, `URLSession` + `async/await`, typed errors, `_sid` in POST body (never URL). Add new endpoints here. |
 | `Network/SynologyAPIModels.swift` | `Codable` DTOs for DSM responses. Keep 1:1 with DSM's wire format; translate into richer app types at the call site, not here. |
 | `Network/SynologyTrustEvaluator.swift` | `URLSessionDelegate` that performs SPKI pinning (RFC 7469 "pin-sha256"). First-use fingerprints are handed to `firstUseDecision` for UI approval (TOFU); mismatches against an existing pin are refused outright. |
 | `Network/SynologyError.swift` | Typed error surface (`SynologyError`) plus DSM-error-code→message mapping. Add new failure modes here, not `NSError`. |
 | `Network/AppLogger.swift` | `os.Logger` categories — `network`, `auth`, `security`, `keychain`. Always use these; never `print(…)` in shipped code. |
-| `Settings.swift` | `StoredCredentials` type + Keychain persistence (via KeychainAccess). Phase 2b replaces KeychainAccess with a direct `SecItem*` wrapper. |
+| `Settings.swift` | `StoredCredentials` type + Keychain persistence via the in-house `KeychainStore`. Phase 2b replaced the KeychainAccess dependency with a direct `SecItem*` wrapper. |
+| `KeychainStore.swift` | Thin `SecItem*` wrapper used by `Settings.swift`. `.whenUnlockedThisDeviceOnly` accessibility, service identifier `com.skavans.synologyDSManager`. |
 | `Shared.swift` | Global mutable state (`synologyAPI`, `mainViewController`, `currentViewController`, etc.), annotated `nonisolated(unsafe)` under complete concurrency. Replaced by an `@Observable` app model in Phase 4. |
 | `Webserver.swift` | Loopback HTTP server on port 11863 used by the Safari extension to enqueue downloads. **Unauthenticated** — scheduled for removal in Phase 3 in favour of `NSXPCConnection`. |
 | `ViewControllers/` | Cocoa view controllers, one per screen. |
