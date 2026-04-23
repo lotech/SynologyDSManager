@@ -12,6 +12,29 @@ commit that makes them.
 ## [Unreleased]
 
 ### Added
+- **Phase 3b-2a — Main-app-side Mach service wiring.** The main app
+  now advertises a named Mach service for the bridge and registers
+  the LaunchAgent that backs it. No behaviour change for existing
+  users yet — nothing connects to the listener until Phase 3b-2b
+  adds the Web Extension target. Safe to ship alone because a named
+  `NSXPCListener` without launchd routes simply sits idle.
+  - `SynologyBridgeListener` swapped from `NSXPCListener.anonymous()`
+    to `NSXPCListener(machServiceName: "com.skavans.synologyDSManager.bridge")`.
+    The name is exposed as `SynologyBridgeListener.machServiceName`
+    so the 3b-2b Web Extension handler reads from a single source
+    of truth.
+  - `AppDelegate.applicationWillFinishLaunching` now calls
+    `SMAppService.agent(plistName:).register()`. The call is
+    idempotent and diagnostic-only on failure: if the plist isn't
+    bundled yet (pre-build-phase change) or the user hasn't yet
+    approved the login item in System Settings, the app still
+    launches cleanly — only the bridge stays dark.
+  - `project.pbxproj` gains an "Embed LaunchAgents" Copy Files
+    build phase on the main target. It bundles
+    `SynologyDSManager/LaunchAgents/com.skavans.synologyDSManager.bridge.plist`
+    into the app at `Contents/Library/LaunchAgents/`, which is
+    where `SMAppService.agent(plistName:)` looks for it.
+
 - **Phase 3b-1 — Safari Web Extension source scaffolding.** Source
   tree for the replacement Safari extension, in the new
   `WebExtension/` directory. No compiled-code changes yet — this
