@@ -7,15 +7,23 @@ Placeholder directory. Phase 3b-2 generates three PNGs from the existing
 - `toolbar-96.png` — 96×96
 - `toolbar-128.png` — 128×128
 
-One-liner (from repo root) once 3b-2 wires the target:
+Two-step `sips` pipeline (from repo root). A one-shot `sips -Z N` on a
+PDF writes the PDF rasterised at its native size three times instead of
+resizing, so we rasterise to a high-res PNG once and downscale with
+`-z H W` (the forced-resize flavour):
 
 ```sh
-sips -Z 128 "SynologyDSManager Extension/ToolbarItemIcon.pdf" \
+sips -s format png "SynologyDSManager Extension/ToolbarItemIcon.pdf" \
+    --out /tmp/toolbar-source.png
+
+sips -z 128 128 /tmp/toolbar-source.png \
     --out WebExtension/Resources/icons/toolbar-128.png
-sips -Z 96  "SynologyDSManager Extension/ToolbarItemIcon.pdf" \
+sips -z  96  96 /tmp/toolbar-source.png \
     --out WebExtension/Resources/icons/toolbar-96.png
-sips -Z 48  "SynologyDSManager Extension/ToolbarItemIcon.pdf" \
+sips -z  48  48 /tmp/toolbar-source.png \
     --out WebExtension/Resources/icons/toolbar-48.png
+
+rm /tmp/toolbar-source.png
 ```
 
 We're only shipping PNGs (not retina `@2x` variants) because Safari's
