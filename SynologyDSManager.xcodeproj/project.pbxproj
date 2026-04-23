@@ -57,6 +57,9 @@
 		AA70ECFA2F9A28A500A429A1 /* SafariWebExtensionHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA70ECF12F9A28A500A429A1 /* SafariWebExtensionHandler.swift */; };
 		AA70ECFC2F9A2C4B00A429A1 /* SafariServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA70ECFB2F9A2C4B00A429A1 /* SafariServices.framework */; };
 		AA70ECFD2F9A2EDF00A429A1 /* SynologyBridgeProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E7E0041000000000000A000 /* SynologyBridgeProtocol.swift */; };
+		AABBA3EC2F9A3E00009943E1 /* toolbar-48.png in Resources */ = {isa = PBXBuildFile; fileRef = AABBA3E92F9A3E00009943E1 /* toolbar-48.png */; };
+		AABBA3ED2F9A3E00009943E1 /* toolbar-128.png in Resources */ = {isa = PBXBuildFile; fileRef = AABBA3EB2F9A3E00009943E1 /* toolbar-128.png */; };
+		AABBA3EE2F9A3E00009943E1 /* toolbar-96.png in Resources */ = {isa = PBXBuildFile; fileRef = AABBA3EA2F9A3E00009943E1 /* toolbar-96.png */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -168,6 +171,9 @@
 		AA70ECF22F9A28A500A429A1 /* SynologyDSManager_WebExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SynologyDSManager_WebExtension.entitlements; sourceTree = "<group>"; };
 		AA70ECFB2F9A2C4B00A429A1 /* SafariServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SafariServices.framework; path = System/Library/Frameworks/SafariServices.framework; sourceTree = SDKROOT; };
 		AA714C832F9961D50068FEEC /* SynologyDSManagerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SynologyDSManagerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		AABBA3E92F9A3E00009943E1 /* toolbar-48.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "toolbar-48.png"; sourceTree = "<group>"; };
+		AABBA3EA2F9A3E00009943E1 /* toolbar-96.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "toolbar-96.png"; sourceTree = "<group>"; };
+		AABBA3EB2F9A3E00009943E1 /* toolbar-128.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "toolbar-128.png"; sourceTree = "<group>"; };
 		AB01CD0100000000000000F1 /* Signing.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Signing.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -361,6 +367,9 @@
 			isa = PBXGroup;
 			children = (
 				AA70ECEA2F9A28A500A429A1 /* README.md */,
+				AABBA3E92F9A3E00009943E1 /* toolbar-48.png */,
+				AABBA3EA2F9A3E00009943E1 /* toolbar-96.png */,
+				AABBA3EB2F9A3E00009943E1 /* toolbar-128.png */,
 			);
 			path = icons;
 			sourceTree = "<group>";
@@ -559,6 +568,9 @@
 			files = (
 				AA70ECF62F9A28A500A429A1 /* background.js in Resources */,
 				AA70ECF72F9A28A500A429A1 /* manifest.json in Resources */,
+				AABBA3EC2F9A3E00009943E1 /* toolbar-48.png in Resources */,
+				AABBA3ED2F9A3E00009943E1 /* toolbar-128.png in Resources */,
+				AABBA3EE2F9A3E00009943E1 /* toolbar-96.png in Resources */,
 				AA70ECF92F9A28A500A429A1 /* messages.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
