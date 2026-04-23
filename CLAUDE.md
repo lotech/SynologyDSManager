@@ -99,30 +99,30 @@ xcodebuild test -project SynologyDSManager.xcodeproj \
 
 Or from Xcode: ⌘U.
 
-### Adding the test target (one-time, per fresh clone)
+### Test target layout
 
-If you clone fresh and don't see a `SynologyDSManagerTests` target in the
-scheme picker, the pbxproj has the test sources on disk but the test
-*target* hasn't been wired into the Xcode project yet. Takes 30 seconds:
+The `SynologyDSManagerTests` target is a macOS unit-test bundle hosted
+by the main app. Notable pbxproj settings:
 
-1. Open the project in Xcode (`./deploy.sh` → `o`).
-2. **File → New → Target…** → pick **Unit Testing Bundle** (under macOS).
-3. Name: `SynologyDSManagerTests`. Target to be tested:
-   `SynologyDSManager`. Finish.
-4. In the Project navigator, find the auto-generated
-   `SynologyDSManagerTests` group + default `*.swift` file Xcode created.
-   Delete the default file (move to trash).
-5. Drag the existing `SynologyDSManagerTests/` folder from Finder into
-   the `SynologyDSManagerTests` group. In the "Add to target" sheet
-   tick **only** `SynologyDSManagerTests` (not the main app).
-6. ⌘U to run. All tests in `SynologyAPITests.swift` should pass.
-7. Commit the resulting `project.pbxproj` change to a new branch and PR.
+- `SDKROOT = macosx`, `SUPPORTED_PLATFORMS = macosx`,
+  `SUPPORTS_MACCATALYST = NO` — pure macOS, not Mac Catalyst. Xcode 16+
+  would otherwise prefer Catalyst and fail module resolution against the
+  pure-macOS app module.
+- `MACOSX_DEPLOYMENT_TARGET = 14.0` — higher than the app's `13.0`
+  floor because Xcode 16's XCTest is built against 14.0+. Tests only
+  run during development, so bumping the floor here is fine.
+- `TEST_HOST = $(BUILT_PRODUCTS_DIR)/SynologyDSManager.app/Contents/MacOS/SynologyDSManager`
+  and `BUNDLE_LOADER = $(TEST_HOST)` — the bundle loads into the app
+  binary at runtime and links against its symbols at build time.
+- PBXTargetDependency on the main app, so the app builds first.
+- No hardcoded `DEVELOPMENT_TEAM` — signing inherits from the
+  gitignored `Signing.local.xcconfig` via the xcconfig cascade, same
+  as the other two targets.
 
-The reason we don't include the test target in the pbxproj by default is
-hand-editing pbxproj for unit-test targets is error-prone — Xcode's UI
-does it cleanly in seconds. Once a maintainer has wired it up and merged
-the resulting pbxproj change, subsequent clones inherit it
-automatically.
+If Xcode ever re-injects `DEVELOPMENT_TEAM = <your-id>` into
+`project.pbxproj` (it sometimes does on project open), strip it out
+before committing. The xcconfig cascade exists specifically to keep
+Team IDs out of the public repo.
 
 ## Code signing
 

@@ -62,6 +62,28 @@ commit that makes them.
   `SynologyAPI`.
 
 ### Added
+- **Test target wired into the Xcode project** — `SynologyDSManagerTests`
+  is now a full macOS unit-test bundle hosted by the main app, so
+  `⌘U` / `xcodebuild test` just works after a fresh clone. Notable
+  configuration:
+  - macOS-only (`SDKROOT = macosx`, `SUPPORTED_PLATFORMS = macosx`,
+    `SUPPORTS_MACCATALYST = NO`). Xcode 16's "New Target" UI defaults
+    to iOS/Catalyst even with macOS selected, which silently breaks
+    `@testable import` because the bundle builds for
+    `arm64-apple-ios-macabi` while the app is pure macOS. Explicit
+    platform pinning prevents that.
+  - `MACOSX_DEPLOYMENT_TARGET = 14.0` on the test bundle (the app
+    stays at 13.0). Xcode 16's XCTest.framework is built against
+    macOS 14.0+.
+  - `TEST_HOST` / `BUNDLE_LOADER` pointing at the app binary,
+    `PBXTargetDependency` on the app for build order.
+  - No hardcoded `DEVELOPMENT_TEAM` — signing inherits from the
+    `Signing.xcconfig` cascade. (Xcode injected the Team ID into
+    five places during target creation; all stripped.)
+- **CI now runs `xcodebuild test` on every PR** — new `test` job
+  added to `.github/workflows/ci.yml` alongside the existing build
+  and lint jobs. Any regression that breaks `SynologyAPITests` fails
+  CI before it can land.
 - **Unit test scaffolding (Phase 2a-2d — test target)** — a
   `SynologyDSManagerTests/` directory with:
   - `URLProtocolStub.swift`: `URLProtocol` subclass that intercepts
