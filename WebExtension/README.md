@@ -58,7 +58,29 @@ The XPC boundary is where network credentials stop. The handler
 never has the NAS host, username, password, or session ID — it only
 sees the URL to enqueue and a success/failure reply.
 
-## What Phase 3b-2 still needs to do in Xcode
+## Phase 3b-2 status
+
+### Phase 3b-2a — main-app-side wiring (shipped)
+
+Done from the CLI; requires no Xcode UI work:
+
+- ✅ Main app's XPC listener switched from
+  `NSXPCListener.anonymous()` to
+  `NSXPCListener(machServiceName: "com.skavans.synologyDSManager.bridge")`.
+- ✅ `AppDelegate.applicationWillFinishLaunching` calls
+  `SMAppService.agent(plistName:).register()` once per launch.
+  Idempotent and diagnostic-only on failure — missing plist or
+  unapproved login item degrades gracefully (listener is simply
+  unreachable from outside, main app works as before).
+- ✅ `project.pbxproj` adds an "Embed LaunchAgents" Copy Files build
+  phase on the main target that ships
+  `SynologyDSManager/LaunchAgents/com.skavans.synologyDSManager.bridge.plist`
+  into `Contents/Library/LaunchAgents/` at build time.
+
+### Phase 3b-2b — Web Extension Xcode target (still pending)
+
+Needs Xcode's "New Target" wizard to land cleanly. pbxproj surgery
+for a full new target is too fragile.
 
 1. **Add the Web Extension target.** File → New → Target → macOS →
    Safari Extension App (Web Extension). Name:
@@ -67,27 +89,19 @@ sees the URL to enqueue and a success/failure reply.
    `ClientAuthorization.allowedPeerBundleIdentifier`).
 2. **Point the target at these source files.** Delete the files
    Xcode auto-generates inside the new target and drag-add the ones
-   from this directory instead.
+   from this directory instead (`SafariWebExtensionHandler.swift`,
+   `Info.plist`, `SynologyDSManager_WebExtension.entitlements`,
+   everything under `Resources/`).
 3. **Share `SynologyDSManager/Bridge/SynologyBridgeProtocol.swift`
    with the Web Extension target.** Check its target membership
    checkbox for the new target so both ends see the same @objc
    protocol.
 4. **Embed the extension into the main app.** The Xcode template
-   does this automatically (adds a Copy Files build phase to the main
-   target with destination PlugIns/). Verify it after creating.
-5. **Bundle the LaunchAgent plist into the main app.** Add
-   `SynologyDSManager/LaunchAgents/com.skavans.synologyDSManager.bridge.plist`
-   to the main target with build-phase destination
-   `Contents/Library/LaunchAgents/`.
-6. **Register the LaunchAgent on first launch.** In `AppDelegate`,
-   call `SMAppService.agent(plistName:).register()` once. Handle
-   `.requiresApproval` by surfacing a modal asking the user to
-   approve the login item in System Settings.
-7. **Swap the XPC listener to a named one.** In
-   `SynologyBridgeListener.init`, change
-   `NSXPCListener.anonymous()` → `NSXPCListener(machServiceName:)`
-   with `com.skavans.synologyDSManager.bridge`.
-8. **Generate icons.** See `Resources/icons/README.md` for the
+   does this automatically (adds a Copy Files build phase to the
+   main target with destination PlugIns/). Verify it after
+   creating; it should slot in right next to the existing "Embed
+   App Extensions" phase that carries the legacy target.
+5. **Generate icons.** See `Resources/icons/README.md` for the
    `sips` one-liner that produces the three required PNGs from the
    legacy extension's PDF.
 

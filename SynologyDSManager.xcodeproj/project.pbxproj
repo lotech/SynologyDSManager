@@ -44,6 +44,7 @@
 		7E7E0042000000000000B000 /* SynologyBridgeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E7E0042000000000000A000 /* SynologyBridgeService.swift */; };
 		7E7E0043000000000000B000 /* ClientAuthorization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E7E0043000000000000A000 /* ClientAuthorization.swift */; };
 		7E7E0044000000000000B000 /* SynologyBridgeListener.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E7E0044000000000000A000 /* SynologyBridgeListener.swift */; };
+		7E7E0050000000000000B000 /* com.skavans.synologyDSManager.bridge.plist in Embed LaunchAgents */ = {isa = PBXBuildFile; fileRef = 7E7E0050000000000000A000 /* com.skavans.synologyDSManager.bridge.plist */; };
 		7E7E0010000000000000B000 /* AppLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E7E0010000000000000A000 /* AppLogger.swift */; };
 		7E7E0011000000000000B000 /* SynologyError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E7E0011000000000000A000 /* SynologyError.swift */; };
 		7E7E0012000000000000B000 /* SynologyAPIModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E7E0012000000000000A000 /* SynologyAPIModels.swift */; };
@@ -78,6 +79,17 @@
 				3A2D5EFE23D248B700B924EE /* SynologyDSManager Extension.appex in Embed App Extensions */,
 			);
 			name = "Embed App Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7E7E0052000000000000A000 /* Embed LaunchAgents */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "Contents/Library/LaunchAgents";
+			dstSubfolderSpec = 1;
+			files = (
+				7E7E0050000000000000B000 /* com.skavans.synologyDSManager.bridge.plist in Embed LaunchAgents */,
+			);
+			name = "Embed LaunchAgents";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
@@ -124,6 +136,7 @@
 		7E7E0042000000000000A000 /* SynologyBridgeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SynologyBridgeService.swift; sourceTree = "<group>"; };
 		7E7E0043000000000000A000 /* ClientAuthorization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientAuthorization.swift; sourceTree = "<group>"; };
 		7E7E0044000000000000A000 /* SynologyBridgeListener.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SynologyBridgeListener.swift; sourceTree = "<group>"; };
+		7E7E0050000000000000A000 /* com.skavans.synologyDSManager.bridge.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = com.skavans.synologyDSManager.bridge.plist; sourceTree = "<group>"; };
 		7E7E0010000000000000A000 /* AppLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLogger.swift; sourceTree = "<group>"; };
 		7E7E0011000000000000A000 /* SynologyError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SynologyError.swift; sourceTree = "<group>"; };
 		7E7E0012000000000000A000 /* SynologyAPIModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SynologyAPIModels.swift; sourceTree = "<group>"; };
@@ -193,6 +206,7 @@
 				3A42ADD6241F57CE00F470ED /* ViewControllers */,
 				7E7E0001000000000000A000 /* Network */,
 				7E7E0040000000000000A000 /* Bridge */,
+				7E7E0051000000000000A000 /* LaunchAgents */,
 				3A2D5EED23D248B500B924EE /* SynologyDSManager.entitlements */,
 				3A2D5EEF23D248B500B924EE /* AppDelegate.swift */,
 				3A2D5EF123D248B500B924EE /* Main.storyboard */,
@@ -283,6 +297,14 @@
 			path = Bridge;
 			sourceTree = "<group>";
 		};
+		7E7E0051000000000000A000 /* LaunchAgents */ = {
+			isa = PBXGroup;
+			children = (
+				7E7E0050000000000000A000 /* com.skavans.synologyDSManager.bridge.plist */,
+			);
+			path = LaunchAgents;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -294,6 +316,7 @@
 				3A2D5EE723D248B500B924EE /* Frameworks */,
 				3A2D5EE823D248B500B924EE /* Resources */,
 				3A2D5F1723D248B700B924EE /* Embed App Extensions */,
+				7E7E0052000000000000A000 /* Embed LaunchAgents */,
 			);
 			buildRules = (
 			);

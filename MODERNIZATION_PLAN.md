@@ -4,7 +4,7 @@ Living document. Tick boxes as tasks land. When all tasks in a phase are
 complete, move the phase status from **In progress** / **Planned** to
 **Shipped** with the date.
 
-Last updated: 2026-04-23 (Phase 3b-1 pushed — Safari Web Extension scaffolding)
+Last updated: 2026-04-23 (Phase 3b-2a pushed — Mach service wiring)
 
 ---
 
@@ -250,7 +250,7 @@ scoped Keychain access.
 - [x] Flipped `SWIFT_STRICT_CONCURRENCY` from `minimal` to `complete`
       — already done in Phase 2a-2d.
 
-## Phase 3 — Safari extension & webserver bridge · **In progress** (3a + 3b-1 shipped)
+## Phase 3 — Safari extension & webserver bridge · **In progress** (3a + 3b-1 + 3b-2a shipped)
 
 Goal: eliminate the two remaining Phase-0 audit findings around the
 extension ↔ main-app bridge:
@@ -334,10 +334,32 @@ files the 3b-2 Xcode target will compile.
       and `SynologyBridgeListener.swift` to reflect the finalized
       architecture (Web Extension as peer, not a separate CLI host).
 
-#### Phase 3b-2 — Xcode target wiring (planned)
+#### Phase 3b-2a — main-app-side wiring · **Shipped 2026-04-23**
 
-All the Xcode-side surgery to turn the scaffolding into compiled
-products. See `WebExtension/README.md` for the step-by-step.
+Everything on the main-app side of the bridge. Safe to ship before
+the Web Extension target exists: a named `NSXPCListener` simply
+doesn't receive connections until launchd routes the name to us,
+which waits on Phase 3b-2b's `.appex` landing + the login item
+being approved by the user.
+
+- [x] Swapped `NSXPCListener.anonymous()` → `NSXPCListener(machServiceName:)`
+      with `com.skavans.synologyDSManager.bridge`. Name exposed as
+      `SynologyBridgeListener.machServiceName` so the Web Extension's
+      handler (once compiled in 3b-2b) pulls from the same source.
+- [x] Added `registerBridgeLaunchAgent()` in `AppDelegate`, called
+      from `applicationWillFinishLaunching`. Uses
+      `SMAppService.agent(plistName:)` and logs-and-continues on
+      `.notFound` / `.requiresApproval` — the app launches cleanly
+      even if the plist isn't bundled yet or the user hasn't
+      approved the login item.
+- [x] `project.pbxproj` gains an "Embed LaunchAgents" Copy Files
+      build phase on the main target that bundles the plist into
+      `Contents/Library/LaunchAgents/` at build time.
+
+#### Phase 3b-2b — Web Extension Xcode target (planned)
+
+The pieces that need Xcode's "New Target" wizard rather than
+pbxproj surgery. See `WebExtension/README.md` for the step-by-step.
 
 - [ ] Add a `SynologyDSManager WebExtension` target (Xcode's "Safari
       Extension App (Web Extension)" template). Bundle ID
@@ -348,14 +370,6 @@ products. See `WebExtension/README.md` for the step-by-step.
       with the Web Extension target (target-membership checkbox).
 - [ ] Verify the main app's Copy Files build phase embeds the
       extension into `Contents/PlugIns/`.
-- [ ] Add the LaunchAgent plist to the main target's Copy Files build
-      phase with destination `Contents/Library/LaunchAgents/`.
-- [ ] Register the agent on first launch with
-      `SMAppService.agent(plistName:).register()` in `AppDelegate`;
-      surface `.requiresApproval` as a modal pointing the user at
-      System Settings → General → Login Items.
-- [ ] Swap `NSXPCListener.anonymous()` → `NSXPCListener(machServiceName:)`
-      in `SynologyBridgeListener`.
 - [ ] Generate the three toolbar PNGs (`sips` one-liner in
       `WebExtension/Resources/icons/README.md`).
 - [ ] The legacy `SynologyDSManager Extension` target stays enabled

@@ -14,11 +14,13 @@ human, `README.md` is a better starting point.
   and the project builds warning-free. 23 unit tests run in CI on every PR.
 - 🚧 **Phase 3** — Safari Web Extension + XPC bridge replacing the
   unauthenticated loopback HTTP server; Swifter dep goes with it.
-  **3a + 3b-1 shipped**: XPC scaffolding (`SynologyBridgeProtocol` +
-  authorisation-gated listener) in the main app, plus the Web
-  Extension's source tree — manifest, background service worker,
-  `SafariWebExtensionHandler`, LaunchAgent plist. Xcode target wiring
-  (3b-2) still pending; no external surface is reachable yet.
+  **3a + 3b-1 + 3b-2a shipped**: XPC scaffolding, the Web Extension
+  source tree, and the main-app-side Mach service wiring — listener
+  swapped from `.anonymous()` to `machServiceName:`, `AppDelegate`
+  registers the LaunchAgent via `SMAppService`, the LaunchAgent plist
+  ships inside `Contents/Library/LaunchAgents/`. Still waiting on
+  Phase 3b-2b (new Web Extension Xcode target + target membership
+  sharing for the protocol) before the bridge actually lights up.
 - ⏳ **Phase 4** — SwiftUI + Observation; retire `Shared.swift` globals.
 - ⏳ **Phase 5** — release engineering (Sparkle, notarised DMGs via CI).
 
