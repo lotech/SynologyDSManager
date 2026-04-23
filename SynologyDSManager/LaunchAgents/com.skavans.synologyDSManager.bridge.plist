@@ -5,35 +5,44 @@
         SynologyDSManager.app/Contents/Library/LaunchAgents/
             com.skavans.synologyDSManager.bridge.plist
 
-    Phase 3b-2 will register this agent programmatically at first
-    launch via `SMAppService.agent(plistName:).register()` (macOS 13+).
+    Phase 3b-2a: registered programmatically at first launch via
+    `SMAppService.agent(plistName:).register()` from `AppDelegate`.
 
     Role
     ----
     Advertises the `com.skavans.synologyDSManager.bridge` Mach service
     name to launchd. Once registered, the sandboxed Safari Web
     Extension can open an `NSXPCConnection(machServiceName:)` to the
-    main app. `SynologyBridgeListener` in the main target then swaps
-    its `NSXPCListener.anonymous()` (Phase 3a) for
-    `NSXPCListener(machServiceName:)` on the same name.
+    main app. `SynologyBridgeListener` in the main target binds to
+    the same name via `NSXPCListener(machServiceName:)`.
 
-    Why not ProgramArguments / Program
-    ----------------------------------
-    Neither `Program` nor `ProgramArguments` is present because the
-    agent is "on-demand": launchd should NOT start the main app in
-    the background, it should only advertise the name so that when
-    the app IS running, the service is reachable. Any connection
-    attempt made while the app is not running simply fails — which
-    is the correct behaviour for a GUI-app-hosted service.
+    BundleProgram, not Program
+    --------------------------
+    launchd requires SOME form of program key even when the agent
+    is really doing `bootstrap_check_in`-style Mach service hosting.
+    `BundleProgram` is the `SMAppService`-aware variant: the path
+    resolves relative to the containing app bundle, so the agent
+    works regardless of where the user installed the app
+    (`/Applications`, `~/Applications`, etc.).
 
-    `OnDemand = true` is the default for `MachServices` agents, but
-    we set it explicitly to document intent.
+    Side effect: if the main app isn't running when a peer connects
+    to the Mach name, launchd will spawn it via this path. That's
+    actually the desired UX — right-click → download → app launches
+    → download queued. The Safari Web Extension would otherwise
+    fail silently when the app is closed, which is what the legacy
+    `Webserver.swift` path does today.
+
+    `LimitLoadToSessionType = Aqua` keeps the agent confined to GUI
+    login sessions; it won't load in SSH / background contexts.
 -->
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
 	<key>Label</key>
 	<string>com.skavans.synologyDSManager.bridge</string>
+
+	<key>BundleProgram</key>
+	<string>Contents/MacOS/SynologyDSManager</string>
 
 	<key>MachServices</key>
 	<dict>
@@ -43,8 +52,5 @@
 
 	<key>LimitLoadToSessionType</key>
 	<string>Aqua</string>
-
-	<key>OnDemand</key>
-	<true/>
 </dict>
 </plist>

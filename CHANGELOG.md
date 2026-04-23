@@ -11,6 +11,22 @@ commit that makes them.
 
 ## [Unreleased]
 
+### Fixed
+- **Bridge LaunchAgent rejected by launchd at first launch.** The
+  Phase 3b-2a plist omitted `Program`/`ProgramArguments`/`BundleProgram`
+  on the theory that a pure-check-in Mach service agent doesn't need
+  one. launchd disagreed and rejected the plist with "Missing
+  program" + "plist content is invalid", which surfaced as
+  `SMAppService.register` failing with status 3. Added a
+  `BundleProgram = Contents/MacOS/SynologyDSManager` key —
+  SMAppService resolves this relative to the app bundle, so the
+  agent follows the app to whichever directory it's installed in.
+  Side effect: if the app is closed when a Safari extension click
+  reaches the Mach service, launchd will now spawn it. That's the
+  better UX (right-click → download → app launches to enqueue) vs.
+  the legacy webserver path which silently failed when the app was
+  closed.
+
 ### Added
 - **Phase 3b-2a — Main-app-side Mach service wiring.** The main app
   now advertises a named Mach service for the bridge and registers
