@@ -21,7 +21,7 @@
 		3A2D5EF323D248B500B924EE /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3A2D5EF123D248B500B924EE /* Main.storyboard */; };
 		3A2D5EF523D248B500B924EE /* SettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A2D5EF423D248B500B924EE /* SettingsViewController.swift */; };
 		3A2D5EF723D248B700B924EE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3A2D5EF623D248B700B924EE /* Assets.xcassets */; };
-		3A2D5EFE23D248B700B924EE /* SynologyDSManager Extension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 3A2D5EFD23D248B700B924EE /* SynologyDSManager Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		3A2D5EFE23D248B700B924EE /* SynologyDSManager Extension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 3A2D5EFD23D248B700B924EE /* SynologyDSManager Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		3A2D5F0323D248B700B924EE /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3A2D5F0223D248B700B924EE /* Cocoa.framework */; };
 		3A2D5F0623D248B700B924EE /* SafariExtensionHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A2D5F0523D248B700B924EE /* SafariExtensionHandler.swift */; };
 		3A2D5F0823D248B700B924EE /* SafariExtensionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A2D5F0723D248B700B924EE /* SafariExtensionViewController.swift */; };
@@ -50,7 +50,7 @@
 		7E7E0043000000000000B000 /* ClientAuthorization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E7E0043000000000000A000 /* ClientAuthorization.swift */; };
 		7E7E0044000000000000B000 /* SynologyBridgeListener.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E7E0044000000000000A000 /* SynologyBridgeListener.swift */; };
 		7E7E0050000000000000B000 /* com.skavans.synologyDSManager.bridge.plist in Embed LaunchAgents */ = {isa = PBXBuildFile; fileRef = 7E7E0050000000000000A000 /* com.skavans.synologyDSManager.bridge.plist */; };
-		AA70ECE22F9A248700A429A1 /* SynologyDSManager WebExtension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = AA70ECCA2F9A248700A429A1 /* SynologyDSManager WebExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		AA70ECE22F9A248700A429A1 /* SynologyDSManager WebExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = AA70ECCA2F9A248700A429A1 /* SynologyDSManager WebExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		AA70ECF62F9A28A500A429A1 /* background.js in Resources */ = {isa = PBXBuildFile; fileRef = AA70ECEC2F9A28A500A429A1 /* background.js */; };
 		AA70ECF72F9A28A500A429A1 /* manifest.json in Resources */ = {isa = PBXBuildFile; fileRef = AA70ECED2F9A28A500A429A1 /* manifest.json */; };
 		AA70ECF92F9A28A500A429A1 /* messages.json in Resources */ = {isa = PBXBuildFile; fileRef = AA70ECE72F9A28A500A429A1 /* messages.json */; };
@@ -87,16 +87,16 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		3A2D5F1723D248B700B924EE /* Embed App Extensions */ = {
+		3A2D5F1723D248B700B924EE /* Embed Foundation Extensions */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
-				3A2D5EFE23D248B700B924EE /* SynologyDSManager Extension.appex in Embed App Extensions */,
-				AA70ECE22F9A248700A429A1 /* SynologyDSManager WebExtension.appex in Embed App Extensions */,
+				3A2D5EFE23D248B700B924EE /* SynologyDSManager Extension.appex in Embed Foundation Extensions */,
+				AA70ECE22F9A248700A429A1 /* SynologyDSManager WebExtension.appex in Embed Foundation Extensions */,
 			);
-			name = "Embed App Extensions";
+			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		7E7E0052000000000000A000 /* Embed LaunchAgents */ = {
@@ -407,7 +407,7 @@
 				3A2D5EE623D248B500B924EE /* Sources */,
 				3A2D5EE723D248B500B924EE /* Frameworks */,
 				3A2D5EE823D248B500B924EE /* Resources */,
-				3A2D5F1723D248B700B924EE /* Embed App Extensions */,
+				3A2D5F1723D248B700B924EE /* Embed Foundation Extensions */,
 				7E7E0052000000000000A000 /* Embed LaunchAgents */,
 			);
 			buildRules = (
@@ -493,7 +493,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
 				LastSwiftUpdateCheck = 2640;
-				LastUpgradeCheck = 1520;
+				LastUpgradeCheck = 2640;
 				TargetAttributes = {
 					3A2D5EE923D248B500B924EE = {
 						CreatedOnToolsVersion = 11.3.1;
@@ -707,6 +707,7 @@
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
@@ -714,6 +715,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -736,6 +738,7 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_STRICT_CONCURRENCY = complete;
@@ -769,6 +772,7 @@
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
@@ -776,6 +780,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -791,6 +796,7 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_STRICT_CONCURRENCY = complete;
@@ -802,6 +808,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = "SynologyDSManager Extension/SynologyDSManager_Extension.entitlements";
 				CURRENT_PROJECT_VERSION = 12;
+				DEAD_CODE_STRIPPING = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				INFOPLIST_FILE = "SynologyDSManager Extension/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -823,6 +830,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = "SynologyDSManager Extension/SynologyDSManager_Extension.entitlements";
 				CURRENT_PROJECT_VERSION = 12;
+				DEAD_CODE_STRIPPING = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				INFOPLIST_FILE = "SynologyDSManager Extension/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -846,6 +854,7 @@
 				CODE_SIGN_ENTITLEMENTS = SynologyDSManager/SynologyDSManager.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 12;
+				DEAD_CODE_STRIPPING = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				INFOPLIST_FILE = SynologyDSManager/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -867,6 +876,7 @@
 				CODE_SIGN_ENTITLEMENTS = SynologyDSManager/SynologyDSManager.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 12;
+				DEAD_CODE_STRIPPING = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				INFOPLIST_FILE = SynologyDSManager/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -890,6 +900,7 @@
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CODE_SIGN_ENTITLEMENTS = WebExtension/SynologyDSManager_WebExtension.entitlements;
 				CURRENT_PROJECT_VERSION = 12;
+				DEAD_CODE_STRIPPING = YES;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -928,6 +939,7 @@
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CODE_SIGN_ENTITLEMENTS = WebExtension/SynologyDSManager_WebExtension.entitlements;
 				CURRENT_PROJECT_VERSION = 12;
+				DEAD_CODE_STRIPPING = YES;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -963,6 +975,7 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CLANG_ENABLE_MODULES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.0;
@@ -986,6 +999,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.0;
