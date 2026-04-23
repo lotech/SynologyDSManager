@@ -62,13 +62,14 @@ and write it to `Signing.local.xcconfig`, which is gitignored so your Team ID
 never ends up in the public repo. All subsequent builds (both from Xcode and
 from `deploy.sh`) pick it up automatically via the `Signing.xcconfig` cascade.
 
-Swift Package dependencies are resolved automatically by Xcode. Current third-party
-dependencies (being phased out — see Phase 2 of the plan):
+Swift Package dependencies are resolved automatically by Xcode. Remaining
+third-party dependencies (Alamofire + SwiftyJSON were removed in Phase 2a-2d):
 
-- Alamofire
-- SwiftyJSON
-- KeychainAccess
-- Swifter
+- KeychainAccess — credential storage; replaced with a direct `SecItem*`
+  wrapper in Phase 2b.
+- Swifter — backs the unauthenticated loopback HTTP bridge used by the
+  Safari App Extension; goes away in Phase 3 along with the whole
+  extension-to-XPC migration.
 
 ### Signing & distribution
 

@@ -4,7 +4,7 @@ Living document. Tick boxes as tasks land. When all tasks in a phase are
 complete, move the phase status from **In progress** / **Planned** to
 **Shipped** with the date.
 
-Last updated: 2026-04-23 (Phase 2a-2c pushed)
+Last updated: 2026-04-23 (Phase 2 complete — Alamofire/SwiftyJSON dropped, strict concurrency on)
 
 ---
 
@@ -187,17 +187,42 @@ scoped Keychain access.
       `Signing.xcconfig` cascade.
 - [x] Add a CI job that runs `xcodebuild test`.
 
-### Phase 2a-2d — Cleanup (planned, after 2a-2c)
+### Phase 2a-2d — Cleanup (merged)
 
-- [ ] Delete `SynologyDSManager/SynologyClient.swift`
-- [ ] Remove Alamofire from `Package.resolved` + `project.pbxproj`
-- [ ] Remove SwiftyJSON from `Package.resolved` + `project.pbxproj`
-- [ ] Remove the transitional `synologyClient.authenticate` call in
-      `DownloadsViewController.doWork` (safe once Phase 2a-2c has
-      migrated the final three legacy callers)
-- [ ] Delete the `registerEvent(…)` stub
-- [ ] Replace remaining `print(…)` sites with `os.Logger`
-- [ ] Flip `SWIFT_STRICT_CONCURRENCY` from `minimal` to `complete`
+- [x] Deleted `SynologyDSManager/SynologyClient.swift` (the legacy
+      Alamofire-based client, ~300 lines of dead code).
+- [x] Removed Alamofire from `Package.resolved` + `project.pbxproj`
+      (both targets). Migrated `SafariExtensionHandler.swift` off
+      Alamofire onto `URLSession`.
+- [x] Removed SwiftyJSON from `Package.resolved` + `project.pbxproj`.
+      Rewrote `Settings.swift` on `JSONEncoder`/`JSONDecoder` (same
+      on-disk JSON shape for backward compatibility with existing
+      installs' Keychain-stored credentials).
+- [x] Replaced `SynologyClient.ConnectionSettings` with a new
+      top-level `StoredCredentials` struct in `Settings.swift`. It's
+      `Codable`, carries a computed `apiCredentials` convenience that
+      produces the `SynologyAPI.Credentials` the actor expects, and
+      stays `String`-typed on port for compatibility with existing
+      stored data.
+- [x] Deleted the `registerEvent(…)` no-op stub and its call sites in
+      `DownloadsViewController`.
+- [x] Removed the `synologyClient: SynologyClient?` global from
+      `Shared.swift` and annotated the remaining UI-mutable globals
+      (`synologyAPI`, `workStarted`, `mainMethod`, `mainViewController`,
+      `currentViewController`) as `nonisolated(unsafe)` to silence
+      complete-concurrency warnings about mutable global state. Phase
+      4 replaces these with a proper `@Observable` app model; the
+      annotation is honest about the current shape being unsafe rather
+      than pretending it's been fixed.
+- [x] Flipped `SWIFT_STRICT_CONCURRENCY` from `minimal` to `complete`.
+
+### Phase 2a-2d follow-ups (planned, minor)
+
+- [ ] Replace remaining `print(…)` sites with `os.Logger`. Most active
+      `print` usage was in the now-deleted `SynologyClient.swift`, so
+      this item is smaller than it was when planned. Remaining sites
+      are in `Webserver.swift` and will go away with the webserver
+      itself in Phase 3.
 
 ### Phase 2b — Credential store & strict concurrency (planned)
 

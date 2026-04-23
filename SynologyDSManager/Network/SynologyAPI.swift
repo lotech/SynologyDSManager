@@ -2,20 +2,18 @@
 //  SynologyAPI.swift
 //  SynologyDSManager
 //
-//  Modern replacement for `SynologyClient.swift`. Same observable DSM API
-//  surface — `authenticate`, list tasks, start/pause/resume/delete, BT
-//  search, directory listing — but built on:
+//  Actor-isolated DSM API client. Built on:
 //
-//    * `URLSession` rather than Alamofire (no third-party transport)
-//    * `async/await` rather than completion-handler pyramids
-//    * typed `Codable` models rather than SwiftyJSON
-//    * typed `SynologyError` rather than `NSError` stringly-typed descriptions
-//    * `SynologyTrustEvaluator` for TLS (SPKI pinning), not `DisabledEvaluator`
-//    * cookie-based session auth rather than `_sid=` in URL query strings
+//    * `URLSession` (no third-party transport)
+//    * `async/await` (no completion-handler pyramids)
+//    * typed `Codable` models (no SwiftyJSON)
+//    * typed `SynologyError` (no stringly-typed `NSError` descriptions)
+//    * `SynologyTrustEvaluator` for TLS — SPKI pinning with user approval
+//      for first-use self-signed certs; no trust-disabling bypass
+//    * `_sid` in POST body rather than URL query (keeps the session ID
+//      out of proxy logs, referer headers, and crash reports)
 //
-//  This file does not replace `SynologyClient.swift` yet — both exist in
-//  parallel during Phase 2a. Phase 2a-2 migrates every call site over,
-//  deletes the old client, and removes Alamofire + SwiftyJSON from SPM.
+//  Replaced the legacy Alamofire-based `SynologyClient` in Phase 2a.
 //
 
 import Foundation

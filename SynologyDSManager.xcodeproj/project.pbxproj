@@ -29,8 +29,6 @@
 		3A2D5F0B23D248B700B924EE /* SafariExtensionViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 3A2D5F0923D248B700B924EE /* SafariExtensionViewController.xib */; };
 		3A2D5F0E23D248B700B924EE /* script.js in Resources */ = {isa = PBXBuildFile; fileRef = 3A2D5F0D23D248B700B924EE /* script.js */; };
 		3A2D5F1023D248B700B924EE /* ToolbarItemIcon.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 3A2D5F0F23D248B700B924EE /* ToolbarItemIcon.pdf */; };
-		3A2D5F2023D6084300B924EE /* Alamofire in Frameworks */ = {isa = PBXBuildFile; productRef = 3A2D5F1F23D6084300B924EE /* Alamofire */; };
-		3A2D5F2223D6097E00B924EE /* SynologyClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A2D5F2123D6097E00B924EE /* SynologyClient.swift */; };
 		3A42ADC7241CE9AB00F470ED /* DownloadsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A42ADC6241CE9AB00F470ED /* DownloadsViewController.swift */; };
 		3A42ADC9241CF39900F470ED /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A42ADC8241CF39900F470ED /* Settings.swift */; };
 		3A42ADCB241CFA7200F470ED /* DownloadsCellView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 3A42ADCA241CFA7200F470ED /* DownloadsCellView.xib */; };
@@ -38,9 +36,7 @@
 		3A42ADD1241D1BBB00F470ED /* LoadableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A42ADD0241D1BBB00F470ED /* LoadableView.swift */; };
 		3A42ADD3241EA37800F470ED /* AddDownloadViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A42ADD2241EA37800F470ED /* AddDownloadViewController.swift */; };
 		3A42ADD5241F56CD00F470ED /* Shared.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A42ADD4241F56CC00F470ED /* Shared.swift */; };
-		3A473966240E44680071E0FF /* SwiftyJSON in Frameworks */ = {isa = PBXBuildFile; productRef = 3A473965240E44680071E0FF /* SwiftyJSON */; };
 		473FAC2824437FC0002F61E4 /* broom.png in Resources */ = {isa = PBXBuildFile; fileRef = 473FAC2724437FC0002F61E4 /* broom.png */; };
-		47E28BAD24E550CA00A09AB1 /* Alamofire in Frameworks */ = {isa = PBXBuildFile; productRef = 47E28BAC24E550CA00A09AB1 /* Alamofire */; };
 		47E28BC224E6E35B00A09AB1 /* logo.png in Resources */ = {isa = PBXBuildFile; fileRef = 47E28BC124E6E35B00A09AB1 /* logo.png */; };
 		47F4D01C24E54BE500A1E222 /* Swifter in Frameworks */ = {isa = PBXBuildFile; productRef = 47F4D01B24E54BE500A1E222 /* Swifter */; };
 		47F4D01E24E54BF300A1E222 /* Webserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47F4D01D24E54BF300A1E222 /* Webserver.swift */; };
@@ -109,7 +105,6 @@
 		3A2D5F0D23D248B700B924EE /* script.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = script.js; sourceTree = "<group>"; };
 		3A2D5F0F23D248B700B924EE /* ToolbarItemIcon.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = ToolbarItemIcon.pdf; sourceTree = "<group>"; };
 		3A2D5F1123D248B700B924EE /* SynologyDSManager_Extension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SynologyDSManager_Extension.entitlements; sourceTree = "<group>"; };
-		3A2D5F2123D6097E00B924EE /* SynologyClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SynologyClient.swift; sourceTree = "<group>"; };
 		3A42ADC6241CE9AB00F470ED /* DownloadsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadsViewController.swift; sourceTree = "<group>"; };
 		3A42ADC8241CF39900F470ED /* Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
 		3A42ADCA241CFA7200F470ED /* DownloadsCellView.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = DownloadsCellView.xib; sourceTree = "<group>"; };
@@ -138,9 +133,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				3A473966240E44680071E0FF /* SwiftyJSON in Frameworks */,
 				47F4D01C24E54BE500A1E222 /* Swifter in Frameworks */,
-				3A2D5F2023D6084300B924EE /* Alamofire in Frameworks */,
 				3A2BEB4C2443D580004B94A0 /* KeychainAccess in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -150,7 +143,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				3A2D5F0323D248B700B924EE /* Cocoa.framework in Frameworks */,
-				47E28BAD24E550CA00A09AB1 /* Alamofire in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -197,7 +189,6 @@
 				3A2D5EF123D248B500B924EE /* Main.storyboard */,
 				3A2D5EF623D248B700B924EE /* Assets.xcassets */,
 				3A2D5EF823D248B700B924EE /* Info.plist */,
-				3A2D5F2123D6097E00B924EE /* SynologyClient.swift */,
 				3A42ADC8241CF39900F470ED /* Settings.swift */,
 				3A42ADCA241CFA7200F470ED /* DownloadsCellView.xib */,
 				3A42ADCC241CFD4900F470ED /* DownloadsCellView.swift */,
@@ -290,8 +281,6 @@
 			);
 			name = SynologyDSManager;
 			packageProductDependencies = (
-				3A2D5F1F23D6084300B924EE /* Alamofire */,
-				3A473965240E44680071E0FF /* SwiftyJSON */,
 				3A2BEB4B2443D580004B94A0 /* KeychainAccess */,
 				47F4D01B24E54BE500A1E222 /* Swifter */,
 			);
@@ -313,7 +302,6 @@
 			);
 			name = "SynologyDSManager Extension";
 			packageProductDependencies = (
-				47E28BAC24E550CA00A09AB1 /* Alamofire */,
 			);
 			productName = "SynologyDSManager Extension";
 			productReference = 3A2D5EFD23D248B700B924EE /* SynologyDSManager Extension.appex */;
@@ -373,8 +361,6 @@
 			);
 			mainGroup = 3A2D5EE123D248B500B924EE;
 			packageReferences = (
-				3A2D5F1E23D6084300B924EE /* XCRemoteSwiftPackageReference "Alamofire" */,
-				3A473964240E44680071E0FF /* XCRemoteSwiftPackageReference "SwiftyJSON" */,
 				3A2BEB4A2443D580004B94A0 /* XCRemoteSwiftPackageReference "KeychainAccess" */,
 				47F4D01A24E54BE500A1E222 /* XCRemoteSwiftPackageReference "swifter" */,
 			);
@@ -432,7 +418,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				3A2D5F2223D6097E00B924EE /* SynologyClient.swift in Sources */,
 				3A2D5EF523D248B500B924EE /* SettingsViewController.swift in Sources */,
 				3A098F6D244CCFB3001D2C8B /* BTSearchViewController.swift in Sources */,
 				3A2BEB4E2443DE8A004B94A0 /* AboutViewController.swift in Sources */,
@@ -563,7 +548,7 @@
 				SDKROOT = macosx;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_STRICT_CONCURRENCY = complete;
 			};
 			name = Debug;
 		};
@@ -618,7 +603,7 @@
 				SDKROOT = macosx;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
-				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_STRICT_CONCURRENCY = complete;
 			};
 			name = Release;
 		};
@@ -803,22 +788,6 @@
 				minimumVersion = 4.2.2;
 			};
 		};
-		3A2D5F1E23D6084300B924EE /* XCRemoteSwiftPackageReference "Alamofire" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/Alamofire/Alamofire.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 5.9.0;
-			};
-		};
-		3A473964240E44680071E0FF /* XCRemoteSwiftPackageReference "SwiftyJSON" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/SwiftyJSON/SwiftyJSON.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 5.0.0;
-			};
-		};
 		47F4D01A24E54BE500A1E222 /* XCRemoteSwiftPackageReference "swifter" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/httpswift/swifter.git";
@@ -834,21 +803,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 3A2BEB4A2443D580004B94A0 /* XCRemoteSwiftPackageReference "KeychainAccess" */;
 			productName = KeychainAccess;
-		};
-		3A2D5F1F23D6084300B924EE /* Alamofire */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 3A2D5F1E23D6084300B924EE /* XCRemoteSwiftPackageReference "Alamofire" */;
-			productName = Alamofire;
-		};
-		3A473965240E44680071E0FF /* SwiftyJSON */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 3A473964240E44680071E0FF /* XCRemoteSwiftPackageReference "SwiftyJSON" */;
-			productName = SwiftyJSON;
-		};
-		47E28BAC24E550CA00A09AB1 /* Alamofire */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 3A2D5F1E23D6084300B924EE /* XCRemoteSwiftPackageReference "Alamofire" */;
-			productName = Alamofire;
 		};
 		47F4D01B24E54BE500A1E222 /* Swifter */ = {
 			isa = XCSwiftPackageProductDependency;
