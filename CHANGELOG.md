@@ -12,6 +12,16 @@ commit that makes them.
 ## [Unreleased]
 
 ### Removed
+- **Phase 2b — dropped the KeychainAccess third-party package.**
+  Replaced with a new `KeychainStore.swift` — a thin Swift wrapper
+  around Apple's `SecItem*` primitives. Uses
+  `kSecAttrAccessibleWhenUnlockedThisDeviceOnly` so credentials are
+  only readable while the device is unlocked AND don't migrate across
+  Macs via iCloud Keychain / Time Machine restores.
+  Existing installs' stored credentials keep working transparently:
+  both the old and new wrappers use `kSecClassGenericPassword` with
+  the same service identifier, so the same Keychain items are visible
+  through either API. No migration step is needed.
 - **Phase 2a-2d cleanup.** End of the Phase 2a migration:
   - Deleted `SynologyClient.swift` — the legacy Alamofire-backed DSM
     client (~300 lines). Every caller migrated over the course of 2a-2a

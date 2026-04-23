@@ -2,15 +2,6 @@
   "originHash" : "766d321bf6cddce3ca83cdec7ab12ef15f2a57818fd9d3151ba3dcb072191310",
   "pins" : [
     {
-      "identity" : "keychainaccess",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/kishikawakatsumi/KeychainAccess.git",
-      "state" : {
-        "revision" : "84e546727d66f1adc5439debad16270d0fdd04e7",
-        "version" : "4.2.2"
-      }
-    },
-    {
       "identity" : "swifter",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/httpswift/swifter.git",
