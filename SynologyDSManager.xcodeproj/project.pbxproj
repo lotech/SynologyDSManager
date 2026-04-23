@@ -39,17 +39,27 @@
 		47E28BC224E6E35B00A09AB1 /* logo.png in Resources */ = {isa = PBXBuildFile; fileRef = 47E28BC124E6E35B00A09AB1 /* logo.png */; };
 		47F4D01C24E54BE500A1E222 /* Swifter in Frameworks */ = {isa = PBXBuildFile; productRef = 47F4D01B24E54BE500A1E222 /* Swifter */; };
 		47F4D01E24E54BF300A1E222 /* Webserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47F4D01D24E54BF300A1E222 /* Webserver.swift */; };
+		7E7E0010000000000000B000 /* AppLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E7E0010000000000000A000 /* AppLogger.swift */; };
+		7E7E0011000000000000B000 /* SynologyError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E7E0011000000000000A000 /* SynologyError.swift */; };
+		7E7E0012000000000000B000 /* SynologyAPIModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E7E0012000000000000A000 /* SynologyAPIModels.swift */; };
+		7E7E0013000000000000B000 /* SynologyTrustEvaluator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E7E0013000000000000A000 /* SynologyTrustEvaluator.swift */; };
+		7E7E0014000000000000B000 /* SynologyAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E7E0014000000000000A000 /* SynologyAPI.swift */; };
 		7E7E0030000000000000B000 /* KeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E7E0030000000000000A000 /* KeychainStore.swift */; };
 		7E7E0041000000000000B000 /* SynologyBridgeProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E7E0041000000000000A000 /* SynologyBridgeProtocol.swift */; };
 		7E7E0042000000000000B000 /* SynologyBridgeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E7E0042000000000000A000 /* SynologyBridgeService.swift */; };
 		7E7E0043000000000000B000 /* ClientAuthorization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E7E0043000000000000A000 /* ClientAuthorization.swift */; };
 		7E7E0044000000000000B000 /* SynologyBridgeListener.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E7E0044000000000000A000 /* SynologyBridgeListener.swift */; };
 		7E7E0050000000000000B000 /* com.skavans.synologyDSManager.bridge.plist in Embed LaunchAgents */ = {isa = PBXBuildFile; fileRef = 7E7E0050000000000000A000 /* com.skavans.synologyDSManager.bridge.plist */; };
-		7E7E0010000000000000B000 /* AppLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E7E0010000000000000A000 /* AppLogger.swift */; };
-		7E7E0011000000000000B000 /* SynologyError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E7E0011000000000000A000 /* SynologyError.swift */; };
-		7E7E0012000000000000B000 /* SynologyAPIModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E7E0012000000000000A000 /* SynologyAPIModels.swift */; };
-		7E7E0013000000000000B000 /* SynologyTrustEvaluator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E7E0013000000000000A000 /* SynologyTrustEvaluator.swift */; };
-		7E7E0014000000000000B000 /* SynologyAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E7E0014000000000000A000 /* SynologyAPI.swift */; };
+		AA70ECE22F9A248700A429A1 /* SynologyDSManager WebExtension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = AA70ECCA2F9A248700A429A1 /* SynologyDSManager WebExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		AA70ECF62F9A28A500A429A1 /* background.js in Resources */ = {isa = PBXBuildFile; fileRef = AA70ECEC2F9A28A500A429A1 /* background.js */; };
+		AA70ECF72F9A28A500A429A1 /* manifest.json in Resources */ = {isa = PBXBuildFile; fileRef = AA70ECED2F9A28A500A429A1 /* manifest.json */; };
+		AA70ECF92F9A28A500A429A1 /* messages.json in Resources */ = {isa = PBXBuildFile; fileRef = AA70ECE72F9A28A500A429A1 /* messages.json */; };
+		AA70ECFA2F9A28A500A429A1 /* SafariWebExtensionHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA70ECF12F9A28A500A429A1 /* SafariWebExtensionHandler.swift */; };
+		AA70ECFC2F9A2C4B00A429A1 /* SafariServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA70ECFB2F9A2C4B00A429A1 /* SafariServices.framework */; };
+		AA70ECFD2F9A2EDF00A429A1 /* SynologyBridgeProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E7E0041000000000000A000 /* SynologyBridgeProtocol.swift */; };
+		AABBA3EC2F9A3E00009943E1 /* toolbar-48.png in Resources */ = {isa = PBXBuildFile; fileRef = AABBA3E92F9A3E00009943E1 /* toolbar-48.png */; };
+		AABBA3ED2F9A3E00009943E1 /* toolbar-128.png in Resources */ = {isa = PBXBuildFile; fileRef = AABBA3EB2F9A3E00009943E1 /* toolbar-128.png */; };
+		AABBA3EE2F9A3E00009943E1 /* toolbar-96.png in Resources */ = {isa = PBXBuildFile; fileRef = AABBA3EA2F9A3E00009943E1 /* toolbar-96.png */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -67,6 +77,13 @@
 			remoteGlobalIDString = 3A2D5EE923D248B500B924EE;
 			remoteInfo = SynologyDSManager;
 		};
+		AA70ECE02F9A248700A429A1 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 3A2D5EE223D248B500B924EE /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = AA70ECC92F9A248700A429A1;
+			remoteInfo = "SynologyDSManager WebExtension";
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -77,6 +94,7 @@
 			dstSubfolderSpec = 13;
 			files = (
 				3A2D5EFE23D248B700B924EE /* SynologyDSManager Extension.appex in Embed App Extensions */,
+				AA70ECE22F9A248700A429A1 /* SynologyDSManager WebExtension.appex in Embed App Extensions */,
 			);
 			name = "Embed App Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -84,7 +102,7 @@
 		7E7E0052000000000000A000 /* Embed LaunchAgents */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = "Contents/Library/LaunchAgents";
+			dstPath = Contents/Library/LaunchAgents;
 			dstSubfolderSpec = 1;
 			files = (
 				7E7E0050000000000000B000 /* com.skavans.synologyDSManager.bridge.plist in Embed LaunchAgents */,
@@ -131,18 +149,31 @@
 		473FAC2724437FC0002F61E4 /* broom.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = broom.png; sourceTree = "<group>"; };
 		47E28BC124E6E35B00A09AB1 /* logo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = logo.png; sourceTree = "<group>"; };
 		47F4D01D24E54BF300A1E222 /* Webserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Webserver.swift; sourceTree = "<group>"; };
+		7E7E0010000000000000A000 /* AppLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLogger.swift; sourceTree = "<group>"; };
+		7E7E0011000000000000A000 /* SynologyError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SynologyError.swift; sourceTree = "<group>"; };
+		7E7E0012000000000000A000 /* SynologyAPIModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SynologyAPIModels.swift; sourceTree = "<group>"; };
+		7E7E0013000000000000A000 /* SynologyTrustEvaluator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SynologyTrustEvaluator.swift; sourceTree = "<group>"; };
+		7E7E0014000000000000A000 /* SynologyAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SynologyAPI.swift; sourceTree = "<group>"; };
 		7E7E0030000000000000A000 /* KeychainStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainStore.swift; sourceTree = "<group>"; };
 		7E7E0041000000000000A000 /* SynologyBridgeProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SynologyBridgeProtocol.swift; sourceTree = "<group>"; };
 		7E7E0042000000000000A000 /* SynologyBridgeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SynologyBridgeService.swift; sourceTree = "<group>"; };
 		7E7E0043000000000000A000 /* ClientAuthorization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientAuthorization.swift; sourceTree = "<group>"; };
 		7E7E0044000000000000A000 /* SynologyBridgeListener.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SynologyBridgeListener.swift; sourceTree = "<group>"; };
 		7E7E0050000000000000A000 /* com.skavans.synologyDSManager.bridge.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = com.skavans.synologyDSManager.bridge.plist; sourceTree = "<group>"; };
-		7E7E0010000000000000A000 /* AppLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLogger.swift; sourceTree = "<group>"; };
-		7E7E0011000000000000A000 /* SynologyError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SynologyError.swift; sourceTree = "<group>"; };
-		7E7E0012000000000000A000 /* SynologyAPIModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SynologyAPIModels.swift; sourceTree = "<group>"; };
-		7E7E0013000000000000A000 /* SynologyTrustEvaluator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SynologyTrustEvaluator.swift; sourceTree = "<group>"; };
-		7E7E0014000000000000A000 /* SynologyAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SynologyAPI.swift; sourceTree = "<group>"; };
+		AA70ECCA2F9A248700A429A1 /* SynologyDSManager WebExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "SynologyDSManager WebExtension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA70ECE72F9A28A500A429A1 /* messages.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = messages.json; sourceTree = "<group>"; };
+		AA70ECEA2F9A28A500A429A1 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		AA70ECEC2F9A28A500A429A1 /* background.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = background.js; sourceTree = "<group>"; };
+		AA70ECED2F9A28A500A429A1 /* manifest.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = manifest.json; sourceTree = "<group>"; };
+		AA70ECEF2F9A28A500A429A1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		AA70ECF02F9A28A500A429A1 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		AA70ECF12F9A28A500A429A1 /* SafariWebExtensionHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafariWebExtensionHandler.swift; sourceTree = "<group>"; };
+		AA70ECF22F9A28A500A429A1 /* SynologyDSManager_WebExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SynologyDSManager_WebExtension.entitlements; sourceTree = "<group>"; };
+		AA70ECFB2F9A2C4B00A429A1 /* SafariServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SafariServices.framework; path = System/Library/Frameworks/SafariServices.framework; sourceTree = SDKROOT; };
 		AA714C832F9961D50068FEEC /* SynologyDSManagerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SynologyDSManagerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		AABBA3E92F9A3E00009943E1 /* toolbar-48.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "toolbar-48.png"; sourceTree = "<group>"; };
+		AABBA3EA2F9A3E00009943E1 /* toolbar-96.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "toolbar-96.png"; sourceTree = "<group>"; };
+		AABBA3EB2F9A3E00009943E1 /* toolbar-128.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "toolbar-128.png"; sourceTree = "<group>"; };
 		AB01CD0100000000000000F1 /* Signing.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Signing.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -167,6 +198,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		AA70ECC72F9A248700A429A1 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA70ECFC2F9A2C4B00A429A1 /* SafariServices.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		AA714C802F9961D50068FEEC /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -186,6 +225,7 @@
 				AA714C842F9961D50068FEEC /* SynologyDSManagerTests */,
 				3A2D5F0123D248B700B924EE /* Frameworks */,
 				3A2D5EEB23D248B500B924EE /* Products */,
+				AA70ECF32F9A28A500A429A1 /* WebExtension */,
 			);
 			sourceTree = "<group>";
 		};
@@ -195,6 +235,7 @@
 				3A2D5EEA23D248B500B924EE /* SynologyDSManager.app */,
 				3A2D5EFD23D248B700B924EE /* SynologyDSManager Extension.appex */,
 				AA714C832F9961D50068FEEC /* SynologyDSManagerTests.xctest */,
+				AA70ECCA2F9A248700A429A1 /* SynologyDSManager WebExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -228,6 +269,7 @@
 		3A2D5F0123D248B700B924EE /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				AA70ECFB2F9A2C4B00A429A1 /* SafariServices.framework */,
 				3A2D5F0223D248B700B924EE /* Cocoa.framework */,
 			);
 			name = Frameworks;
@@ -305,6 +347,56 @@
 			path = LaunchAgents;
 			sourceTree = "<group>";
 		};
+		AA70ECE82F9A28A500A429A1 /* en */ = {
+			isa = PBXGroup;
+			children = (
+				AA70ECE72F9A28A500A429A1 /* messages.json */,
+			);
+			path = en;
+			sourceTree = "<group>";
+		};
+		AA70ECE92F9A28A500A429A1 /* _locales */ = {
+			isa = PBXGroup;
+			children = (
+				AA70ECE82F9A28A500A429A1 /* en */,
+			);
+			path = _locales;
+			sourceTree = "<group>";
+		};
+		AA70ECEB2F9A28A500A429A1 /* icons */ = {
+			isa = PBXGroup;
+			children = (
+				AA70ECEA2F9A28A500A429A1 /* README.md */,
+				AABBA3E92F9A3E00009943E1 /* toolbar-48.png */,
+				AABBA3EA2F9A3E00009943E1 /* toolbar-96.png */,
+				AABBA3EB2F9A3E00009943E1 /* toolbar-128.png */,
+			);
+			path = icons;
+			sourceTree = "<group>";
+		};
+		AA70ECEE2F9A28A500A429A1 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				AA70ECE92F9A28A500A429A1 /* _locales */,
+				AA70ECEB2F9A28A500A429A1 /* icons */,
+				AA70ECEC2F9A28A500A429A1 /* background.js */,
+				AA70ECED2F9A28A500A429A1 /* manifest.json */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		AA70ECF32F9A28A500A429A1 /* WebExtension */ = {
+			isa = PBXGroup;
+			children = (
+				AA70ECEE2F9A28A500A429A1 /* Resources */,
+				AA70ECEF2F9A28A500A429A1 /* Info.plist */,
+				AA70ECF02F9A28A500A429A1 /* README.md */,
+				AA70ECF12F9A28A500A429A1 /* SafariWebExtensionHandler.swift */,
+				AA70ECF22F9A28A500A429A1 /* SynologyDSManager_WebExtension.entitlements */,
+			);
+			path = WebExtension;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -322,6 +414,7 @@
 			);
 			dependencies = (
 				3A2D5F0023D248B700B924EE /* PBXTargetDependency */,
+				AA70ECE12F9A248700A429A1 /* PBXTargetDependency */,
 			);
 			name = SynologyDSManager;
 			packageProductDependencies = (
@@ -348,6 +441,25 @@
 			);
 			productName = "SynologyDSManager Extension";
 			productReference = 3A2D5EFD23D248B700B924EE /* SynologyDSManager Extension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		AA70ECC92F9A248700A429A1 /* SynologyDSManager WebExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AA70ECE62F9A248700A429A1 /* Build configuration list for PBXNativeTarget "SynologyDSManager WebExtension" */;
+			buildPhases = (
+				AA70ECC62F9A248700A429A1 /* Sources */,
+				AA70ECC72F9A248700A429A1 /* Frameworks */,
+				AA70ECC82F9A248700A429A1 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "SynologyDSManager WebExtension";
+			packageProductDependencies = (
+			);
+			productName = "SynologyDSManager WebExtension";
+			productReference = AA70ECCA2F9A248700A429A1 /* SynologyDSManager WebExtension.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
 		AA714C822F9961D50068FEEC /* SynologyDSManagerTests */ = {
@@ -389,6 +501,9 @@
 					3A2D5EFC23D248B700B924EE = {
 						CreatedOnToolsVersion = 11.3.1;
 					};
+					AA70ECC92F9A248700A429A1 = {
+						CreatedOnToolsVersion = 26.4.1;
+					};
 					AA714C822F9961D50068FEEC = {
 						CreatedOnToolsVersion = 26.4.1;
 					};
@@ -413,6 +528,7 @@
 				AA714C822F9961D50068FEEC /* SynologyDSManagerTests */,
 				3A2D5EE923D248B500B924EE /* SynologyDSManager */,
 				3A2D5EFC23D248B700B924EE /* SynologyDSManager Extension */,
+				AA70ECC92F9A248700A429A1 /* SynologyDSManager WebExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -443,6 +559,19 @@
 				3A2D5F1023D248B700B924EE /* ToolbarItemIcon.pdf in Resources */,
 				3A2D5F0B23D248B700B924EE /* SafariExtensionViewController.xib in Resources */,
 				3A2D5F0E23D248B700B924EE /* script.js in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AA70ECC82F9A248700A429A1 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA70ECF62F9A28A500A429A1 /* background.js in Resources */,
+				AA70ECF72F9A28A500A429A1 /* manifest.json in Resources */,
+				AABBA3EC2F9A3E00009943E1 /* toolbar-48.png in Resources */,
+				AABBA3ED2F9A3E00009943E1 /* toolbar-128.png in Resources */,
+				AABBA3EE2F9A3E00009943E1 /* toolbar-96.png in Resources */,
+				AA70ECF92F9A28A500A429A1 /* messages.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -495,6 +624,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		AA70ECC62F9A248700A429A1 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA70ECFD2F9A2EDF00A429A1 /* SynologyBridgeProtocol.swift in Sources */,
+				AA70ECFA2F9A28A500A429A1 /* SafariWebExtensionHandler.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		AA714C7F2F9961D50068FEEC /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -514,6 +652,11 @@
 			isa = PBXTargetDependency;
 			target = 3A2D5EE923D248B500B924EE /* SynologyDSManager */;
 			targetProxy = 7E7E0020000000000000A000 /* PBXContainerItemProxy */;
+		};
+		AA70ECE12F9A248700A429A1 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = AA70ECC92F9A248700A429A1 /* SynologyDSManager WebExtension */;
+			targetProxy = AA70ECE02F9A248700A429A1 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -699,7 +842,6 @@
 		3A2D5F1923D248B700B924EE /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = SynologyDSManager/SynologyDSManager.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -721,7 +863,6 @@
 		3A2D5F1A23D248B700B924EE /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = SynologyDSManager/SynologyDSManager.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -737,6 +878,81 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				"PROVISIONING_PROFILE_SPECIFIER[sdk=macosx*]" = "";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		AA70ECE32F9A248700A429A1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CODE_SIGN_ENTITLEMENTS = WebExtension/SynologyDSManager_WebExtension.entitlements;
+				CURRENT_PROJECT_VERSION = 12;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				INFOPLIST_FILE = WebExtension/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 2.0.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.skavans.synologyDSManager.bridge;
+				PRODUCT_NAME = "SynologyDSManager WebExtension";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		AA70ECE42F9A248700A429A1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CODE_SIGN_ENTITLEMENTS = WebExtension/SynologyDSManager_WebExtension.entitlements;
+				CURRENT_PROJECT_VERSION = 12;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				INFOPLIST_FILE = WebExtension/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 2.0.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.skavans.synologyDSManager.bridge;
+				PRODUCT_NAME = "SynologyDSManager WebExtension";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
@@ -811,6 +1027,15 @@
 			buildConfigurations = (
 				3A2D5F1923D248B700B924EE /* Debug */,
 				3A2D5F1A23D248B700B924EE /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AA70ECE62F9A248700A429A1 /* Build configuration list for PBXNativeTarget "SynologyDSManager WebExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA70ECE32F9A248700A429A1 /* Debug */,
+				AA70ECE42F9A248700A429A1 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

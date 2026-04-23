@@ -1,9 +1,10 @@
-# Safari Web Extension — source scaffolding
+# Safari Web Extension
 
 This directory is the source tree for the **Synology DS Manager Web
-Extension** target. Phase 3b-1 (this PR) ships the source files only;
-the Xcode target that compiles them lands in Phase 3b-2 so the two
-surfaces can be reviewed independently.
+Extension** target — a Safari MV3 extension that captures link
+right-clicks and dispatches the URL to the main app over XPC. The
+source landed in Phase 3b-1 and the Xcode target that compiles it
+landed in Phase 3b-2b.
 
 ## Why Web Extensions, not Safari App Extensions
 
@@ -77,33 +78,46 @@ Done from the CLI; requires no Xcode UI work:
   `SynologyDSManager/LaunchAgents/com.skavans.synologyDSManager.bridge.plist`
   into `Contents/Library/LaunchAgents/` at build time.
 
-### Phase 3b-2b — Web Extension Xcode target (still pending)
+### Phase 3b-2b — Web Extension Xcode target (shipped)
 
-Needs Xcode's "New Target" wizard to land cleanly. pbxproj surgery
-for a full new target is too fragile.
+Landed via Xcode's "New Target" wizard rather than pbxproj surgery.
+Kept here as a reference for anyone redoing the target on a fork,
+or for future similar work. Each step is a ✅:
 
-1. **Add the Web Extension target.** File → New → Target → macOS →
+1. **Added the Web Extension target.** File → New → Target → macOS →
    Safari Extension App (Web Extension). Name:
    `SynologyDSManager WebExtension`. Bundle ID:
    `com.skavans.synologyDSManager.bridge` (must match
    `ClientAuthorization.allowedPeerBundleIdentifier`).
-2. **Point the target at these source files.** Delete the files
-   Xcode auto-generates inside the new target and drag-add the ones
-   from this directory instead (`SafariWebExtensionHandler.swift`,
+2. **Pointed the target at these source files.** Deleted the files
+   Xcode auto-generated inside the new target and reference-added
+   the ones from this directory (`SafariWebExtensionHandler.swift`,
    `Info.plist`, `SynologyDSManager_WebExtension.entitlements`,
-   everything under `Resources/`).
-3. **Share `SynologyDSManager/Bridge/SynologyBridgeProtocol.swift`
-   with the Web Extension target.** Check its target membership
-   checkbox for the new target so both ends see the same @objc
-   protocol.
-4. **Embed the extension into the main app.** The Xcode template
-   does this automatically (adds a Copy Files build phase to the
-   main target with destination PlugIns/). Verify it after
-   creating; it should slot in right next to the existing "Embed
-   App Extensions" phase that carries the legacy target.
-5. **Generate icons.** See `Resources/icons/README.md` for the
-   `sips` one-liner that produces the three required PNGs from the
-   legacy extension's PDF.
+   everything under `Resources/`). Required turning off
+   `GENERATE_INFOPLIST_FILE` so our hand-authored `Info.plist` is
+   used verbatim — the `NSExtension` dict is load-bearing and a
+   synthesised plist can clobber it.
+3. **Shared `SynologyDSManager/Bridge/SynologyBridgeProtocol.swift`
+   with the Web Extension target** via target-membership checkbox.
+   Both sides compile it into their own module; `NSXPCConnection`
+   matches by the Obj-C runtime name of the `@objc` protocol, so
+   the wire format stays in sync.
+4. **Embed-into-main-app** slot: Xcode auto-added
+   `SynologyDSManager WebExtension.appex` to the main target's
+   existing "Embed App Extensions" Copy Files phase
+   (`Contents/PlugIns/`), right next to the legacy extension.
+5. **Generated icons.** Two-step `sips` pipeline (see
+   `Resources/icons/README.md`) — single-step `sips -Z N input.pdf`
+   is a no-op on PDF input in current macOS, so we rasterise to a
+   temporary high-res PNG then `-z H W` to each target size.
+6. **Normalised target build settings** to match the main app's
+   signing cascade. The wizard injected `CODE_SIGN_IDENTITY` and
+   `CODE_SIGN_STYLE` at target level, which short-circuits the
+   per-configuration logic in `Signing.xcconfig`; stripping both
+   lets the xcconfig drive signing the same way it drives the main
+   app. Also normalised `CURRENT_PROJECT_VERSION`,
+   `MARKETING_VERSION`, and `MACOSX_DEPLOYMENT_TARGET` to match the
+   parent, and removed the wizard's stale `INFOPLIST_KEY_*` keys.
 
 Phase 3c retires the legacy `SynologyDSManager Extension` target
 and `Webserver.swift` once the Web Extension is shipping and

@@ -45,20 +45,20 @@ final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
             let userInfo = item.userInfo as? [String: Any],
             let message = userInfo[SFExtensionMessageKey] as? [String: Any]
         else {
-            respond(to: context, ok: false, error: "Malformed message from extension.")
+            Self.respond(to: context, ok: false, error: "Malformed message from extension.")
             return
         }
 
         switch message["action"] as? String {
         case "enqueueDownload":
             guard let url = message["url"] as? String else {
-                respond(to: context, ok: false, error: "Missing 'url' field.")
+                Self.respond(to: context, ok: false, error: "Missing 'url' field.")
                 return
             }
-            enqueueDownload(url: url, context: context)
+            Self.enqueueDownload(url: url, context: context)
 
         default:
-            respond(to: context, ok: false, error: "Unknown action.")
+            Self.respond(to: context, ok: false, error: "Unknown action.")
         }
     }
 
@@ -66,46 +66,65 @@ final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
     /// `enqueueDownload(url:reply:)`, and forward the reply back to JS.
     /// The connection is invalidated after a single call — we don't
     /// keep it alive across Safari's message dispatches.
-    private func enqueueDownload(url: String, context: NSExtensionContext) {
-        let connection = NSXPCConnection(machServiceName: Self.bridgeMachServiceName,
+    ///
+    /// A `CheckedContinuation` bridges XPC's `@Sendable` reply closure
+    /// into this `Task`'s context so `NSExtensionContext` and
+    /// `NSXPCConnection` (both non-`Sendable`) never cross an isolation
+    /// boundary — only `(Bool, String?)` does, and both are `Sendable`.
+    private static func enqueueDownload(url: String, context: NSExtensionContext) {
+        let connection = NSXPCConnection(machServiceName: bridgeMachServiceName,
                                          options: [])
         connection.remoteObjectInterface = NSXPCInterface(with: SynologyBridgeProtocol.self)
 
-        connection.invalidationHandler = { [weak self] in
-            log.notice("bridge connection invalidated before reply")
-            self?.respond(to: context, ok: false,
-                          error: "Lost connection to Synology DS Manager. Is the app running?")
+        connection.invalidationHandler = {
+            log.notice("bridge connection invalidated")
         }
-        connection.interruptionHandler = { [weak self] in
-            log.notice("bridge connection interrupted before reply")
-            self?.respond(to: context, ok: false,
-                          error: "Synology DS Manager stopped responding.")
+        connection.interruptionHandler = {
+            log.notice("bridge connection interrupted")
         }
-
         connection.resume()
 
-        let proxy = connection.remoteObjectProxyWithErrorHandler { [weak self] error in
-            log.error("remoteObjectProxy error \(error.localizedDescription, privacy: .public)")
-            self?.respond(to: context, ok: false,
-                          error: "Couldn't reach Synology DS Manager: \(error.localizedDescription)")
-            connection.invalidate()
-        } as? SynologyBridgeProtocol
+        // Wrap the non-`Sendable` values we need past the upcoming
+        // `Task` boundary. The wrapped values outlive exactly one XPC
+        // round-trip and aren't touched concurrently from anywhere else,
+        // so the `@unchecked` is safe in practice.
+        let contextBox = UncheckedBox(context)
+        let connectionBox = UncheckedBox(connection)
 
-        guard let proxy else {
-            respond(to: context, ok: false,
-                    error: "Couldn't acquire bridge proxy.")
-            connection.invalidate()
-            return
+        Task {
+            let (ok, errorMessage) = await fetchReply(from: connectionBox.value, url: url)
+            respond(to: contextBox.value, ok: ok, error: ok ? nil : errorMessage)
+            connectionBox.value.invalidate()
         }
+    }
 
-        proxy.enqueueDownload(url: url) { [weak self] accepted, message in
-            self?.respond(to: context, ok: accepted, error: accepted ? nil : message)
-            connection.invalidate()
+    /// Open a proxy on `connection`, ask it to enqueue `url`, and return
+    /// the reply. Uses a `CheckedContinuation` so the `@Sendable` reply
+    /// closure only ever captures `continuation` (which is `Sendable`).
+    private static func fetchReply(from connection: NSXPCConnection,
+                                   url: String) async -> (Bool, String?) {
+        await withCheckedContinuation { continuation in
+            let proxy = connection.remoteObjectProxyWithErrorHandler { error in
+                log.error("remoteObjectProxy error \(error.localizedDescription, privacy: .public)")
+                continuation.resume(returning: (
+                    false,
+                    "Couldn't reach Synology DS Manager: \(error.localizedDescription)"
+                ))
+            } as? SynologyBridgeProtocol
+
+            guard let proxy else {
+                continuation.resume(returning: (false, "Couldn't acquire bridge proxy."))
+                return
+            }
+
+            proxy.enqueueDownload(url: url) { accepted, message in
+                continuation.resume(returning: (accepted, message))
+            }
         }
     }
 
     /// Build and complete the Safari extension reply.
-    private func respond(to context: NSExtensionContext, ok: Bool, error: String?) {
+    private static func respond(to context: NSExtensionContext, ok: Bool, error: String?) {
         var payload: [String: Any] = ["ok": ok]
         if let error { payload["error"] = error }
 
@@ -113,4 +132,15 @@ final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
         reply.userInfo = [SFExtensionMessageKey: payload]
         context.completeRequest(returningItems: [reply], completionHandler: nil)
     }
+}
+
+
+/// `@unchecked Sendable` envelope for values that aren't formally
+/// `Sendable` but are only ever touched on one thread at a time for the
+/// duration of a single XPC round-trip (`NSXPCConnection`,
+/// `NSExtensionContext`). Kept `private` so nothing else in the module
+/// can reach for it.
+private struct UncheckedBox<Value>: @unchecked Sendable {
+    let value: Value
+    init(_ value: Value) { self.value = value }
 }
