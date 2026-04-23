@@ -4,7 +4,7 @@ Living document. Tick boxes as tasks land. When all tasks in a phase are
 complete, move the phase status from **In progress** / **Planned** to
 **Shipped** with the date.
 
-Last updated: 2026-04-23 (Phase 2 complete — Alamofire/SwiftyJSON dropped, strict concurrency on)
+Last updated: 2026-04-23 (Phase 2b pushed — KeychainAccess dropped)
 
 ---
 
@@ -224,12 +224,26 @@ scoped Keychain access.
       are in `Webserver.swift` and will go away with the webserver
       itself in Phase 3.
 
-### Phase 2b — Credential store & strict concurrency (planned)
+### Phase 2b — Credential store (merged)
 
-- [ ] Replace KeychainAccess with a small wrapper around `SecItem*`,
-      `kSecAttrAccessibleWhenUnlockedThisDeviceOnly`; stop persisting the SID
-- [ ] Remove KeychainAccess from `Package.resolved` + `project.pbxproj`
-- [ ] Flip `SWIFT_STRICT_CONCURRENCY` from `minimal` to `complete`
+- [x] Replaced KeychainAccess with a small wrapper around `SecItem*`
+      in `SynologyDSManager/KeychainStore.swift`, using
+      `kSecAttrAccessibleWhenUnlockedThisDeviceOnly` (item only
+      readable while the device is unlocked; does not migrate to
+      other Macs via iCloud Keychain or backups).
+- [x] Rewrote `Settings.swift` on top of `KeychainStore`. Because
+      both the old and new wrappers use `kSecClassGenericPassword`
+      with the same service identifier, existing installs' stored
+      credentials read back through the new code without needing a
+      migration step.
+- [x] Removed KeychainAccess from `Package.resolved` +
+      `project.pbxproj`.
+- [x] Stop persisting the SID — already done in Phase 2a-2a (the new
+      `SynologyAPI` actor keeps the SID in memory only; the
+      `StoredCredentials` type introduced in 2a-2d explicitly doesn't
+      have an `sid` field).
+- [x] Flipped `SWIFT_STRICT_CONCURRENCY` from `minimal` to `complete`
+      — already done in Phase 2a-2d.
 
 ## Phase 3 — Safari extension & webserver bridge · **Planned**
 

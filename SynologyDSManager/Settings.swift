@@ -5,17 +5,15 @@
 
 import Foundation
 
-import KeychainAccess
-
 
 /// User-entered connection details persisted to the Keychain between
-/// launches. Serialised as JSON for backward compatibility with the
-/// historical SwiftyJSON-based storage format (old installs keep
-/// decoding cleanly — unknown keys like the legacy `sid` are ignored).
+/// launches. Serialised as JSON.
 ///
-/// `port` is a `String` rather than `Int` because the Settings UI uses
-/// an `NSTextField` and the historical stored shape matched that.
-/// Convert to a typed port at the boundary via `apiCredentials`.
+/// The on-disk shape matches what the pre-Phase-2 code produced, so
+/// existing installs decode cleanly. Notably, `port` stays a `String`
+/// (the UI edits it as a text field) — at the `SynologyAPI` boundary
+/// we parse it into an `Int` via `apiCredentials`. Unknown keys like
+/// the legacy `sid` field are silently ignored by `Decodable`.
 struct StoredCredentials: Codable, Equatable {
     var host: String = ""
     var port: String = "5001"
@@ -25,7 +23,7 @@ struct StoredCredentials: Codable, Equatable {
 
     /// Convert to the typed credentials the `SynologyAPI` actor uses.
     /// Falls back to DSM's default HTTPS port `5001` if the stored
-    /// string doesn't parse as an Int.
+    /// string doesn't parse as an `Int`.
     var apiCredentials: SynologyAPI.Credentials {
         SynologyAPI.Credentials(
             host: host,
@@ -39,7 +37,6 @@ struct StoredCredentials: Codable, Equatable {
 
 
 let userDefaults = UserDefaults()
-private let keychain = Keychain(service: "com.skavans.synologyDSManager")
 private let credentialsKey = "syno_conn_settings"
 
 
@@ -48,16 +45,18 @@ func storeSettings(_ credentials: StoredCredentials) {
     do {
         let data = try JSONEncoder().encode(credentials)
         if let string = String(data: data, encoding: .utf8) {
-            keychain[credentialsKey] = string
+            KeychainStore.write(key: credentialsKey, value: string)
         }
     } catch {
-        AppLogger.keychain.error("Failed to encode credentials for keychain: \(error.localizedDescription, privacy: .public)")
+        AppLogger.keychain.error(
+            "Failed to encode credentials for keychain: \(error.localizedDescription, privacy: .public)"
+        )
     }
 }
 
 
-/// Read credentials from the Keychain. Returns `nil` if nothing has been
-/// stored yet or the stored blob can't be decoded.
+/// Read credentials from the Keychain. Returns `nil` if nothing has
+/// been stored yet or the stored blob can't be decoded.
 ///
 /// Legacy note: an earlier version of the app stored credentials in
 /// `UserDefaults` (before moving to the Keychain). If we find them
@@ -66,7 +65,7 @@ func storeSettings(_ credentials: StoredCredentials) {
 func readSettings() -> StoredCredentials? {
     migrateLegacyUserDefaultsCredentialsIfPresent()
 
-    guard let string = keychain[credentialsKey],
+    guard let string = KeychainStore.read(key: credentialsKey),
           let data = string.data(using: .utf8) else {
         return nil
     }
@@ -83,7 +82,7 @@ private func migrateLegacyUserDefaultsCredentialsIfPresent() {
 
     if let data = try? JSONSerialization.data(withJSONObject: dict),
        let string = String(data: data, encoding: .utf8) {
-        keychain[credentialsKey] = string
+        KeychainStore.write(key: credentialsKey, value: string)
     }
     userDefaults.removeObject(forKey: credentialsKey)
 }

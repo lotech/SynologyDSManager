@@ -16,7 +16,6 @@
 		3A2BEB3D2443C22F004B94A0 /* pause_all.png in Resources */ = {isa = PBXBuildFile; fileRef = 3A2BEB3C2443C22F004B94A0 /* pause_all.png */; };
 		3A2BEB3F2443C23F004B94A0 /* resume_all.png in Resources */ = {isa = PBXBuildFile; fileRef = 3A2BEB3E2443C23F004B94A0 /* resume_all.png */; };
 		3A2BEB492443C88D004B94A0 /* settings.png in Resources */ = {isa = PBXBuildFile; fileRef = 3A2BEB482443C88C004B94A0 /* settings.png */; };
-		3A2BEB4C2443D580004B94A0 /* KeychainAccess in Frameworks */ = {isa = PBXBuildFile; productRef = 3A2BEB4B2443D580004B94A0 /* KeychainAccess */; };
 		3A2BEB4E2443DE8A004B94A0 /* AboutViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A2BEB4D2443DE8A004B94A0 /* AboutViewController.swift */; };
 		3A2D5EF023D248B500B924EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A2D5EEF23D248B500B924EE /* AppDelegate.swift */; };
 		3A2D5EF323D248B500B924EE /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3A2D5EF123D248B500B924EE /* Main.storyboard */; };
@@ -40,6 +39,7 @@
 		47E28BC224E6E35B00A09AB1 /* logo.png in Resources */ = {isa = PBXBuildFile; fileRef = 47E28BC124E6E35B00A09AB1 /* logo.png */; };
 		47F4D01C24E54BE500A1E222 /* Swifter in Frameworks */ = {isa = PBXBuildFile; productRef = 47F4D01B24E54BE500A1E222 /* Swifter */; };
 		47F4D01E24E54BF300A1E222 /* Webserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47F4D01D24E54BF300A1E222 /* Webserver.swift */; };
+		7E7E0030000000000000B000 /* KeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E7E0030000000000000A000 /* KeychainStore.swift */; };
 		7E7E0010000000000000B000 /* AppLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E7E0010000000000000A000 /* AppLogger.swift */; };
 		7E7E0011000000000000B000 /* SynologyError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E7E0011000000000000A000 /* SynologyError.swift */; };
 		7E7E0012000000000000B000 /* SynologyAPIModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E7E0012000000000000A000 /* SynologyAPIModels.swift */; };
@@ -115,6 +115,7 @@
 		473FAC2724437FC0002F61E4 /* broom.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = broom.png; sourceTree = "<group>"; };
 		47E28BC124E6E35B00A09AB1 /* logo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = logo.png; sourceTree = "<group>"; };
 		47F4D01D24E54BF300A1E222 /* Webserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Webserver.swift; sourceTree = "<group>"; };
+		7E7E0030000000000000A000 /* KeychainStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainStore.swift; sourceTree = "<group>"; };
 		7E7E0010000000000000A000 /* AppLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLogger.swift; sourceTree = "<group>"; };
 		7E7E0011000000000000A000 /* SynologyError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SynologyError.swift; sourceTree = "<group>"; };
 		7E7E0012000000000000A000 /* SynologyAPIModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SynologyAPIModels.swift; sourceTree = "<group>"; };
@@ -134,7 +135,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				47F4D01C24E54BE500A1E222 /* Swifter in Frameworks */,
-				3A2BEB4C2443D580004B94A0 /* KeychainAccess in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -197,6 +197,7 @@
 				3A098F78244FA9CF001D2C8B /* DestinationView.swift */,
 				3A098F7A244FAB46001D2C8B /* DestinationView.xib */,
 				47F4D01D24E54BF300A1E222 /* Webserver.swift */,
+				7E7E0030000000000000A000 /* KeychainStore.swift */,
 			);
 			path = SynologyDSManager;
 			sourceTree = "<group>";
@@ -281,7 +282,6 @@
 			);
 			name = SynologyDSManager;
 			packageProductDependencies = (
-				3A2BEB4B2443D580004B94A0 /* KeychainAccess */,
 				47F4D01B24E54BE500A1E222 /* Swifter */,
 			);
 			productName = SynologyDSManager;
@@ -361,7 +361,6 @@
 			);
 			mainGroup = 3A2D5EE123D248B500B924EE;
 			packageReferences = (
-				3A2BEB4A2443D580004B94A0 /* XCRemoteSwiftPackageReference "KeychainAccess" */,
 				47F4D01A24E54BE500A1E222 /* XCRemoteSwiftPackageReference "swifter" */,
 			);
 			productRefGroup = 3A2D5EEB23D248B500B924EE /* Products */;
@@ -428,6 +427,7 @@
 				3A42ADC7241CE9AB00F470ED /* DownloadsViewController.swift in Sources */,
 				3A2D5EF023D248B500B924EE /* AppDelegate.swift in Sources */,
 				47F4D01E24E54BF300A1E222 /* Webserver.swift in Sources */,
+				7E7E0030000000000000B000 /* KeychainStore.swift in Sources */,
 				3A42ADD5241F56CD00F470ED /* Shared.swift in Sources */,
 				3A42ADD1241D1BBB00F470ED /* LoadableView.swift in Sources */,
 				3A42ADC9241CF39900F470ED /* Settings.swift in Sources */,
@@ -780,14 +780,6 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		3A2BEB4A2443D580004B94A0 /* XCRemoteSwiftPackageReference "KeychainAccess" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/kishikawakatsumi/KeychainAccess.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 4.2.2;
-			};
-		};
 		47F4D01A24E54BE500A1E222 /* XCRemoteSwiftPackageReference "swifter" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/httpswift/swifter.git";
@@ -799,11 +791,6 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		3A2BEB4B2443D580004B94A0 /* KeychainAccess */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 3A2BEB4A2443D580004B94A0 /* XCRemoteSwiftPackageReference "KeychainAccess" */;
-			productName = KeychainAccess;
-		};
 		47F4D01B24E54BE500A1E222 /* Swifter */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 47F4D01A24E54BE500A1E222 /* XCRemoteSwiftPackageReference "swifter" */;
