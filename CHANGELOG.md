@@ -12,6 +12,24 @@ commit that makes them.
 ## [Unreleased]
 
 ### Fixed
+- **Web Extension target's signing diverged from the main app.** Xcode's
+  "Safari Web Extension" wizard had hardcoded a handful of settings at
+  target level that should inherit from the project's `Signing.xcconfig`
+  cascade — specifically `CODE_SIGN_IDENTITY[sdk=macosx*] = "Apple
+  Development"` and `CODE_SIGN_STYLE = Automatic`. Those overrides
+  short-circuited the per-configuration logic the xcconfig uses to
+  split Debug (Automatic + Apple Development) from Release (Manual +
+  Developer ID Application) and produced *"Embedded binary is not
+  signed with the same certificate as the parent app"* at embed time.
+  Stripped them so the WebExtension target picks up identity and style
+  exactly like the main app does. Also normalised `CURRENT_PROJECT_VERSION`
+  and `MARKETING_VERSION` to match the parent (`12` / `2.0.0`), removed
+  the wizard's `GENERATE_INFOPLIST_FILE = YES` so our hand-authored
+  `WebExtension/Info.plist` is used verbatim (the `NSExtension` dict is
+  load-bearing and a merged plist can lose it), dropped two dead
+  `INFOPLIST_KEY_*` entries, and dropped the target-level
+  `MACOSX_DEPLOYMENT_TARGET = 13.5` override so the target inherits the
+  project's `13.0` floor.
 - **Web Extension handler tripped Swift 6 sendability checks.** The
   trailing closure passed to `proxy.enqueueDownload` is `@Sendable`
   (enforced by the protocol since the earlier Bridge-side fix), but
