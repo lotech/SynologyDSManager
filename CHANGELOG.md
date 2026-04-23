@@ -11,6 +11,29 @@ commit that makes them.
 
 ## [Unreleased]
 
+### Fixed
+- **Web Extension showed as "Unknown" / `<Do Not Localize> Extension
+  Name` in Safari's Extensions panel.** When the `WebExtension/`
+  directory was drag-added to the Xcode target with "Create groups",
+  Xcode preserved the *navigator* hierarchy but registered each leaf
+  file with a flat `path` attribute, so the Copy Bundle Resources
+  phase copied `messages.json` directly into the bundle's
+  `Contents/Resources/` root instead of
+  `Contents/Resources/_locales/en/`. Safari's MV3 manifest reader
+  looks up `__MSG_extension_name__` / `__MSG_extension_description__`
+  via the `default_locale` path, couldn't find them, and fell back
+  to Apple's built-in `<Do Not Localize>` placeholder strings —
+  which rendered as "Unknown" with a blank icon in Safari's
+  Extensions list. Same issue affected the `icons/` subdirectory
+  (the manifest references `icons/toolbar-*.png`, but the PNGs
+  were flattened to the Resources root). Converted both `_locales/`
+  and `icons/` from PBXGroups to PBXFileReferences with
+  `lastKnownFileType = folder` (i.e. folder references instead of
+  groups), so Xcode copies the directory hierarchy verbatim into
+  the bundle. Also deleted `WebExtension/Resources/icons/README.md`
+  to keep documentation out of the shipped bundle — the same info
+  already lives in `WebExtension/README.md`'s step 5.
+
 ### Changed
 - **`deploy.sh` flow.** Three related fixes, one commit:
   - **Fixed a silent `i` (install) failure** where the built app never
