@@ -12,6 +12,18 @@ commit that makes them.
 ## [Unreleased]
 
 ### Fixed
+- **Web Extension's toolbar icon rendered as a solid black square.**
+  The first pass rasterised
+  `SynologyDSManager Extension/ToolbarItemIcon.pdf` via `sips`, but
+  that PDF is an AppKit *template* image (opaque black on transparent,
+  designed for runtime tinting by macOS). Safari's Extensions panel
+  renders Web Extension icons as-is — no template tinting — so the
+  result was three identical solid-black squares. Regenerated the
+  three PNGs from the main app's
+  `Assets.xcassets/AppIcon.appiconset/icon_128x128@2x.png` (a 256×256
+  RGBA PNG) with Lanczos downsampling to 48/96/128, so the Web
+  Extension now carries the same orange-arrow glyph the user already
+  sees for the host app in LaunchAgents / `/Applications/`.
 - **Web Extension showed as "Unknown" / `<Do Not Localize> Extension
   Name` in Safari's Extensions panel.** When the `WebExtension/`
   directory was drag-added to the Xcode target with "Create groups",
@@ -35,6 +47,20 @@ commit that makes them.
   already lives in `WebExtension/README.md`'s step 5.
 
 ### Changed
+- **`deploy.sh → i` (install) now builds Debug instead of Release.**
+  Release builds are signed with "Developer ID Application", which
+  Gatekeeper rejects without notarisation — and a Gatekeeper-rejected
+  host app means Safari silently refuses to load the bundled Web
+  Extension (the symptom: extension simply doesn't appear in the
+  Extensions panel, even though `pluginkit` sees it). Debug is signed
+  with "Apple Development", which Gatekeeper trusts on the signing
+  user's Mac without notarisation, so the full `i` flow now produces
+  a bundle Safari will actually load. Release stays reserved for `d`
+  (DMG), which is the notarisation pipeline anyway — mixing Release
+  and `i` was the worst of both worlds. Parameterised the
+  `_build_release` helper as `_build <team> <config>` so both call
+  sites pass the configuration explicitly.
+
 - **`deploy.sh` flow.** Three related fixes, one commit:
   - **Fixed a silent `i` (install) failure** where the built app never
     made it to `/Applications/` but the script still printed

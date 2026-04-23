@@ -30,7 +30,7 @@ Extension` shape gets us:
 | `Resources/manifest.json` | MV3 manifest. Declares permissions, the background service worker, and Safari minimum version (16.4 — the first Safari release with full MV3 support). |
 | `Resources/background.js` | Service worker. Registers the right-click context-menu on links and dispatches the chosen URL to the native handler. |
 | `Resources/_locales/en/messages.json` | i18n strings. Extension display name, description, context-menu title. |
-| `Resources/icons/` | PNG toolbar icons (Phase 3b-2 populates these from the legacy PDF — see that directory's `README.md`). |
+| `Resources/icons/` | `toolbar-48.png`, `toolbar-96.png`, `toolbar-128.png` — derived from the main app's `AppIcon` at build time of Phase 3b-2. `icons/` is a folder reference (not a group) so the bundle preserves the subdirectory, matching the manifest's `icons/toolbar-*.png` keys. |
 | `Info.plist` | Declares `NSExtensionPointIdentifier = com.apple.Safari.web-extension` and the principal Swift class. |
 | `SynologyDSManager_WebExtension.entitlements` | Sandbox entitlements. Includes a `mach-lookup.global-name` exception for the bridge's Mach service so the sandboxed process can reach it. |
 
@@ -106,10 +106,17 @@ or for future similar work. Each step is a ✅:
    `SynologyDSManager WebExtension.appex` to the main target's
    existing "Embed App Extensions" Copy Files phase
    (`Contents/PlugIns/`), right next to the legacy extension.
-5. **Generated icons.** Two-step `sips` pipeline (see
-   `Resources/icons/README.md`) — single-step `sips -Z N input.pdf`
-   is a no-op on PDF input in current macOS, so we rasterise to a
-   temporary high-res PNG then `-z H W` to each target size.
+5. **Generated icons.** Downsampled from the main app's
+   `Assets.xcassets/AppIcon.appiconset/icon_128x128@2x.png` (a
+   256×256 RGBA PNG) with Lanczos resampling to 48/96/128. First
+   attempt tried rasterising `SynologyDSManager Extension/ToolbarItemIcon.pdf`
+   via `sips`, but that PDF is an AppKit *template* image (opaque
+   black on transparent, designed for runtime tinting by macOS)
+   and Safari's Extensions panel renders Web Extension icons
+   as-is without tinting, which showed as a solid black square.
+   The main app's AppIcon is the same artwork the user already
+   sees in the dock / LaunchAgents list, so the Web Extension
+   now matches.
 6. **Normalised target build settings** to match the main app's
    signing cascade. The wizard injected `CODE_SIGN_IDENTITY` and
    `CODE_SIGN_STYLE` at target level, which short-circuits the
