@@ -126,6 +126,68 @@ or for future similar work. Each step is a ✅:
    `MARKETING_VERSION`, and `MACOSX_DEPLOYMENT_TARGET` to match the
    parent, and removed the wizard's stale `INFOPLIST_KEY_*` keys.
 
-Phase 3c retires the legacy `SynologyDSManager Extension` target
-and `Webserver.swift` once the Web Extension is shipping and
-verified.
+Also landed in follow-up commits on top of 3b-2b:
+
+- `ENABLE_DEBUG_DYLIB = NO` on the Web Extension target (both
+  Debug and Release). Xcode 15+ defaults Debug builds to
+  producing a stub `Contents/MacOS/` executable that loads the
+  real code from a sibling `.debug.dylib` at launch. Safari's
+  WebExtensionHandler can't follow the indirection and silently
+  drops the service worker on the floor.
+- Folder references (not groups) for `_locales/` and `icons/`
+  in `project.pbxproj`. With groups, Xcode flattens the bundle
+  layout at build time (`messages.json` and `toolbar-*.png`
+  all land directly in `Contents/Resources/`), which breaks
+  MV3's `default_locale` / `icons.*` lookups. Folder references
+  preserve the subdirectory hierarchy verbatim.
+- Toolbar `action` block in `manifest.json` and a minimal
+  `browser.action.onClicked` handler. The button exists mainly
+  so Safari treats the extension as "interactive" and
+  consistently starts the service worker on install/update.
+- Defensive `background.js` — every API touch wrapped in
+  try/catch, registration retried on `onInstalled`, `onStartup`,
+  and module-scope load, so one missing API can't take down the
+  worker on load.
+- `deploy.sh` builds Debug for local installs (Release is
+  reserved for the DMG pipeline that feeds notarisation), and
+  explicitly `pluginkit -r`s the build-tree `.appex` copies
+  after `cp -R` into `/Applications/` so Safari doesn't see the
+  same extension registered twice.
+
+## Phase 3b-2b-RT — Safari won't start the service worker (known blocker)
+
+Observed on macOS 26.x / Safari 26.x after all of the above
+landed. The bundle is structurally valid — principal class
+resolves, `pluginkit` indexes it, Gatekeeper accepts the host
+app, codesign strict-verify passes, all the MV3 boxes are
+ticked — yet Safari never executes `background.js`. Develop →
+Web Extension Background Content alternates between listing
+the extension as `(not loaded)` and not listing it at all;
+clicking the entry doesn't open a live Inspector window; a
+cold Inspector console attached to whatever partial context
+Safari creates shows `typeof browser === "object"` but
+`Object.keys(browser.runtime) === []`. No log predicate
+against `Safari`, `extensionkitservice`, or the
+`WebExtension` subsystem surfaces any mention of our bundle —
+Safari isn't trying and failing, it simply doesn't try.
+
+A minimal MV3 manifest (manifest_version, name, description,
+version, `background.service_worker` — nothing else) reproduces
+the symptom, so this isn't a manifest-content problem. Other
+Safari Web Extensions in the same browser (1Password,
+AdGuard, etc.) run fine, so the WebExtension runtime itself
+is healthy.
+
+Tracked as **Phase 3b-2b-RT** in `MODERNIZATION_PLAN.md`.
+Next diagnostic step is a clean-room Safari Web Extension
+created from Xcode's built-in template (zero modifications),
+installed via the same flow, to see whether *any* locally-built
+extension can start its worker on this machine — which either
+(a) gives us a working reference to binary-search forward
+against our bundle, or (b) proves the local Safari install is
+in a state where no extensions can launch, independent of
+this project.
+
+Phase 3c retires the legacy `SynologyDSManager Extension`
+target and `Webserver.swift` once 3b-2b-RT is resolved and the
+Web Extension is shipping in earnest.

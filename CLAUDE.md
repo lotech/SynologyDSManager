@@ -16,10 +16,15 @@ human, `README.md` is a better starting point.
   unauthenticated loopback HTTP server; Swifter dep goes with it.
   **3a + 3b shipped**: XPC scaffolding, the Web Extension source tree,
   the main-app-side Mach service wiring, the Web Extension Xcode target
-  itself, and the bundled toolbar icons. End-to-end path
-  (Safari → extension handler → XPC → main app → DSM) is functional.
-  Phase 3c retires the legacy `SynologyDSManager Extension` target and
-  `Webserver.swift` once 3b's in real-world use.
+  itself, and the bundled toolbar icons. Build-side path
+  (Safari → extension handler → XPC → main app → DSM) is *structurally*
+  functional — bundle installs cleanly, Safari lists the extension,
+  pluginkit indexes it, ClientAuthorization + Mach service + LaunchAgent
+  are all live. **Runtime is blocked**: Safari's WebExtension subsystem
+  silently refuses to start the service worker (`background.js`) on
+  macOS 26.x + Safari 26.x. See the *"Known blocker"* note below. Phase
+  3c (retire the legacy target + `Webserver.swift`) waits on 3b's
+  runtime coming up.
 - ⏳ **Phase 4** — SwiftUI + Observation; retire `Shared.swift` globals.
 - ⏳ **Phase 5** — release engineering (Sparkle, notarised DMGs via CI).
 
@@ -75,14 +80,74 @@ Source tree for the Safari Web Extension target. See
 
 - `SafariWebExtensionHandler.swift` — the extension's
   `NSExtensionPrincipalClass`. Opens an `NSXPCConnection` to the main
-  app's bridge, forwards one call, replies back to JS.
-- `Resources/manifest.json` — MV3 manifest (permissions
-  `contextMenus` + `nativeMessaging`, background service worker).
+  app's bridge, forwards one call, replies back to JS. Uses a
+  `CheckedContinuation` + `UncheckedBox<T>` pattern so the `@Sendable`
+  XPC reply closure doesn't capture `NSExtensionContext` /
+  `NSXPCConnection` / `self` across an isolation boundary.
+- `Resources/manifest.json` — MV3 manifest. `permissions`:
+  `contextMenus` + `nativeMessaging`. Declares a toolbar `action`
+  (required to keep Safari's service worker alive — see runtime
+  blocker below), a background `service_worker`, and
+  `browser_specific_settings.safari.strict_min_version = 16.4`.
 - `Resources/background.js` — registers the `contexts: ["link"]`
   context-menu and dispatches link URLs to the native handler.
-- `Resources/_locales/en/messages.json` — i18n strings.
+  Defensively wraps every API touch in try/catch so a single
+  missing-API throw can't take down the service worker;
+  registration fires on `onInstalled`, `onStartup`, and module-scope
+  startup.
+- `Resources/_locales/en/messages.json` — i18n strings. Shipped
+  via a **folder reference** (not a group) in `project.pbxproj` so
+  the bundle preserves `_locales/en/messages.json` hierarchy; with
+  a group, Xcode flattens to `Resources/messages.json` and Safari
+  can't resolve `__MSG_*` placeholders.
+- `Resources/icons/` — `toolbar-{48,96,128}.png`, derived at build
+  time by Lanczos-downsampling the main app's
+  `Assets.xcassets/AppIcon.appiconset/icon_128x128@2x.png`. Also
+  shipped as a folder reference for the same hierarchy-preservation
+  reason; the manifest's `icons` key references `icons/toolbar-*.png`
+  and Safari fails the lookup if they're flat.
 - `Info.plist` + `SynologyDSManager_WebExtension.entitlements` —
-  extension point + sandbox config.
+  extension point + sandbox config. The Web Extension target has
+  `ENABLE_DEBUG_DYLIB = NO` explicitly set (both configurations);
+  the Xcode-15+ default of `YES` produces a stub `Contents/MacOS/`
+  executable that Safari's WebExtensionHandler can't follow.
+
+### Known blocker — Safari refuses to start the service worker (Phase 3b-2b-RT)
+
+Observed on macOS 26.x / Safari 26.x. After all of the above —
+folder references correct, `ENABLE_DEBUG_DYLIB=NO`, `action`
+declared, bundle codesign valid, pluginkit indexing clean,
+principal class compiled and resolvable — Safari's WebExtension
+subsystem silently refuses to execute `background.js`. Symptoms:
+
+- Safari → Settings → Extensions lists the extension correctly
+  (real name, real description, real icon, the expected
+  permissions breakdown).
+- Safari → Develop → Web Extension Background Content shows
+  `Synology DS Manager (not loaded)` — sometimes present,
+  sometimes absent, alternating every few minutes.
+- Clicking `(not loaded)` does nothing; no Web Inspector window
+  opens for the worker.
+- Attaching to whatever cold worker context the Inspector
+  reaches gives `typeof browser === "object"` and
+  `Object.keys(browser.runtime) === []` — the WebExtension APIs
+  never populate.
+- `log stream` with a wide predicate produces no entry from
+  WebExtensionHandler / extensionkitservice that mentions our
+  bundle ID — Safari isn't trying and failing, it's not trying
+  at all.
+- Verified identical behaviour via `./deploy.sh → i` install
+  path **and** `⌘R` from Xcode, ruling out the install flow.
+- Minimal manifest (manifest_version, name, description,
+  version, `background.service_worker` — nothing else)
+  reproduces the symptom; it's below the manifest layer.
+- Reference extensions (1Password for Safari, etc.) run fine in
+  the same Safari, so the WebExtension runtime itself is alive.
+
+Runtime bring-up tracked as a separate follow-up. Everything
+upstream of this — target compile, `.appex` embed, install,
+signing, pluginkit registration, ClientAuthorization, Mach
+service, LaunchAgent registration — all works as designed.
 
 ## Conventions
 

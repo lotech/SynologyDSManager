@@ -11,66 +11,52 @@ commit that makes them.
 
 ## [Unreleased]
 
+> **Phase 3b-2b-RT (Safari service worker runtime) — still blocked on
+> macOS 26.x / Safari 26.x.** The bundle-level work below is all
+> correct and necessary (each item was shown to actually change the
+> symptom), but Safari's WebExtension subsystem still silently refuses
+> to execute `background.js` even with a minimal MV3 manifest. The
+> phase is being shipped with infrastructure complete and runtime
+> tracked as its own follow-up — see `MODERNIZATION_PLAN.md` phase
+> 3b-2b-RT for the handoff notes.
+
 ### Fixed
-- **Safari refused to start the Web Extension's service worker (root
-  cause).** Xcode 15+ builds Debug extensions with `ENABLE_DEBUG_DYLIB`
-  on by default — the "executable" in `Contents/MacOS/` becomes a stub
-  that loads the real code from a sibling `.debug.dylib` at runtime.
-  That's fine for regular apps (faster incremental builds) but Safari's
-  WebExtensionHandler can't follow the indirection: it loads what it
-  thinks is the extension's principal executable, finds no code there,
-  and silently refuses to boot the service worker. Hence every symptom
-  we chased upstream — empty `browser.runtime`, worker stuck in
-  "(not loaded)" state, toolbar button greyed out, `onInstalled`
-  never firing — was a downstream consequence of Safari never running
-  the bundle. Disabled `ENABLE_DEBUG_DYLIB` on both Debug and Release
-  configurations of the `SynologyDSManager WebExtension` target so
-  Xcode emits a single conventional `Contents/MacOS/SynologyDSManager
-  WebExtension` executable that Safari's loader can actually reach.
-  The extension target is tiny (one Swift file) so the lost
-  incremental-build optimisation is negligible.
+- **`ENABLE_DEBUG_DYLIB` flipped off on the Web Extension target.**
+  Xcode 15+ builds Debug extensions with this on by default: the
+  "executable" in `Contents/MacOS/` becomes a stub that loads the
+  real code from a sibling `.debug.dylib` at runtime. Safari's
+  WebExtensionHandler can't follow the indirection — it loads what
+  it thinks is the extension's principal executable, finds a stub,
+  and never gets to real code. Setting `ENABLE_DEBUG_DYLIB = NO`
+  on both Debug and Release produces a single conventional
+  `Contents/MacOS/SynologyDSManager WebExtension` binary. Verified
+  on-disk via `codesign --deep --strict`: post-fix the bundle's
+  `Contents/MacOS/` contains one file of 335 kB rather than a stub
+  + `.debug.dylib` + `__preview.dylib` trio. (Necessary; not
+  sufficient — the worker still doesn't start, but for a different
+  reason we haven't localised yet.)
 
 ### Added
 - **Web Extension toolbar button (`action`).** Declared a minimal
-  toolbar action in `manifest.json` — with `default_title` and the
-  same PNG icons we already ship for the `icons` key. The button's
-  `onClicked` handler just logs and re-registers the context menu
-  idempotently. No real UX on click by design; the button exists
-  primarily so Safari treats us as an "interactive" extension and
-  reliably boots the service worker on install/update. In Safari's
-  MV3 service-worker model, extensions with no user-facing surface
-  can be silently skipped at load time — `onInstalled` never fires,
-  the worker never runs, and `contextMenus.create` never executes,
-  so the right-click menu never appears. Declaring `action` is the
-  least-invasive way to guarantee the worker gets a chance to boot.
-  Also handy as a manual "wake the worker" affordance during
-  development: clicking the toolbar button always starts the worker.
-
-### Fixed
-- **Context-menu item never appeared after enabling the Web Extension
-  in Safari.** Safari's MV3 service-worker model starts the worker
-  on-demand when a registered event fires; the previous `background.js`
-  only listened for `onInstalled` (fires once per install) and
-  `contextMenus.onClicked` (chicken-and-egg — the menu has to exist
-  first for this to fire), so after the initial install the worker
-  had no reason to start again, `contextMenus.create` never ran, and
-  the right-click item didn't appear. The diagnostic trail was
-  equally damning: module-scope `browser.contextMenus.onClicked.addListener`
-  threw because `browser.contextMenus` was undefined on a cold
-  worker, the worker crashed before finishing load, Safari marked it
-  failed, and after repeat failures dropped it from the
-  Develop → Web Extension Background Content menu entirely. Rewrote
-  `background.js` so it: (a) wraps every API touch in try/catch so
-  no missing-API throw takes down the worker, (b) registers the
-  context menu idempotently (`contextMenus.removeAll()` then
-  `create`) on `onInstalled`, `onStartup`, **and** module-scope
-  startup, (c) logs the actual API surface Safari exposes at each
-  boot so future "it didn't fire" debugging has a concrete diagnostic
-  in the service worker's Console. Bumped
-  `WebExtension/Resources/manifest.json` version `1.0` → `1.0.1` so
-  Safari treats the next install as an update and fires
-  `onInstalled`, which starts the worker and lets it register the
-  menu for the first time.
+  toolbar action in `manifest.json` with the same PNGs we ship for
+  the `icons` key, plus a tiny `browser.action.onClicked` handler
+  that logs and re-registers the context menu idempotently.
+  Rationale: in Safari's MV3 model, extensions with no user-facing
+  surface can be de-prioritised at load time, so declaring an
+  `action` block is a low-cost way to flag the extension as
+  interactive. (On current macOS this hasn't been enough to
+  actually start the worker; see phase 3b-2b-RT. The toolbar
+  button is still worth shipping — it becomes a manual
+  "wake-the-worker" affordance the moment the underlying runtime
+  block is resolved.)
+- **Defensive `background.js` rewrite.** Every API touch wrapped
+  in try/catch; context-menu registration fires on `onInstalled`,
+  `onStartup`, **and** module-scope load so a single missing API
+  namespace can't take down the whole worker; API surface
+  (`browser` keys, `browser.runtime` keys) is logged on each
+  worker boot for observability. When the service worker does
+  start running, this makes debugging future regressions much
+  cheaper.
 - **Duplicate Safari extension entries after `./deploy.sh → i`.**
   The install action built into `build/DerivedData/Build/Products/Debug/`
   and then copied the result to `/Applications/`, but never unregistered

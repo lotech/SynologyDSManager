@@ -4,7 +4,7 @@ Living document. Tick boxes as tasks land. When all tasks in a phase are
 complete, move the phase status from **In progress** / **Planned** to
 **Shipped** with the date.
 
-Last updated: 2026-04-23 (Phase 3b-2b pushed — Web Extension target landed; bridge now end-to-end functional)
+Last updated: 2026-04-24 (Phase 3b-2b pushed — Web Extension target landed, bundle structurally correct; service-worker runtime bring-up tracked separately as Phase 3b-2b-RT)
 
 ---
 
@@ -290,7 +290,7 @@ wiring that lets Phase 3b cut over.
       authorisation denial needs a second signed binary, so it's
       deferred to Phase 3b integration testing.
 
-### Phase 3b — Safari Web Extension · **Shipped 2026-04-23**
+### Phase 3b — Safari Web Extension · **Partially shipped 2026-04-24** (3b-1, 3b-2a, 3b-2b landed; runtime blocked as 3b-2b-RT)
 
 Goal: replace the deprecated `SafariExtensionHandler` with a modern
 Safari Web Extension that reaches the main app over XPC. Architecture
@@ -395,6 +395,41 @@ pbxproj surgery. See `WebExtension/README.md` for the step-by-step
       outer `Task` via a private `@unchecked Sendable` envelope.
 - [x] The legacy `SynologyDSManager Extension` target stays enabled
       throughout 3b so existing users keep working; retired in 3c.
+
+#### Phase 3b-2b-RT — Safari service-worker runtime bring-up (blocked)
+
+The bundle is structurally correct (see 3b-2b checklist above —
+every box ticked, principal class resolves, codesign valid,
+pluginkit registration clean, `ENABLE_DEBUG_DYLIB=NO`, folder
+references preserving hierarchy) but Safari silently refuses to
+execute `background.js` on macOS 26.x / Safari 26.x. The issue
+sits below the manifest layer — a minimal MV3 manifest
+(only `manifest_version`, `name`, `description`, `version`, and
+`background.service_worker`) reproduces the symptom, and every
+log predicate we've thrown at Safari/WebExtensionHandler/
+extensionkitservice turns up zero mentions of our bundle. Other
+extensions (1Password, etc.) run fine in the same Safari, so the
+WebExtension runtime itself is healthy.
+
+- [ ] Reproduce in a clean-room Safari Web Extension created
+      from Xcode's built-in template (zero modifications). If
+      the clean-room target's worker starts, binary-search
+      forward from there comparing bundle layouts until the
+      divergence shows up. If the clean-room target *also*
+      doesn't start, the local Safari/macOS install has a
+      problem separate from this project.
+- [ ] If the clean-room test comes out positive for us, file
+      an Apple Feedback with full reproducer.
+- [ ] Once the worker starts, verify the end-to-end path:
+      right-click link → context-menu appears → click fires
+      `browser.runtime.sendNativeMessage` → `SafariWebExtensionHandler`
+      opens XPC to `com.skavans.synologyDSManager.bridge` →
+      `ClientAuthorization.isTrusted(connection:)` accepts the
+      peer → `SynologyBridgeService.enqueueDownload` forwards
+      to `SynologyAPI.createTask` → download appears in DSM.
+
+Once 3b-2b-RT is resolved the Phase 3b umbrella flips from
+*Partially shipped* to *Shipped* and 3c becomes unblocked.
 
 ### Phase 3c — Delete the loopback bridge (planned)
 
