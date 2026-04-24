@@ -33,15 +33,23 @@ private func handle_new_download_task(request: HttpRequest) -> HttpResponse {
         mainViewController?.downloadByURLFromExtension(URL: url)
     }
 
-    return HttpResponse.raw(200, "OK", ["Access-Control-Allow-Origin": "*"], {try! $0.write("OK".data(using: String.Encoding.utf8)!)})
+    return HttpResponse.raw(200, "OK", [:], {try! $0.write("OK".data(using: String.Encoding.utf8)!)})
 }
 
 
 func start_webserver() {
-    
+
     let server = HttpServer()
-    
+
     server["/add_download"] = handle_new_download_task
+
+    // Bind to the loopback interface only. Swifter's default is INADDR_ANY,
+    // which would expose this unauthenticated endpoint to anything on the
+    // user's LAN; tightening to 127.0.0.1 keeps the legacy Safari App
+    // Extension's bridge reachable without inviting LAN peers in. Goes away
+    // entirely in Phase 3c when the XPC bridge fully supersedes this file.
+    server.listenAddressIPv4 = "127.0.0.1"
+    server.listenAddressIPv6 = "::1"
 
     do {
         try server.start(11863, forceIPv4: true, priority: DispatchQoS.QoSClass.userInteractive)
