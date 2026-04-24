@@ -12,6 +12,30 @@ commit that makes them.
 ## [Unreleased]
 
 ### Fixed
+- **Context-menu item never appeared after enabling the Web Extension
+  in Safari.** Safari's MV3 service-worker model starts the worker
+  on-demand when a registered event fires; the previous `background.js`
+  only listened for `onInstalled` (fires once per install) and
+  `contextMenus.onClicked` (chicken-and-egg — the menu has to exist
+  first for this to fire), so after the initial install the worker
+  had no reason to start again, `contextMenus.create` never ran, and
+  the right-click item didn't appear. The diagnostic trail was
+  equally damning: module-scope `browser.contextMenus.onClicked.addListener`
+  threw because `browser.contextMenus` was undefined on a cold
+  worker, the worker crashed before finishing load, Safari marked it
+  failed, and after repeat failures dropped it from the
+  Develop → Web Extension Background Content menu entirely. Rewrote
+  `background.js` so it: (a) wraps every API touch in try/catch so
+  no missing-API throw takes down the worker, (b) registers the
+  context menu idempotently (`contextMenus.removeAll()` then
+  `create`) on `onInstalled`, `onStartup`, **and** module-scope
+  startup, (c) logs the actual API surface Safari exposes at each
+  boot so future "it didn't fire" debugging has a concrete diagnostic
+  in the service worker's Console. Bumped
+  `WebExtension/Resources/manifest.json` version `1.0` → `1.0.1` so
+  Safari treats the next install as an update and fires
+  `onInstalled`, which starts the worker and lets it register the
+  menu for the first time.
 - **Duplicate Safari extension entries after `./deploy.sh → i`.**
   The install action built into `build/DerivedData/Build/Products/Debug/`
   and then copied the result to `/Applications/`, but never unregistered
