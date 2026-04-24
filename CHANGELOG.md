@@ -11,6 +11,22 @@ commit that makes them.
 
 ## [Unreleased]
 
+### Added
+- **Web Extension toolbar button (`action`).** Declared a minimal
+  toolbar action in `manifest.json` — with `default_title` and the
+  same PNG icons we already ship for the `icons` key. The button's
+  `onClicked` handler just logs and re-registers the context menu
+  idempotently. No real UX on click by design; the button exists
+  primarily so Safari treats us as an "interactive" extension and
+  reliably boots the service worker on install/update. In Safari's
+  MV3 service-worker model, extensions with no user-facing surface
+  can be silently skipped at load time — `onInstalled` never fires,
+  the worker never runs, and `contextMenus.create` never executes,
+  so the right-click menu never appears. Declaring `action` is the
+  least-invasive way to guarantee the worker gets a chance to boot.
+  Also handy as a manual "wake the worker" affordance during
+  development: clicking the toolbar button always starts the worker.
+
 ### Fixed
 - **Context-menu item never appeared after enabling the Web Extension
   in Safari.** Safari's MV3 service-worker model starts the worker

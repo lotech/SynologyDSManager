@@ -89,6 +89,25 @@ try {
 // Safari to fire any lifecycle event at us.
 registerContextMenu();
 
+// Toolbar-button handler. The button itself is declared in
+// manifest.json's `action` block and doesn't need to do anything —
+// its mere presence is what makes Safari treat us as an
+// "interactive" extension and reliably start the service worker on
+// install/update. Logging the click is useful during development
+// because it's a guaranteed way to wake the worker from the user's
+// side (handy when the `onInstalled` / `onStartup` triggers didn't
+// fire for whatever reason).
+try {
+    browser?.action?.onClicked?.addListener?.(() => {
+        console.log("[DSManager] toolbar action clicked; worker is alive");
+        // Re-register the menu in case something ate the previous
+        // registration. Idempotent.
+        registerContextMenu();
+    });
+} catch (err) {
+    console.error("[DSManager] action.onClicked registration failed:", err);
+}
+
 // Menu-click handler. Same defensive pattern — guard the
 // addListener call itself, keep the handler body inside try/catch.
 try {
