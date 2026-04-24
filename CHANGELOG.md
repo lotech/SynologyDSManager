@@ -11,6 +11,25 @@ commit that makes them.
 
 ## [Unreleased]
 
+### Fixed
+- **Safari refused to start the Web Extension's service worker (root
+  cause).** Xcode 15+ builds Debug extensions with `ENABLE_DEBUG_DYLIB`
+  on by default — the "executable" in `Contents/MacOS/` becomes a stub
+  that loads the real code from a sibling `.debug.dylib` at runtime.
+  That's fine for regular apps (faster incremental builds) but Safari's
+  WebExtensionHandler can't follow the indirection: it loads what it
+  thinks is the extension's principal executable, finds no code there,
+  and silently refuses to boot the service worker. Hence every symptom
+  we chased upstream — empty `browser.runtime`, worker stuck in
+  "(not loaded)" state, toolbar button greyed out, `onInstalled`
+  never firing — was a downstream consequence of Safari never running
+  the bundle. Disabled `ENABLE_DEBUG_DYLIB` on both Debug and Release
+  configurations of the `SynologyDSManager WebExtension` target so
+  Xcode emits a single conventional `Contents/MacOS/SynologyDSManager
+  WebExtension` executable that Safari's loader can actually reach.
+  The extension target is tiny (one Swift file) so the lost
+  incremental-build optimisation is negligible.
+
 ### Added
 - **Web Extension toolbar button (`action`).** Declared a minimal
   toolbar action in `manifest.json` — with `default_title` and the
