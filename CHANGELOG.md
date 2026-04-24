@@ -12,6 +12,15 @@ commit that makes them.
 ## [Unreleased]
 
 ### Fixed
+- **Duplicate Safari extension entries after `./deploy.sh → i`.**
+  The install action built into `build/DerivedData/Build/Products/Debug/`
+  and then copied the result to `/Applications/`, but never unregistered
+  the intermediate `.appex` bundles from `pluginkit`. The result was that
+  Safari's Extensions panel showed **two** copies of every Safari-extension
+  our app ships (one per path). `action_install` now calls `pluginkit -r`
+  on each `.appex` under the freshly-built `Contents/PlugIns/`, then
+  `killall extensionkitservice` to force a clean rescan, before reporting
+  success. Safari now sees exactly the `/Applications/` copies.
 - **Web Extension's toolbar icon rendered as a solid black square.**
   The first pass rasterised
   `SynologyDSManager Extension/ToolbarItemIcon.pdf` via `sips`, but

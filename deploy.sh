@@ -346,6 +346,24 @@ action_install() {
     # Clear the quarantine attribute so Gatekeeper doesn't prompt after install.
     xattr -dr com.apple.quarantine "$dest" 2>/dev/null || true
 
+    # Unregister the build-tree .appex copies from `pluginkit` so Safari
+    # doesn't end up seeing the same extension from two paths at once
+    # (build/DerivedData + /Applications). Without this, Safari's Extensions
+    # panel duplicates every Safari-extension entry our app ships. Failing
+    # silently is fine — the entries may already be absent.
+    local build_plugins_dir="${built}/Contents/PlugIns"
+    if [[ -d "$build_plugins_dir" ]]; then
+        local appex
+        for appex in "$build_plugins_dir"/*.appex; do
+            [[ -e "$appex" ]] || continue
+            pluginkit -r "$appex" 2>/dev/null || true
+        done
+    fi
+
+    # Force ExtensionKit to rescan — the fresh `/Applications/` copy needs
+    # to replace whatever was registered against the build-tree path.
+    killall extensionkitservice 2>/dev/null || true
+
     # Report the installed size so it's clear the copy actually landed.
     local size
     size="$(du -sh "$dest" 2>/dev/null | awk '{print $1}')"
