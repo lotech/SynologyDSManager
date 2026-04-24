@@ -3,7 +3,7 @@
   "name": "__MSG_extension_name__",
   "description": "__MSG_extension_description__",
   "default_locale": "en",
-  "version": "1.0",
+  "version": "1.0.2",
 
   "icons": {
     "48":  "icons/toolbar-48.png",
@@ -15,6 +15,15 @@
     "contextMenus",
     "nativeMessaging"
   ],
+
+  "action": {
+    "default_title": "Synology DS Manager",
+    "default_icon": {
+      "48":  "icons/toolbar-48.png",
+      "96":  "icons/toolbar-96.png",
+      "128": "icons/toolbar-128.png"
+    }
+  },
 
   "background": {
     "service_worker": "background.js"

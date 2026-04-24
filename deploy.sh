@@ -9,8 +9,10 @@
 #       discard / cancel if the working tree has uncommitted changes
 #   o   Open the Xcode project
 #   s   Configure code signing (creates Signing.local.xcconfig from template)
-#   i   Build Release and install to /Applications
-#   d   Build Release and create a distributable DMG (optionally notarised)
+#   i   Build Debug and install to /Applications (local-testing flow;
+#       Apple-Development signed, trusted by Gatekeeper on this Mac)
+#   d   Build Release and create a distributable DMG (optionally notarised;
+#       Developer-ID signed — needs notarisation for Safari extensions)
 #   q   Quit
 #
 # Requires macOS with Xcode command-line tools installed. The build/install/DMG
@@ -261,28 +263,34 @@ action_configure_signing() {
     echo "    echo SynologyDSManager-Notary > .notary-profile-name"
 }
 
-# Build Release into DerivedData. Echoes the path to the built .app.
-_build_release() {
+# Build `$SCHEME` in the given configuration ("Debug" or "Release") into
+# DerivedData. Echoes the path to the built .app on stdout; diagnostic
+# output goes to stderr so callers can safely do `built="$(_build …)"`.
+#
+# Use Debug for local-install testing (`i`): faster, signed with
+# "Apple Development", trusted by Gatekeeper on the signing user's Mac,
+# so Safari will load bundled extensions without needing notarisation.
+#
+# Use Release for distribution (`d` DMG): signed with
+# "Developer ID Application", requires notarisation afterwards — Safari
+# won't trust the extension until the notarytool staple lands.
+_build() {
     local team="$1"
+    local config="$2"
     mkdir -p "$BUILD_DIR"
 
-    info "Building Release for Team ID ${team} (this takes a minute or two)…"
+    info "Building ${config} for Team ID ${team} (this takes a minute or two)…"
     local started=$SECONDS
 
     # Pipe through `xcbeautify` for readable progress when it's installed,
-    # otherwise fall back to xcodebuild's raw output. `set -o pipefail`
-    # propagates xcodebuild's exit status through the pipe.
+    # otherwise fall back to xcodebuild's raw output.
     # NB: Signing settings come from Signing.xcconfig + Signing.local.xcconfig,
     # which are wired as baseConfigurationReference in the Xcode project.
-    #
-    # All diagnostic output goes to stderr. Only the final path goes to stdout
-    # so the caller's `$(_build_release …)` capture gets a clean path.
-    local build_log
     if command -v xcbeautify >/dev/null 2>&1; then
         xcodebuild \
             -project "$PROJECT" \
             -scheme "$SCHEME" \
-            -configuration Release \
+            -configuration "$config" \
             -destination 'generic/platform=macOS' \
             -derivedDataPath "$DERIVED_DATA" \
             DEVELOPMENT_TEAM="$team" \
@@ -292,14 +300,14 @@ _build_release() {
         xcodebuild \
             -project "$PROJECT" \
             -scheme "$SCHEME" \
-            -configuration Release \
+            -configuration "$config" \
             -destination 'generic/platform=macOS' \
             -derivedDataPath "$DERIVED_DATA" \
             DEVELOPMENT_TEAM="$team" \
             build >&2
     fi
 
-    local built="${DERIVED_DATA}/Build/Products/Release/${APP_NAME}"
+    local built="${DERIVED_DATA}/Build/Products/${config}/${APP_NAME}"
     if [[ ! -d "$built" ]]; then
         err "Build did not produce ${built}."
         return 1
@@ -315,8 +323,13 @@ action_install() {
     local team
     team="$(require_signing_configured)" || return 1
 
+    # Debug for local installs: signed with "Apple Development", which
+    # Gatekeeper trusts on the signing user's Mac without notarisation.
+    # Release (= Developer ID Application) without notarisation would be
+    # Gatekeeper-rejected and Safari would refuse to load the bundled
+    # Web Extension — see `action_dmg` for the notarised Release path.
     local built
-    built="$(_build_release "$team")" || return 1
+    built="$(_build "$team" "Debug")" || return 1
 
     local dest="/Applications/${APP_NAME}"
     if [[ -e "$dest" ]]; then
@@ -332,6 +345,24 @@ action_install() {
 
     # Clear the quarantine attribute so Gatekeeper doesn't prompt after install.
     xattr -dr com.apple.quarantine "$dest" 2>/dev/null || true
+
+    # Unregister the build-tree .appex copies from `pluginkit` so Safari
+    # doesn't end up seeing the same extension from two paths at once
+    # (build/DerivedData + /Applications). Without this, Safari's Extensions
+    # panel duplicates every Safari-extension entry our app ships. Failing
+    # silently is fine — the entries may already be absent.
+    local build_plugins_dir="${built}/Contents/PlugIns"
+    if [[ -d "$build_plugins_dir" ]]; then
+        local appex
+        for appex in "$build_plugins_dir"/*.appex; do
+            [[ -e "$appex" ]] || continue
+            pluginkit -r "$appex" 2>/dev/null || true
+        done
+    fi
+
+    # Force ExtensionKit to rescan — the fresh `/Applications/` copy needs
+    # to replace whatever was registered against the build-tree path.
+    killall extensionkitservice 2>/dev/null || true
 
     # Report the installed size so it's clear the copy actually landed.
     local size
@@ -349,8 +380,9 @@ action_dmg() {
     local team
     team="$(require_signing_configured)" || return 1
 
+    # Release + Developer ID for distribution. Notarisation happens below.
     local built
-    built="$(_build_release "$team")" || return 1
+    built="$(_build "$team" "Release")" || return 1
 
     local version
     version="$(read_marketing_version)"
@@ -430,7 +462,7 @@ ${DIM}$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo '(no git branch)') �
   ${BOLD}p${RESET}   Pull main from origin to local
   ${BOLD}o${RESET}   Open in Xcode
   ${BOLD}s${RESET}   Configure signing (Apple Developer Team ID)
-  ${BOLD}i${RESET}   Build Release and install to /Applications
+  ${BOLD}i${RESET}   Build Debug and install to /Applications (local testing)
   ${BOLD}d${RESET}   Build Release and create a DMG for distribution
   ${BOLD}q${RESET}   Quit
 
