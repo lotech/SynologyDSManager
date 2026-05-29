@@ -42,8 +42,8 @@ See `MODERNIZATION_PLAN.md` for the per-phase task checklist.
   Download Station over its HTTP API.
 - **Language / UI**: Swift 5.9, AppKit + Storyboards (plus one XIB-based
   `NSTableCellView`). No SwiftUI yet — moving there in Phase 4.
-- **Min OS**: macOS 13 (app) / macOS 14 (test bundle, because Xcode 16's
-  XCTest framework needs it).
+- **Min OS**: macOS 14 (app and test bundle — bumped from 13 in Phase 4
+  slice 1 to enable `@Observable` from the Observation framework).
 - **Build system**: Xcode project (`SynologyDSManager.xcodeproj`), SwiftPM for
   dependencies. No `Package.swift`, no CocoaPods. Only remaining
   third-party SPM dep: **Swifter** (goes with `Webserver.swift` in Phase 3).

@@ -2,34 +2,27 @@
 //  Shared.swift
 //  SynologyDSManager
 //
-//  Global mutable state used across view controllers. These are
-//  intentionally `nonisolated(unsafe)` — we know they're main-thread-only
-//  in practice but the compiler can't prove it under strict concurrency.
-//  Phase 4 (SwiftUI + Observation) replaces this file with a proper
-//  `@Observable` app model.
+//  AppKit navigation anchors used across view controllers while the
+//  storyboard-based screens are still AppKit. These go away as each
+//  remaining screen is ported to SwiftUI in Phase 4.
+//
+//  The four former globals (synologyAPI, synologyTrustEvaluator,
+//  workStarted, mainMethod) now live in AppModel.
 //
 
 import Foundation
 import Cocoa
 
 
-/// The DSM API client. Created in `DownloadsViewController.doWork` once
-/// settings are available. View controllers read this lazily — a nil
-/// value means "not signed in yet, Settings should be showing".
-nonisolated(unsafe) var synologyAPI: SynologyAPI?
-
-/// Shared TLS trust evaluator. App-wide so the first-use approval
-/// callback installed by `AppDelegate` survives across reconstructions
-/// of `synologyAPI` (e.g. when the user changes credentials). The
-/// evaluator also owns the persisted pin store, so a single instance
-/// means pins are consistent across every connection the app makes.
-let synologyTrustEvaluator = SynologyTrustEvaluator()
-
-nonisolated(unsafe) var workStarted = false
-nonisolated(unsafe) var mainMethod: ((StoredCredentials) -> Void)?
-
+/// The main downloads window controller. Set by
+/// DownloadsViewController.viewDidLoad. Used by DestinationView to find
+/// a storyboard to instantiate dirSelectorVC from, and by SettingsView
+/// to refocus the main window after Settings closes.
 nonisolated(unsafe) var mainViewController: DownloadsViewController?
 
+/// The view controller currently displayed in a secondary window (e.g.
+/// Settings, AddDownload, BTSearch). Set by showStoryboardWindowCenteredToMainWindow.
+/// Used by DestinationView to call presentAsSheet on the right host.
 nonisolated(unsafe) var currentViewController: NSViewController?
 
 

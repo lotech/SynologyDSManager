@@ -61,7 +61,7 @@ class ChooseDestViewController: NSViewController {
         dirsOutlineView.dataSource = self
         dirsOutlineView.delegate = self
 
-        guard let api = synologyAPI else { return }
+        guard let api = AppModel.shared.api else { return }
         Task { [weak self] in
             do {
                 let entries = try await api.listDirectories(root: "/")
@@ -83,7 +83,7 @@ class ChooseDestViewController: NSViewController {
     /// Main-actor-isolated so the outline-view mutations are safe.
     @MainActor
     private func loadChildren(of dir: RemoteDir) async {
-        guard let api = synologyAPI else { return }
+        guard let api = AppModel.shared.api else { return }
         do {
             let entries = try await api.listDirectories(root: dir.absolutePath)
             dir.children = entries.map {

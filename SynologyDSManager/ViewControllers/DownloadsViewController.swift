@@ -54,7 +54,7 @@ class DownloadsViewController: NSViewController, NSWindowDelegate {
     }
 
     @IBAction func cleanToolbarItemClicked(_ sender: AnyObject?) {
-        guard let api = synologyAPI else { return }
+        guard let api = AppModel.shared.api else { return }
         let finishedIDs = tasks.filter(\.isFinished).map(\.id)
         Task {
             for id in finishedIDs {
@@ -64,7 +64,7 @@ class DownloadsViewController: NSViewController, NSWindowDelegate {
     }
 
     @IBAction func resumeAllToolbarItemClicked(_ sender: AnyObject?) {
-        guard let api = synologyAPI else { return }
+        guard let api = AppModel.shared.api else { return }
         let ids = tasks.map(\.id)
         Task {
             for id in ids {
@@ -74,7 +74,7 @@ class DownloadsViewController: NSViewController, NSWindowDelegate {
     }
 
     @IBAction func pauseAllToolbarItemClicked(_ sender: AnyObject?) {
-        guard let api = synologyAPI else { return }
+        guard let api = AppModel.shared.api else { return }
         let ids = tasks.map(\.id)
         Task {
             for id in ids {
@@ -126,7 +126,7 @@ class DownloadsViewController: NSViewController, NSWindowDelegate {
     /// placeholder label) is UI.
     @MainActor
     private func refreshDownloads() async {
-        guard let api = synologyAPI else { return }
+        guard let api = AppModel.shared.api else { return }
 
         let newTasks: [DSMTask]
         do {
@@ -172,23 +172,22 @@ class DownloadsViewController: NSViewController, NSWindowDelegate {
 
     private func doWork(settings: StoredCredentials) {
         // Cancel any previous refresh loop. Defensive: with `workStarted`
-        // being set below, a repeat Test Connection takes the else-branch
-        // in SettingsViewController and doesn't re-enter doWork. This
-        // guard just means the second call is cheap if it ever happens.
+        // being set below, a repeat Test Connection takes the update-
+        // credentials branch in SettingsView and doesn't re-enter doWork.
+        // This guard just means the second call is cheap if it ever happens.
         refreshTask?.cancel()
         refreshTask = nil
 
-        synologyAPI = SynologyAPI(
+        let newAPI = SynologyAPI(
             credentials: settings.apiCredentials,
-            trustEvaluator: synologyTrustEvaluator
+            trustEvaluator: AppModel.shared.trustEvaluator
         )
+        AppModel.shared.setAPI(newAPI)
 
-        // Capture the instance we just assigned to the global so the
-        // refresh loop below holds a stable reference, independent of
-        // any later reassignment of the `synologyAPI` global (e.g. if
-        // Settings changes credentials during a re-auth — we want the
-        // currently-running loop to keep using the current client).
-        guard let api = synologyAPI else { return }
+        // Capture the instance we just set so the refresh loop holds a
+        // stable reference, independent of any later update to AppModel.api
+        // (e.g. if the user changes credentials while a refresh is running).
+        guard let api = AppModel.shared.api else { return }
 
         start_webserver()
 
@@ -211,11 +210,11 @@ class DownloadsViewController: NSViewController, NSWindowDelegate {
             }
         }
 
-        workStarted = true
+        AppModel.shared.markWorkStarted()
     }
 
     public func downloadByURLFromExtension(URL url: String) {
-guard let api = synologyAPI else { return }
+        guard let api = AppModel.shared.api else { return }
 
         let content = UNMutableNotificationContent()
         content.title = "Download started"
@@ -296,7 +295,7 @@ guard let api = synologyAPI else { return }
         super.viewDidLoad()
 
         mainViewController = self
-        mainMethod = self.doWork
+        AppModel.shared.connect = self.doWork
 
         downloadsTableView.delegate = self
         downloadsTableView.dataSource = self
@@ -313,7 +312,7 @@ guard let api = synologyAPI else { return }
     override func viewDidAppear() {
         self.view.window!.delegate = self
         DispatchQueue.main.async {
-            if let connSettings = readSettings() {
+            if let connSettings = AppModel.shared.loadCredentials() {
                 self.doWork(settings: connSettings)
             } else {
                 self.settingsMenuItemClicked(self)
@@ -345,7 +344,7 @@ extension DownloadsViewController: NSTableViewDelegate {
 
     @objc func startPauseButtonClicked(button: NSButton) {
         let row = downloadsTableView.row(for: button.superview!)
-        guard row >= 0, row < tasks.count, let api = synologyAPI else { return }
+        guard row >= 0, row < tasks.count, let api = AppModel.shared.api else { return }
         let task = tasks[row]
         switch task.status {
         case "paused":
@@ -359,7 +358,7 @@ extension DownloadsViewController: NSTableViewDelegate {
 
     @objc func deleteButtonClicked(button: NSButton) {
         let row = downloadsTableView.row(for: button.superview!)
-        guard row >= 0, row < tasks.count, let api = synologyAPI else { return }
+        guard row >= 0, row < tasks.count, let api = AppModel.shared.api else { return }
         let task = tasks[row]
         let alert = NSAlert()
         alert.alertStyle = .warning

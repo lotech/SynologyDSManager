@@ -476,15 +476,42 @@ rewrite (decided 2026-05-29); a future iOS/iPadOS port would refactor the
 already-portable network/keychain core into a shared package at that
 point, not now.
 
-- [ ] Lift shared state into an `@Observable` app model; retire the global
-      singletons in `Shared.swift`
-- [ ] Port screens in this order: Settings → About → Add Download →
+### Phase 4 slice 1 — AppModel foundation + Settings screen · **Shipped 2026-05-29**
+
+Bumped `MACOSX_DEPLOYMENT_TARGET` 13.0 → 14.0 (required for `@Observable`
+from the Observation framework; by 2026 macOS 14 is three years old, the
+test bundle was already there, and the plan explicitly required `Observation`).
+
+- [x] Lift shared state into an `@Observable` app model (`AppModel.swift`);
+      retire `synologyAPI`, `synologyTrustEvaluator`, `workStarted`, and
+      `mainMethod` from `Shared.swift` — replaced by `AppModel.shared.api`,
+      `.trustEvaluator`, `.workStarted`, and `.connect`. Navigation anchors
+      (`mainViewController`, `currentViewController`) stay in `Shared.swift`
+      until the last AppKit screen is ported.
+- [x] Update all 8 call sites: `AppDelegate`, `DownloadsViewController`
+      (8 spots), `AddDownloadViewController`, `BTSearchViewController`,
+      `ChooseDestViewController`, `SynologyBridgeService`.
+- [x] Port **Settings** to SwiftUI (`SettingsView.swift`). Three `GroupBox`
+      sections (NAS Connection, Safari Extension, Behavior). `DestinationView`
+      bridged via `NSViewRepresentable` until the Choose Destination screen
+      is ported. Hosted by `SettingsHostingController`
+      (`NSHostingController<SettingsView>`) swapped into the storyboard's
+      SettingsWC slot; `Main.storyboard` retains all other scenes unchanged.
+- [x] Delete `SettingsViewController.swift`.
+- [x] Drop the dead `mailto:support@swiftapps.skavans.ru` contact button
+      (was already disconnected from the storyboard; removed completely now).
+
+### Remaining Phase 4 tasks
+
+- [ ] Port screens in this order: About → Add Download →
       BT Search → Choose Destination → Downloads list
 - [ ] Replace the status item with `MenuBarExtra`
 - [ ] Replace PNG toolbar icons with SF Symbols
 - [ ] Delete `Main.storyboard` and all `.xib` files when the last screen
       has been ported
 - [ ] Add localisation scaffolding (`String Catalog`), starting with English
+- [ ] Remove `swiftapps.skavans.ru` mailto and `synoboost.com` link from
+      the ported BT Search screen (carried forward from Phase 1 leftover)
 
 ## Phase 5 — Release engineering · **Planned**
 

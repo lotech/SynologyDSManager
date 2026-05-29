@@ -11,6 +11,18 @@ commit that makes them.
 
 ## [Unreleased]
 
+### Changed
+- **Phase 4 slice 1 — AppModel foundation + Settings screen (SwiftUI).**
+  The five `nonisolated(unsafe)` globals in `Shared.swift` that held the
+  DSM API client, TLS evaluator, connection lifecycle state, and the
+  connect callback have been replaced by `AppModel`, an `@Observable`
+  `@MainActor` singleton. The Settings screen is now pure SwiftUI
+  (`SettingsView` / `SettingsHostingController`), hosted in the existing
+  storyboard window slot with no change to any other screen. The dead
+  `mailto:support@swiftapps.skavans.ru` contact button has been removed.
+- Minimum macOS version raised from 13.0 to 14.0 to enable `@Observable`
+  from the Observation framework (required by the Phase 4 plan).
+
 > **Phase 3b-2b-RT (Safari service worker runtime) — still blocked on
 > macOS 26.x / Safari 26.x.** The bundle-level work below is all
 > correct and necessary (each item was shown to actually change the

@@ -1116,7 +1116,7 @@ Gw
         <!--Settings View Controller-->
         <scene sceneID="hIz-AP-VOD">
             <objects>
-                <viewController storyboardIdentifier="SettingsVC" id="XfG-lQ-9wD" customClass="SettingsViewController" customModule="SynologyDSManager" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="SettingsVC" id="XfG-lQ-9wD" customClass="SettingsHostingController" customModule="SynologyDSManager" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" autoresizesSubviews="NO" id="m2S-Jp-Qdl">
                         <rect key="frame" x="0.0" y="0.0" width="447" height="575"/>
                         <autoresizingMask key="autoresizingMask"/>
@@ -1342,18 +1342,6 @@ DQ
                             </box>
                         </subviews>
                     </view>
-                    <connections>
-                        <outlet property="clearFinishedTasksCheckbox" destination="Nk0-Yi-H3S" id="92Y-jz-LJf"/>
-                        <outlet property="extensionDestinationView" destination="6Nf-9R-igN" id="Jm4-fS-UyM"/>
-                        <outlet property="hideDockIconCheckbox" destination="Xsv-xE-O5t" id="4wy-AH-qNI"/>
-                        <outlet property="hideFromStatusBarCheckbox" destination="pw4-An-Wg0" id="9qQ-xN-rYM"/>
-                        <outlet property="hostTextField" destination="jEC-40-Orf" id="uZI-cX-EYF"/>
-                        <outlet property="otpCheckbox" destination="LRf-LD-Jqf" id="7Ep-XW-1mr"/>
-                        <outlet property="otpSecureTextField" destination="6fU-hR-IO6" id="ax7-HM-xCE"/>
-                        <outlet property="passwordSecureTextField" destination="5z8-Pr-Mmm" id="Joc-Xw-q2w"/>
-                        <outlet property="portTextField" destination="0cM-28-4Ep" id="qKY-o1-4Ns"/>
-                        <outlet property="usernameTextField" destination="PbZ-Zj-nWz" id="Gu5-9y-hSj"/>
-                    </connections>
                 </viewController>
                 <customObject id="rPt-NT-nkU" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>

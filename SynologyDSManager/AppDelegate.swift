@@ -59,7 +59,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// — safe here because the delegate queue is neither the main queue
     /// nor a queue any main-thread work depends on.
     private func installCertificateApprovalHandler() {
-        synologyTrustEvaluator.firstUseDecision = { host, spkiBase64 in
+        AppModel.shared.trustEvaluator.firstUseDecision = { host, spkiBase64 in
             var approved = false
             DispatchQueue.main.sync {
                 let alert = NSAlert()
