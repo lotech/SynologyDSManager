@@ -12,20 +12,26 @@ human, `README.md` is a better starting point.
   SecItem-based Keychain wrapper. Alamofire + SwiftyJSON + KeychainAccess
   all gone from `Package.resolved`. `SWIFT_STRICT_CONCURRENCY = complete`
   and the project builds warning-free. 23 unit tests run in CI on every PR.
-- 🚧 **Phase 3** — Safari Web Extension + XPC bridge replacing the
+- ⏸️ **Phase 3** — Safari Web Extension + XPC bridge replacing the
   unauthenticated loopback HTTP server; Swifter dep goes with it.
-  **3a + 3b shipped**: XPC scaffolding, the Web Extension source tree,
-  the main-app-side Mach service wiring, the Web Extension Xcode target
-  itself, and the bundled toolbar icons. Build-side path
-  (Safari → extension handler → XPC → main app → DSM) is *structurally*
-  functional — bundle installs cleanly, Safari lists the extension,
-  pluginkit indexes it, ClientAuthorization + Mach service + LaunchAgent
-  are all live. **Runtime is blocked**: Safari's WebExtension subsystem
-  silently refuses to start the service worker (`background.js`) on
-  macOS 26.x + Safari 26.x. See the *"Known blocker"* note below. Phase
-  3c (retire the legacy target + `Webserver.swift`) waits on 3b's
-  runtime coming up.
-- ⏳ **Phase 4** — SwiftUI + Observation; retire `Shared.swift` globals.
+  **Deferred 2026-05-29.** **3a + 3b shipped**: XPC scaffolding, the Web
+  Extension source tree, the main-app-side Mach service wiring, the Web
+  Extension Xcode target itself, and the bundled toolbar icons.
+  Build-side path (Safari → extension handler → XPC → main app → DSM) is
+  *structurally* functional — bundle installs cleanly, Safari lists the
+  extension, pluginkit indexes it, ClientAuthorization + Mach service +
+  LaunchAgent are all live. **Runtime is blocked**: Safari's WebExtension
+  subsystem silently refuses to start the service worker (`background.js`)
+  on macOS 26.x + Safari 26.x — a Safari-side bug we can't fix from here.
+  See the *"Known blocker"* note below. Rather than block the roadmap on
+  Apple, active work has moved to Phase 4. Phase 3c (retire the legacy
+  target + `Webserver.swift`) stays parked behind the runtime blocker, so
+  the unauthenticated loopback server stays in place until there's a
+  working replacement. Revisit when a Safari/macOS point release unblocks
+  the worker.
+- 🚧 **Phase 4** — SwiftUI + Observation; retire `Shared.swift` globals.
+  **Active phase.** Pure macOS rewrite (a future iOS port would refactor
+  the portable network/keychain core into a shared package at that point).
 - ⏳ **Phase 5** — release engineering (Sparkle, notarised DMGs via CI).
 
 See `MODERNIZATION_PLAN.md` for the per-phase task checklist.
