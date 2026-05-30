@@ -76,13 +76,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        // When the SwiftUI App lifecycle is active, AppKit may not
-        // auto-load NSMainStoryboardFile on all macOS versions. Instantiate
-        // the initial window controller explicitly if no windows appeared.
-        if NSApp.windows.isEmpty {
-            if let wc = NSStoryboard.main?.instantiateInitialController() as? NSWindowController {
-                wc.showWindow(nil)
-            }
+        // NSMainStoryboardFile loads the storyboard (giving us the main menu)
+        // but we removed initialViewController so AppKit no longer auto-
+        // instantiates the Downloads window. Instantiate it by identifier now
+        // so viewDidLoad / viewDidAppear fire and the polling loop can start.
+        if let wc = NSStoryboard.main?.instantiateController(withIdentifier: "MainWC") as? NSWindowController {
+            wc.showWindow(nil)
         }
     }
 
