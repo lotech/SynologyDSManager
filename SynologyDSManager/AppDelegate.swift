@@ -4,6 +4,7 @@
 //
 
 import Cocoa
+import Observation
 import ServiceManagement
 import SwiftUI
 
@@ -14,47 +15,14 @@ struct SynologyDSManagerApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     var body: some Scene {
-        MenuBarExtra {
-            StatusBarMenu()
-        } label: {
-            MenuBarLabel()
-        }
-        .menuBarExtraStyle(.menu)
-        .commands {
-            CommandGroup(replacing: .appInfo) {
-                Button("About Synology DS Manager") {
-                    mainViewController?.aboutMenuItemClicked(nil)
-                }
-            }
-        }
-    }
-}
-
-// MARK: - Status bar label
-
-// Access AppModel.shared directly rather than via @Environment so that
-// @Observable's automatic tracking wires up inside View.body without
-// requiring the caller to inject the environment value.
-private struct MenuBarLabel: View {
-    var body: some View {
-        Text(AppModel.shared.statusBarTitle)
-            .monospacedDigit()
-    }
-}
-
-// MARK: - Status bar menu content
-
-struct StatusBarMenu: View {
-    var body: some View {
-        Button("Pause all")      { mainViewController?.pauseAllToolbarItemClicked(nil) }
-        Button("Start all")      { mainViewController?.resumeAllToolbarItemClicked(nil) }
-        Button("Clear finished") { mainViewController?.cleanToolbarItemClicked(nil) }
-        Divider()
-        Button("Show window")    { NSApp.activate(ignoringOtherApps: true) }
-        Divider()
-        Button("About")          { mainViewController?.aboutMenuItemClicked(nil) }
-        Divider()
-        Button("Quit")           { NSApplication.shared.terminate(nil) }
+        // SwiftUI requires at least one scene. This placeholder creates no
+        // visible UI. The status bar item is managed by NSStatusBar in
+        // AppDelegate (reliable on all macOS versions). The main window comes
+        // from the storyboard loaded in applicationDidFinishLaunching.
+        //
+        // TODO: Replace with MenuBarExtra once macOS 26.x resolves the silent
+        //       scene-registration failure that prevents it from appearing.
+        Settings { EmptyView() }
     }
 }
 
@@ -62,69 +30,102 @@ struct StatusBarMenu: View {
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
 
-    /// Long-lived XPC listener that services the Safari Web Extension's
-    /// `SafariWebExtensionHandler`. Retained here so its lifetime
-    /// matches the app's.
+    /// Long-lived XPC listener that services the Safari Web Extension.
     private let bridgeListener = SynologyBridgeListener()
 
+    /// The status bar item that shows download speed and opens the menu.
+    private var statusItem: NSStatusItem?
+
+    // MARK: Lifecycle
+
     func applicationWillFinishLaunching(_ notification: Notification) {
-        // Set activation policy before SwiftUI initialises the MenuBarExtra
-        // scene so the status-bar item appears on first launch.
         if !(UserDefaults.standard.value(forKey: "hideDockIcon") as? Bool ?? true) {
             NSApp.setActivationPolicy(.regular)
         }
-
         installCertificateApprovalHandler()
         bridgeListener.start()
         registerBridgeLaunchAgent()
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        // NSMainStoryboardFile has been removed from Info.plist so SwiftUI's
-        // scene system (MenuBarExtra) can initialise without AppKit storyboard
-        // processing racing against it. Load the main window manually instead.
         let storyboard = NSStoryboard(name: "Main", bundle: nil)
         if let wc = storyboard.instantiateController(withIdentifier: "MainWC") as? NSWindowController {
             wc.showWindow(nil)
         }
+        setupStatusItem()
     }
 
-    /// Ask launchd to advertise the bridge's Mach service name by
-    /// registering our bundled LaunchAgent plist. Safe to call on
-    /// every launch — `SMAppService.register()` is idempotent.
-    ///
-    /// If the plist isn't in the app bundle yet (Phase 3b-2b will
-    /// wire the Copy Files build phase that puts it there), this
-    /// logs-and-continues rather than failing the launch. The
-    /// listener itself still creates cleanly; external callers just
-    /// can't reach it until the agent is installed.
-    ///
-    /// If the user hasn't yet approved the login item, macOS reports
-    /// `.requiresApproval` — same outcome from the listener's
-    /// perspective (unreachable) but the user sees a prompt in
-    /// System Settings. A UX polish pass in a later phase could
-    /// surface an in-app nudge pointing at that prompt.
+    // MARK: - Status bar item
+
+    @MainActor
+    private func setupStatusItem() {
+        statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        statusItem?.menu = buildStatusMenu()
+        observeStatusBarTitle()
+    }
+
+    /// Re-registers observation on every change so the title stays in sync
+    /// with AppModel.shared.statusBarTitle throughout the app's lifetime.
+    @MainActor
+    private func observeStatusBarTitle() {
+        withObservationTracking {
+            statusItem?.button?.title = AppModel.shared.statusBarTitle
+        } onChange: {
+            Task { @MainActor [weak self] in
+                self?.observeStatusBarTitle()
+            }
+        }
+    }
+
+    private func buildStatusMenu() -> NSMenu {
+        let menu = NSMenu()
+
+        func add(_ title: String, _ sel: Selector) {
+            let item = NSMenuItem(title: title, action: sel, keyEquivalent: "")
+            item.target = self
+            menu.addItem(item)
+        }
+
+        add("Pause all",      #selector(pauseAll))
+        add("Start all",      #selector(startAll))
+        add("Clear finished", #selector(clearFinished))
+        menu.addItem(.separator())
+        add("Show window",    #selector(showWindow))
+        menu.addItem(.separator())
+        add("About",          #selector(showAbout))
+        menu.addItem(.separator())
+
+        let quit = NSMenuItem(
+            title: "Quit",
+            action: #selector(NSApplication.terminate(_:)),
+            keyEquivalent: "q"
+        )
+        quit.target = NSApp
+        menu.addItem(quit)
+
+        return menu
+    }
+
+    @objc private func pauseAll()      { mainViewController?.pauseAllToolbarItemClicked(nil) }
+    @objc private func startAll()      { mainViewController?.resumeAllToolbarItemClicked(nil) }
+    @objc private func clearFinished() { mainViewController?.cleanToolbarItemClicked(nil) }
+    @objc private func showWindow()    { NSApp.activate(ignoringOtherApps: true) }
+    @objc private func showAbout()     { mainViewController?.aboutMenuItemClicked(nil) }
+
+    // MARK: - Bridge / TLS helpers
+
     private func registerBridgeLaunchAgent() {
         let service = SMAppService.agent(plistName: "com.skavans.synologyDSManager.bridge.plist")
-
         do {
             try service.register()
             AppLogger.security.notice("LaunchAgent registered; bridge reachable via launchd")
         } catch {
-            // Diagnose-only: the app works without the bridge. Use
-            // public logging for the error domain so Console.app is
-            // useful, but keep any identifying paths out of the log.
             AppLogger.security.error(
                 "SMAppService.register failed (status=\(service.status.rawValue, privacy: .public)): \(error.localizedDescription, privacy: .public)"
             )
         }
     }
 
-    /// Wire the shared TLS trust evaluator to an AppKit modal prompt so
-    /// self-signed NAS certs can be approved on first use. The callback is
-    /// `async`; `await MainActor.run { }` schedules the alert on the main
-    /// actor without blocking any thread. `NSAlert.runModal()` runs a nested
-    /// event loop, so the main actor stays responsive while the user decides.
     @MainActor
     private func installCertificateApprovalHandler() {
         AppModel.shared.trustEvaluator.firstUseDecision = { host, spkiBase64 in
@@ -149,24 +150,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    // MARK: - URL / file open
+
     func application(_ application: NSApplication, open urls: [URL]) {
         Timer.scheduledTimer(withTimeInterval: 1, repeats: false) { _ in
             DispatchQueue.main.async {
-
                 var torrents: [String] = []
 
                 for url in urls {
                     switch url.scheme {
-                    case "synologydsmanager":  // deeplink
-                        if url.host == "download" {
-                            if let queryItems = URLComponents(string: url.absoluteString)?.queryItems,
-                               let downloadURL = queryItems.first(where: { $0.name == "downloadURL" }),
-                               let value = downloadURL.value, !value.isEmpty {
-                                mainViewController?.downloadByURLFromExtension(URL: value)
-                            }
+                    case "synologydsmanager":
+                        if url.host == "download",
+                           let queryItems = URLComponents(string: url.absoluteString)?.queryItems,
+                           let downloadURL = queryItems.first(where: { $0.name == "downloadURL" }),
+                           let value = downloadURL.value, !value.isEmpty {
+                            mainViewController?.downloadByURLFromExtension(URL: value)
                         }
 
-                    case "file":  // torrent-file to open
+                    case "file":
                         torrents.append(url.path)
 
                     default:
