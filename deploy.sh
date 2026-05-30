@@ -116,13 +116,27 @@ action_pull_main() {
     current_branch="$(git rev-parse --abbrev-ref HEAD)"
 
     if [[ "$current_branch" != "main" ]]; then
-        # Not on main — just advance the local main ref without switching.
+        # Update local main ref.
         if git rev-parse --verify main >/dev/null 2>&1; then
             git fetch origin main:main 2>/dev/null \
-                && ok "Local 'main' updated (still on '${current_branch}')." \
+                && ok "Local 'main' updated." \
                 || warn "Could not fast-forward local 'main' — resolve separately if needed."
         else
             ok "origin/main fetched (no local 'main' ref to update)."
+        fi
+        # Merge main into the current feature branch so changes are visible in Xcode.
+        info "Merging 'main' into '${current_branch}'…"
+        local merge_out
+        if merge_out=$(git merge main --no-edit 2>&1); then
+            if echo "$merge_out" | grep -q "Already up to date"; then
+                ok "Already up to date with 'main'."
+            else
+                ok "Merged 'main' into '${current_branch}'."
+            fi
+        else
+            err "Merge conflict detected."
+            err "Run 'git merge --abort' to cancel, or resolve conflicts then 'git merge --continue'."
+            return 1
         fi
         return 0
     fi
@@ -455,7 +469,7 @@ print_menu() {
 ${BOLD}SynologyDSManager — deploy.sh${RESET}
 ${DIM}$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo '(no git branch)') · ${status_line}${DIM}${RESET}
 
-  ${BOLD}p${RESET}   Pull main from origin (fast-forward local main only)
+  ${BOLD}p${RESET}   Pull main from origin and merge into current branch
   ${BOLD}o${RESET}   Open in Xcode
   ${BOLD}s${RESET}   Configure signing (Apple Developer Team ID)
   ${BOLD}i${RESET}   Build Debug and install to /Applications (local testing)
