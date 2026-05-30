@@ -21,7 +21,7 @@ class AddDownloadViewController: NSViewController {
     var urls: [String] = []
     
     @IBAction func startDownloadButtonClicked(_ sender: Any) {
-        guard let api = synologyAPI else {
+        guard let api = AppModel.shared.api else {
             // Without a client there's nothing to submit to. This
             // shouldn't be reachable from the UI flow — the Add window
             // is only shown after Settings → Test Connection succeeds —

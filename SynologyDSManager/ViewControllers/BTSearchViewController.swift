@@ -40,7 +40,7 @@ class BTSearchController: NSViewController {
     }
 
     @IBAction func searchButtonClicked(_ sender: Any) {
-        guard let api = synologyAPI else { return }
+        guard let api = AppModel.shared.api else { return }
 
         // Cancel any previous in-flight search before starting a new one.
         searchTask?.cancel()
@@ -102,7 +102,7 @@ class BTSearchController: NSViewController {
     }
 
     @IBAction func downloadButtonClicked(_ sender: Any) {
-        guard let api = synologyAPI else {
+        guard let api = AppModel.shared.api else {
             view.window?.close()
             return
         }

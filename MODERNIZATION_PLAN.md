@@ -4,7 +4,7 @@ Living document. Tick boxes as tasks land. When all tasks in a phase are
 complete, move the phase status from **In progress** / **Planned** to
 **Shipped** with the date.
 
-Last updated: 2026-04-24 (Phase 3b-2b pushed — Web Extension target landed, bundle structurally correct; service-worker runtime bring-up tracked separately as Phase 3b-2b-RT)
+Last updated: 2026-05-29 (Phase 3 deferred — Safari Web Extension runtime is blocked on a macOS 26.x / Safari 26.x bug outside our control; see 3b-2b-RT. Active work moves to Phase 4 SwiftUI rewrite. Phase 3c remains blocked behind 3b-2b-RT and is parked, not abandoned.)
 
 ---
 
@@ -250,7 +250,18 @@ scoped Keychain access.
 - [x] Flipped `SWIFT_STRICT_CONCURRENCY` from `minimal` to `complete`
       — already done in Phase 2a-2d.
 
-## Phase 3 — Safari extension & webserver bridge · **In progress** (3a + 3b-1 + 3b-2 shipped)
+## Phase 3 — Safari extension & webserver bridge · **Deferred** (3a + 3b-1 + 3b-2 shipped; 3b-2b-RT blocked, 3c parked)
+
+> **Deferred 2026-05-29.** The XPC bridge and Web Extension are
+> structurally complete and shipped, but the service worker won't start
+> on macOS 26.x / Safari 26.x (3b-2b-RT) — a Safari-side bug we can't fix
+> from here. Rather than block the whole roadmap on Apple, active work
+> moves to **Phase 4** (SwiftUI rewrite), which is independent of the
+> bridge. Phase 3c (retiring `Webserver.swift` and the legacy extension
+> target) stays blocked behind 3b-2b-RT: we keep the unauthenticated
+> loopback server until there's a working replacement. Revisit when a
+> Safari/macOS point release unblocks the worker, or when an Apple
+> Feedback comes back.
 
 Goal: eliminate the two remaining Phase-0 audit findings around the
 extension ↔ main-app bridge:
@@ -457,20 +468,50 @@ Out-of-scope-until-asked. The original Chrome extension is referenced
 in the README but isn't in this repo. If a user wants it revived, it'd
 follow the same MV3 + native-messaging-host shape as 3b.
 
-## Phase 4 — SwiftUI rewrite · **Planned**
+## Phase 4 — SwiftUI rewrite · **In progress** (active phase as of 2026-05-29)
 
 Goal: storyboards out, SwiftUI in — screen by screen, behind
-`NSHostingController` so we can ship as we go.
+`NSHostingController` so we can ship as we go. Scope is a **pure macOS**
+rewrite (decided 2026-05-29); a future iOS/iPadOS port would refactor the
+already-portable network/keychain core into a shared package at that
+point, not now.
 
-- [ ] Lift shared state into an `@Observable` app model; retire the global
-      singletons in `Shared.swift`
-- [ ] Port screens in this order: Settings → About → Add Download →
+### Phase 4 slice 1 — AppModel foundation + Settings screen · **Shipped 2026-05-29**
+
+Bumped `MACOSX_DEPLOYMENT_TARGET` 13.0 → 14.0 (required for `@Observable`
+from the Observation framework; by 2026 macOS 14 is three years old, the
+test bundle was already there, and the plan explicitly required `Observation`).
+
+- [x] Lift shared state into an `@Observable` app model (`AppModel.swift`);
+      retire `synologyAPI`, `synologyTrustEvaluator`, `workStarted`, and
+      `mainMethod` from `Shared.swift` — replaced by `AppModel.shared.api`,
+      `.trustEvaluator`, `.workStarted`, and `.connect`. Navigation anchors
+      (`mainViewController`, `currentViewController`) stay in `Shared.swift`
+      until the last AppKit screen is ported.
+- [x] Update all 8 call sites: `AppDelegate`, `DownloadsViewController`
+      (8 spots), `AddDownloadViewController`, `BTSearchViewController`,
+      `ChooseDestViewController`, `SynologyBridgeService`.
+- [x] Port **Settings** to SwiftUI (`SettingsView.swift`). Three `GroupBox`
+      sections (NAS Connection, Safari Extension, Behavior). `DestinationView`
+      bridged via `NSViewRepresentable` until the Choose Destination screen
+      is ported. Hosted by `SettingsHostingController`
+      (`NSHostingController<SettingsView>`) swapped into the storyboard's
+      SettingsWC slot; `Main.storyboard` retains all other scenes unchanged.
+- [x] Delete `SettingsViewController.swift`.
+- [x] Drop the dead `mailto:support@swiftapps.skavans.ru` contact button
+      (was already disconnected from the storyboard; removed completely now).
+
+### Remaining Phase 4 tasks
+
+- [ ] Port screens in this order: About → Add Download →
       BT Search → Choose Destination → Downloads list
 - [ ] Replace the status item with `MenuBarExtra`
 - [ ] Replace PNG toolbar icons with SF Symbols
 - [ ] Delete `Main.storyboard` and all `.xib` files when the last screen
       has been ported
 - [ ] Add localisation scaffolding (`String Catalog`), starting with English
+- [ ] Remove `swiftapps.skavans.ru` mailto and `synoboost.com` link from
+      the ported BT Search screen (carried forward from Phase 1 leftover)
 
 ## Phase 5 — Release engineering · **Planned**
 

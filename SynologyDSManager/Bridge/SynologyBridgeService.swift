@@ -31,7 +31,7 @@ final class SynologyBridgeService: NSObject, SynologyBridgeProtocol {
         }
 
         Task {
-            guard let api = await MainActor.run(body: { synologyAPI }) else {
+            guard let api = await MainActor.run(body: { AppModel.shared.api }) else {
                 reply(false, "Not signed in to Download Station.")
                 return
             }
