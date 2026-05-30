@@ -12,6 +12,44 @@ commit that makes them.
 ## [Unreleased]
 
 ### Changed
+- **Phase 4 slice 3 — remaining screens ported to SwiftUI.**
+  All four remaining AppKit screens are now pure SwiftUI, each hosted by
+  an `NSHostingController` subclass that drops into the existing storyboard
+  window slot with no visible behaviour change:
+  - **Add Download** (`AddDownloadView` / `AddDownloadHostingController`)
+    replaces `AddDownloadViewController`. URL/torrent text entry backed by
+    a `TextEditor`; destination picker bridged via `DestinationViewRepresentable`;
+    start-download action reads the saved destination from `UserDefaults`
+    at submission time and enqueues via `SynologyAPI.createTask` in a
+    detached `Task`. `AppDelegate`'s `.torrent`-file-open path updated to
+    call `populate(with:)` on the new hosting controller.
+  - **BT Search** (`BTSearchView` / `BTSearchHostingController`) replaces
+    `BTSearchController`. SwiftUI `Table` with six sortable columns and
+    multi-row selection; search state backed by `@Observable BTSearchState`
+    with a cancellable `Task`; running search cancelled on `onDisappear`.
+    Dead `synoboost.com` link removed.
+  - **Choose Destination** (`ChooseDestView` / `ChooseDestHostingController`)
+    replaces `ChooseDestViewController`. Lazy-loading directory tree built
+    from `DisclosureGroup`-inside-`List`; `@Observable RemoteDir` nodes
+    load children on first expansion via `onChange(of: isExpanded)`;
+    completion callback invoked only on non-nil selection (cancel dismisses
+    without calling back, matching the original AppKit behaviour).
+  - **Downloads list** (`DownloadsView` / `DownloadsHostingController`)
+    replaces `DownloadsViewController`. All toolbar and menu `@objc` actions
+    remain discoverable via the responder chain on `DownloadsHostingController`;
+    `NSWindowDelegate` conformance preserves hide-on-close behaviour;
+    per-row and bulk delete confirmation via SwiftUI `.alert`. Status-bar
+    `NSStatusItem` retained pending a `MenuBarExtra` migration.
+  - `DownloadsHostingController` set as `mainViewController` in `Shared.swift`
+    (type updated from `DownloadsViewController?`); `Double.round(to:)`
+    extension moved from the deleted `DownloadsViewController.swift` into
+    `Shared.swift` so `prettifyBytesCount` / `prettifySpeed` compile.
+  - Storyboard outlet `<connections>` blocks removed from all four scenes
+    (outlet references crash at load time when the class no longer has the
+    matching `@IBOutlet` properties).
+  - Deleted: `AddDownloadViewController.swift`, `BTSearchViewController.swift`,
+    `ChooseDestViewController.swift`, `DownloadsViewController.swift`.
+
 - **Phase 4 slice 2 — async TLS approval + About screen (SwiftUI).**
   `SynologyTrustEvaluator.firstUseDecision` is now an `async` callback;
   `AppDelegate` shows the TOFU certificate-approval `NSAlert` via

@@ -108,12 +108,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                     mainViewController?.showStoryboardWindowCenteredToMainWindow(
                         storyboardWindowControllerIdentifier: "addDownloadWC"
                     )
-                    if let vc = currentViewController as? AddDownloadViewController {
-                        vc.torrents = torrents
-                        vc.tasksTextView.string = torrents.joined(separator: "\n")
-                        vc.tasksTextView.delegate?.textDidChange?(
-                            Notification(name: NSNotification.Name("torrentsAdded"))
-                        )
+                    if let vc = currentViewController as? AddDownloadHostingController {
+                        vc.populate(with: torrents)
                     }
                 }
             }

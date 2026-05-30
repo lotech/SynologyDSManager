@@ -505,7 +505,7 @@
         <!--Search Controller-->
         <scene sceneID="cxm-VW-51D">
             <objects>
-                <viewController id="u30-HE-HQm" customClass="BTSearchController" customModule="SynologyDSManager" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController id="u30-HE-HQm" customClass="BTSearchHostingController" customModule="SynologyDSManager" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" id="MBK-t3-6Xb">
                         <rect key="frame" x="0.0" y="0.0" width="887" height="482"/>
                         <autoresizingMask key="autoresizingMask"/>
@@ -714,17 +714,6 @@
                             </button>
                         </subviews>
                     </view>
-                    <connections>
-                        <outlet property="destinationView" destination="KL0-8S-150" id="wVs-tl-hFz"/>
-                        <outlet property="downloadButton" destination="taa-IJ-t9L" id="fwb-hQ-MZB"/>
-                        <outlet property="instructionsButton" destination="xFl-Vc-etC" id="Rqe-BG-Mxg"/>
-                        <outlet property="noResultsLabel" destination="PWR-uS-jKL" id="zhh-Ja-odM"/>
-                        <outlet property="queryTextField" destination="vLG-DA-PnS" id="5A0-Qg-aO0"/>
-                        <outlet property="resultsTableview" destination="ynb-63-kqz" id="JsL-So-Hbf"/>
-                        <outlet property="searchButton" destination="l6B-IZ-qLF" id="Ktg-h2-5fW"/>
-                        <outlet property="searchLabel" destination="IhS-kQ-15Y" id="03z-0W-NGJ"/>
-                        <outlet property="searchSpinner" destination="VMe-6g-ncs" id="K4z-Ag-N6m"/>
-                    </connections>
                 </viewController>
                 <customObject id="zAo-Ke-De8" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
@@ -754,7 +743,7 @@
         <!--Add Download View Controller-->
         <scene sceneID="wjm-di-CvJ">
             <objects>
-                <viewController storyboardIdentifier="addDownloadVC" id="3W9-SD-p94" customClass="AddDownloadViewController" customModule="SynologyDSManager" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="addDownloadVC" id="3W9-SD-p94" customClass="AddDownloadHostingController" customModule="SynologyDSManager" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" id="JlJ-xv-uVh">
                         <rect key="frame" x="0.0" y="0.0" width="522" height="366"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -882,12 +871,6 @@
                             </textField>
                         </subviews>
                     </view>
-                    <connections>
-                        <outlet property="destinationView" destination="miM-AH-bpT" id="emX-e5-66o"/>
-                        <outlet property="startDownloadButton" destination="aug-41-f8c" id="oRC-bx-Srd"/>
-                        <outlet property="tasksScrollView" destination="qnC-Sd-JLw" id="nkP-J3-zyR"/>
-                        <outlet property="tasksTextView" destination="TK3-FK-OGs" id="DAn-5I-0T7"/>
-                    </connections>
                 </viewController>
                 <customObject id="xpb-C8-zUr" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
@@ -896,7 +879,7 @@
         <!--Choose Dest View Controller-->
         <scene sceneID="aLW-9E-fdo">
             <objects>
-                <viewController storyboardIdentifier="dirSelectorVC" id="kNd-KH-8UX" customClass="ChooseDestViewController" customModule="SynologyDSManager" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="dirSelectorVC" id="kNd-KH-8UX" customClass="ChooseDestHostingController" customModule="SynologyDSManager" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" id="pX4-pq-8iM">
                         <rect key="frame" x="0.0" y="0.0" width="280" height="281"/>
                         <autoresizingMask key="autoresizingMask"/>
@@ -999,10 +982,6 @@ Gw
                             </button>
                         </subviews>
                     </view>
-                    <connections>
-                        <outlet property="dirsOutlineView" destination="RaO-aX-NjY" id="EbB-f7-EyJ"/>
-                        <outlet property="okButton" destination="l2R-Y8-UNX" id="8Me-FD-K8e"/>
-                    </connections>
                 </viewController>
                 <customObject id="OxE-gg-tJx" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
@@ -1011,7 +990,7 @@ Gw
         <!--Downloads View Controller-->
         <scene sceneID="BKw-uX-Egj">
             <objects>
-                <viewController id="ybQ-Ty-33j" customClass="DownloadsViewController" customModule="SynologyDSManager" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController id="ybQ-Ty-33j" customClass="DownloadsHostingController" customModule="SynologyDSManager" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" id="EXZ-mt-USZ">
                         <rect key="frame" x="0.0" y="0.0" width="827" height="415"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -1096,11 +1075,6 @@ Gw
                             </textField>
                         </subviews>
                     </view>
-                    <connections>
-                        <outlet property="bandwidthLabel" destination="Fl3-bF-2Jl" id="W3z-DU-Xe6"/>
-                        <outlet property="downloadsPlaceholderLabel" destination="Hjf-IK-V0k" id="FrN-hu-6f6"/>
-                        <outlet property="downloadsTableView" destination="L5n-FQ-rd4" id="vud-xa-ddq"/>
-                    </connections>
                 </viewController>
                 <customObject id="Vfo-WP-Hh6" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
