@@ -20,6 +20,23 @@ commit that makes them.
 > tracked as its own follow-up — see `MODERNIZATION_PLAN.md` phase
 > 3b-2b-RT for the handoff notes.
 
+### Security
+- **Loopback-only bind on the legacy webserver (`Webserver.swift`).**
+  Swifter's default `start(_:forceIPv4:priority:)` overload binds to
+  `INADDR_ANY` (`0.0.0.0`), not `127.0.0.1` — so the unauthenticated
+  `POST /add_download` endpoint that the legacy Safari App Extension
+  uses to enqueue downloads on the user's authenticated DSM session
+  was reachable from any host on the same LAN whenever the app was
+  running. Now sets `listenAddressIPv4 = "127.0.0.1"` and
+  `listenAddressIPv6 = "::1"` before `start`, restricting the
+  listener to the loopback interface as the surrounding code and
+  docs always assumed. Also dropped the response's
+  `Access-Control-Allow-Origin: *` header, which had explicitly
+  invited cross-origin POSTs from any web page the user visited.
+  The whole file still goes away in Phase 3c once the XPC bridge
+  fully supersedes the legacy Safari App Extension; this is the
+  defensive stop-gap until then.
+
 ### Fixed
 - **`ENABLE_DEBUG_DYLIB` flipped off on the Web Extension target.**
   Xcode 15+ builds Debug extensions with this on by default: the
