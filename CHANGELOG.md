@@ -19,6 +19,12 @@ commit that makes them.
   dependency entirely. The label (`↓DS` / `↓DS: X.X MB/s`) is driven directly
   by an `@Observable` `AppModel.statusBarTitle` property and updates live as
   bandwidth changes.
+- **Removed competing `AppDelegate` proxy from the storyboard's MainMenu
+  scene.** The `<customObject customClass="AppDelegate">` and its `delegate`
+  outlet caused AppKit to instantiate a second `AppDelegate` at storyboard-load
+  time and wire it as `NSApplication.delegate`, displacing the instance created
+  by `@NSApplicationDelegateAdaptor` and suppressing the `MenuBarExtra` scene.
+  With the proxy removed, the SwiftUI lifecycle's delegate is the only one.
 - **Downloads list populates correctly again** after the prior commit
   introduced a regression where the polling loop's `AppModel.shared.statusBarItem`
   access (an `NSStatusItem?` wrapped in `@Observable`) silently interfered with
