@@ -101,46 +101,51 @@ struct DownloadsView: View {
     let state: DownloadsState
 
     var body: some View {
-        VStack(spacing: 0) {
-            if state.tasks.isEmpty {
-                Spacer()
-                Text("No active downloads")
-                    .foregroundStyle(.secondary)
-                Spacer()
-            } else {
-                List(state.tasks) { task in
-                    DownloadTaskRow(
-                        task: task,
-                        onStartPause: { toggleTask(task) },
-                        onDeleteTap: { state.taskToDelete = task }
-                    )
+        taskContent
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                VStack(spacing: 0) {
+                    Divider()
+                    HStack {
+                        Text("Bandwidth: \(prettifySpeed(speed: state.bandwidth))")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .monospacedDigit()
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
+                        Spacer()
+                    }
+                    .background(.bar)
                 }
-                .listStyle(.plain)
             }
+            .alert("Confirm deletion", isPresented: Binding(
+                get: { state.taskToDelete != nil },
+                set: { if !$0 { state.taskToDelete = nil } }
+            )) {
+                Button("No", role: .cancel) { state.taskToDelete = nil }
+                Button("Yes", role: .destructive) {
+                    if let t = state.taskToDelete { deleteTask(t) }
+                    state.taskToDelete = nil
+                }
+            } message: {
+                Text("Are you sure you want to delete download \"\(state.taskToDelete?.title ?? "")\"?")
+            }
+    }
 
-            Divider()
-
-            HStack {
-                Text("Bandwidth: \(prettifySpeed(speed: state.bandwidth))")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .monospacedDigit()
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
-                Spacer()
+    @ViewBuilder
+    private var taskContent: some View {
+        if state.tasks.isEmpty {
+            Text("No active downloads")
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else {
+            List(state.tasks) { task in
+                DownloadTaskRow(
+                    task: task,
+                    onStartPause: { toggleTask(task) },
+                    onDeleteTap: { state.taskToDelete = task }
+                )
             }
-        }
-        .alert("Confirm deletion", isPresented: Binding(
-            get: { state.taskToDelete != nil },
-            set: { if !$0 { state.taskToDelete = nil } }
-        )) {
-            Button("No", role: .cancel) { state.taskToDelete = nil }
-            Button("Yes", role: .destructive) {
-                if let t = state.taskToDelete { deleteTask(t) }
-                state.taskToDelete = nil
-            }
-        } message: {
-            Text("Are you sure you want to delete download \"\(state.taskToDelete?.title ?? "")\"?")
+            .listStyle(.plain)
         }
     }
 
@@ -181,6 +186,10 @@ final class DownloadsHostingController: NSHostingController<DownloadsView>,
         let s = DownloadsState()
         self.dlState = s
         super.init(coder: coder, rootView: DownloadsView(state: s))
+        // Create the status bar item immediately on instantiation so it appears
+        // in the macOS menu bar as soon as the app launches, regardless of
+        // whether the downloads window is visible yet.
+        initStatusBar()
     }
 
     override func viewDidLoad() {
@@ -188,7 +197,6 @@ final class DownloadsHostingController: NSHostingController<DownloadsView>,
         mainViewController = self
         AppModel.shared.connect = self.doWork
 
-        initStatusBar()
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, _ in }
 
         if !(userDefaults.value(forKey: "hideDockIcon") as? Bool ?? true) {
