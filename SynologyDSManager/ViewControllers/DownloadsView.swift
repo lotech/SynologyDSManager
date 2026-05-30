@@ -186,10 +186,6 @@ final class DownloadsHostingController: NSHostingController<DownloadsView>,
         let s = DownloadsState()
         self.dlState = s
         super.init(coder: coder, rootView: DownloadsView(state: s))
-        // Create the status bar item immediately on instantiation so it appears
-        // in the macOS menu bar as soon as the app launches, regardless of
-        // whether the downloads window is visible yet.
-        initStatusBar()
     }
 
     override func viewDidLoad() {
@@ -207,6 +203,15 @@ final class DownloadsHostingController: NSHostingController<DownloadsView>,
     override func viewDidAppear() {
         super.viewDidAppear()
         view.window?.delegate = self
+        // Create the status bar item on first appearance. viewDidAppear is
+        // the earliest reliable callback for NSHostingController where AppKit
+        // status-bar API works correctly — viewDidLoad fires during the
+        // NSHostingController setup phase and init?(coder:) fires before the
+        // run loop is fully live, both of which silently drop the item on
+        // macOS 14+.
+        if statusBarItem == nil {
+            initStatusBar()
+        }
         DispatchQueue.main.async {
             if let settings = AppModel.shared.loadCredentials() {
                 self.doWork(settings: settings)

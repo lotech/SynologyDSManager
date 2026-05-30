@@ -11,6 +11,25 @@ commit that makes them.
 
 ## [Unreleased]
 
+### Fixed
+- **Status-bar `NSStatusItem` not appearing after Phase 4 slice 3.**
+  `DownloadsHostingController` previously called `initStatusBar()` from
+  `viewDidLoad()` and later from `init?(coder:)`; both fire during
+  `NSHostingController`'s internal setup phase on macOS 14 + and the item
+  was silently dropped. Moving the call to `viewDidAppear()` (guarded by a
+  `statusBarItem == nil` check so it only runs once) ensures the item is
+  created after the hosting controller is fully live, matching when
+  `NSWindowDelegate` and the polling loop are also established.
+- Removed dead `SPUStandardUpdaterController` custom object and its
+  "Check for Updates…" menu item from the storyboard MainMenu scene.
+  These Sparkle remnants caused `Unknown class` and `Could not connect
+  action` warnings at every launch.
+- Replaced the Downloads scene's old AppKit view hierarchy (NSTableView,
+  two NSTextFields, NSBox) in the storyboard with an empty view.
+  `NSHostingController` replaces the view at runtime anyway, but the old
+  hierarchy contained a `customClass="Downloads"` text-field cell whose
+  class no longer exists, causing silent storyboard decode warnings.
+
 ### Changed
 - **Phase 4 slice 3 — remaining screens ported to SwiftUI.**
   All four remaining AppKit screens are now pure SwiftUI, each hosted by
