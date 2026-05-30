@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="21701" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" initialViewController="3sR-BC-BNC">
+<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="21701" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
         <deployment identifier="macosx"/>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="21701"/>
@@ -401,7 +401,7 @@
         <!--Window Controller-->
         <scene sceneID="z5D-1v-zNw">
             <objects>
-                <windowController id="3sR-BC-BNC" sceneMemberID="viewController">
+                <windowController storyboardIdentifier="MainWC" id="3sR-BC-BNC" sceneMemberID="viewController">
                     <window key="window" title="Synology DS Manager" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" frameAutosaveName="SynologyDSManagerMain" animationBehavior="default" toolbarStyle="expanded" id="nen-X1-bjV">
                         <windowStyleMask key="styleMask" titled="YES" closable="YES" resizable="YES"/>
                         <rect key="contentRect" x="245" y="310" width="827" height="415"/>
