@@ -227,7 +227,7 @@ final class DownloadsHostingController: NSHostingController<DownloadsView>,
         "Search":        "magnifyingglass",
         "Pause all":     "pause.fill",
         "Start all":     "play.fill",
-        "Clear finished": "broom",
+        "Clear finished": "eraser.fill",
     ]
 
     private func applyToolbarSymbols() {

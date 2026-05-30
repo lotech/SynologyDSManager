@@ -20,6 +20,13 @@ struct SynologyDSManagerApp: App {
             MenuBarLabel()
         }
         .menuBarExtraStyle(.menu)
+        .commands {
+            CommandGroup(replacing: .appInfo) {
+                Button("About Synology DS Manager") {
+                    mainViewController?.aboutMenuItemClicked(nil)
+                }
+            }
+        }
     }
 }
 
@@ -73,11 +80,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        // NSMainStoryboardFile loads the storyboard (giving us the main menu)
-        // but we removed initialViewController so AppKit no longer auto-
-        // instantiates the Downloads window. Instantiate it by identifier now
-        // so viewDidLoad / viewDidAppear fire and the polling loop can start.
-        if let wc = NSStoryboard.main?.instantiateController(withIdentifier: "MainWC") as? NSWindowController {
+        // NSMainStoryboardFile has been removed from Info.plist so SwiftUI's
+        // scene system (MenuBarExtra) can initialise without AppKit storyboard
+        // processing racing against it. Load the main window manually instead.
+        let storyboard = NSStoryboard(name: "Main", bundle: nil)
+        if let wc = storyboard.instantiateController(withIdentifier: "MainWC") as? NSWindowController {
             wc.showWindow(nil)
         }
     }
