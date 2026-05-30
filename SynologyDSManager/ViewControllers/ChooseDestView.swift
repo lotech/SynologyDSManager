@@ -34,6 +34,7 @@ final class RemoteDir: Identifiable {
 // MARK: - State
 
 @Observable
+@MainActor
 final class ChooseDestState {
     var remoteDirs: [RemoteDir] = []
     var selectedDir: RemoteDir?
@@ -44,9 +45,7 @@ final class ChooseDestState {
         Task {
             do {
                 let entries = try await api.listDirectories(root: "/")
-                await MainActor.run {
-                    self.remoteDirs = entries.map { RemoteDir(name: $0.name, absolutePath: $0.path) }
-                }
+                self.remoteDirs = entries.map { RemoteDir(name: $0.name, absolutePath: $0.path) }
             } catch {
                 AppLogger.network.error(
                     "listDirectories(root: /) failed: \(error.localizedDescription, privacy: .public)"

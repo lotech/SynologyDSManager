@@ -122,6 +122,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// `async`; `await MainActor.run { }` schedules the alert on the main
     /// actor without blocking any thread. `NSAlert.runModal()` runs a nested
     /// event loop, so the main actor stays responsive while the user decides.
+    @MainActor
     private func installCertificateApprovalHandler() {
         AppModel.shared.trustEvaluator.firstUseDecision = { host, spkiBase64 in
             await MainActor.run {

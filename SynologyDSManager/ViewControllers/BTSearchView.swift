@@ -12,6 +12,7 @@ import SwiftUI
 // MARK: - State
 
 @Observable
+@MainActor
 final class BTSearchState {
     var query: String = ""
     var results: [BTSearchResult] = []
@@ -39,20 +40,17 @@ final class BTSearchState {
             } catch {
                 outcome = .failure(error)
             }
-            await MainActor.run {
-                guard let self else { return }
-                self.isSearching = false
-                switch outcome {
-                case .success(let found):
-                    self.results = found
-                    self.showNoResults = found.isEmpty
-                case .failure(let error):
-                    AppLogger.network.error(
-                        "searchTorrents failed: \(error.localizedDescription, privacy: .public)"
-                    )
-                    self.results = []
-                    self.showNoResults = true
-                }
+            self.isSearching = false
+            switch outcome {
+            case .success(let found):
+                self.results = found
+                self.showNoResults = found.isEmpty
+            case .failure(let error):
+                AppLogger.network.error(
+                    "searchTorrents failed: \(error.localizedDescription, privacy: .public)"
+                )
+                self.results = []
+                self.showNoResults = true
             }
         }
     }
