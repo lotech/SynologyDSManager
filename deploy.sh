@@ -104,26 +104,36 @@ read_marketing_version() {
 # ----- Actions -------------------------------------------------------------
 
 action_pull_main() {
-    info "Fetching origin/main…"
     local current_branch
     current_branch="$(git rev-parse --abbrev-ref HEAD)"
 
+    # When on a feature branch, pull that branch and also keep local main
+    # in sync — but do NOT switch branches.
+    if [[ "$current_branch" != "main" ]]; then
+        info "On branch '${current_branch}' — pulling it from origin…"
+        if ! git fetch origin; then
+            err "git fetch failed — check network / auth and try again."
+            return 1
+        fi
+        if git pull --ff-only origin "$current_branch"; then
+            ok "Branch '${current_branch}' is up to date with origin/${current_branch}."
+        else
+            err "Fast-forward pull of '${current_branch}' failed. Resolve manually."
+            return 1
+        fi
+        # Also advance local main ref if it exists and can be fast-forwarded.
+        if git rev-parse --verify main >/dev/null 2>&1; then
+            git fetch origin main:main 2>/dev/null \
+                && ok "Local 'main' also updated." \
+                || warn "Could not fast-forward local 'main' — resolve separately if needed."
+        fi
+        return 0
+    fi
+
+    info "Fetching origin/main…"
     if ! git fetch origin main; then
         err "git fetch origin main failed — check network / auth and try again."
         return 1
-    fi
-
-    # When not on main, the working tree is on a different branch so the
-    # fetch refspec below can fast-forward the local `main` ref without
-    # touching files on disk. No stash dance needed.
-    if [[ "$current_branch" != "main" ]]; then
-        if git fetch origin main:main; then
-            ok "Local 'main' updated from origin/main (you stayed on '${current_branch}')."
-            return 0
-        else
-            err "Could not fast-forward local 'main'. Check out 'main' and resolve manually."
-            return 1
-        fi
     fi
 
     # --- From here: on main. ---
@@ -459,7 +469,7 @@ print_menu() {
 ${BOLD}SynologyDSManager — deploy.sh${RESET}
 ${DIM}$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo '(no git branch)') · ${status_line}${DIM}${RESET}
 
-  ${BOLD}p${RESET}   Pull main from origin to local
+  ${BOLD}p${RESET}   Pull current branch (and main) from origin
   ${BOLD}o${RESET}   Open in Xcode
   ${BOLD}s${RESET}   Configure signing (Apple Developer Team ID)
   ${BOLD}i${RESET}   Build Debug and install to /Applications (local testing)
