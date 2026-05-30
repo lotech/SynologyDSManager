@@ -12,6 +12,7 @@
 //  existing implicit behaviour and makes it explicit.
 //
 
+import AppKit
 import Foundation
 import Observation
 
@@ -36,6 +37,10 @@ final class AppModel {
     /// the first-use approval callback installed by AppDelegate survive
     /// across reconstructions of `api` (e.g. credential changes).
     let trustEvaluator = SynologyTrustEvaluator()
+
+    /// The menu-bar status item (↓DS / ↓DS: X.X MB/s). Owned here so its
+    /// lifetime matches the app, not any particular view controller.
+    var statusBarItem: NSStatusItem?
 
     // MARK: - Connection lifecycle
 
