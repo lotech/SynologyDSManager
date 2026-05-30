@@ -357,7 +357,7 @@ final class DownloadsHostingController: NSHostingController<DownloadsView>,
         dlState.update(with: newTasks)
 
         let speed = prettifySpeed(speed: dlState.bandwidth)
-        AppModel.shared.statusBarItem?.button?.title = userDefaults.bool(forKey: "hideFromStatusBar")
+        AppModel.shared.statusBarTitle = userDefaults.bool(forKey: "hideFromStatusBar")
             ? "↓DS"
             : "↓DS: \(speed)"
     }

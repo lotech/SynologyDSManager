@@ -5,8 +5,43 @@
 
 import Cocoa
 import ServiceManagement
+import SwiftUI
+
+// MARK: - App entry point
 
 @main
+struct SynologyDSManagerApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+
+    var body: some Scene {
+        MenuBarExtra {
+            StatusBarMenu()
+        } label: {
+            Text(AppModel.shared.statusBarTitle)
+                .monospacedDigit()
+        }
+        .menuBarExtraStyle(.menu)
+    }
+}
+
+// MARK: - Status bar menu content
+
+struct StatusBarMenu: View {
+    var body: some View {
+        Button("Pause all")      { mainViewController?.pauseAllToolbarItemClicked(nil) }
+        Button("Start all")      { mainViewController?.resumeAllToolbarItemClicked(nil) }
+        Button("Clear finished") { mainViewController?.cleanToolbarItemClicked(nil) }
+        Divider()
+        Button("Show window")    { NSApp.activate(ignoringOtherApps: true) }
+        Divider()
+        Button("About")          { mainViewController?.aboutMenuItemClicked(nil) }
+        Divider()
+        Button("Quit")           { NSApplication.shared.terminate(nil) }
+    }
+}
+
+// MARK: - Application delegate
+
 final class AppDelegate: NSObject, NSApplicationDelegate {
 
     /// Long-lived XPC listener that services the Safari Web Extension's
@@ -21,63 +56,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        // Create the menu-bar status item here — at the single most reliable
-        // point in the app lifecycle — rather than inside NSHostingController's
-        // view callbacks.  All three of viewDidLoad / init?(coder:) /
-        // viewDidAppear fire during NSHostingController's internal SwiftUI
-        // setup and the NSStatusItem is silently dropped on macOS 14+.
-        createStatusBarItem()
-        // Belt-and-suspenders: retry one run-loop later in case the storyboard
-        // scene is still being finalised when this fires synchronously.
-        DispatchQueue.main.async { [weak self] in self?.createStatusBarItem() }
-    }
-
-    private func createStatusBarItem() {
-        guard AppModel.shared.statusBarItem == nil else { return }
-        let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        let hideSpeed = UserDefaults.standard.bool(forKey: "hideFromStatusBar")
-        item.button?.title = hideSpeed ? "↓DS" : "↓DS: 0.0 B/s"
-
-        let menu = NSMenu(title: "Synology DS Manager Status Bar Menu")
-        menu.addItem(NSMenuItem.separator())
-
-        for (title, sel) in [
-            ("Pause all",      #selector(DownloadsHostingController.pauseAllToolbarItemClicked(_:))),
-            ("Start all",      #selector(DownloadsHostingController.resumeAllToolbarItemClicked(_:))),
-            ("Clear finished", #selector(DownloadsHostingController.cleanToolbarItemClicked(_:))),
-        ] {
-            // target=nil → dispatched via the responder chain to whichever
-            // object currently handles these selectors (DownloadsHostingController).
-            menu.addItem(NSMenuItem(title: title, action: sel, keyEquivalent: ""))
+        // When the SwiftUI App lifecycle is active, AppKit may not
+        // auto-load NSMainStoryboardFile on all macOS versions. Instantiate
+        // the initial window controller explicitly if no windows appeared.
+        if NSApp.windows.isEmpty {
+            if let wc = NSStoryboard.main?.instantiateInitialController() as? NSWindowController {
+                wc.showWindow(nil)
+            }
         }
-
-        menu.addItem(NSMenuItem.separator())
-        let showItem = NSMenuItem(title: "Show window",
-                                  action: #selector(showMainWindowFromStatusBar(_:)),
-                                  keyEquivalent: "")
-        showItem.target = self
-        menu.addItem(showItem)
-
-        menu.addItem(NSMenuItem.separator())
-        let aboutItem = NSMenuItem(title: "About",
-                                   action: #selector(DownloadsHostingController.aboutMenuItemClicked(_:)),
-                                   keyEquivalent: "")
-        menu.addItem(aboutItem)
-
-        menu.addItem(NSMenuItem.separator())
-        let quitItem = NSMenuItem(title: "Quit",
-                                  action: #selector(NSApplication.terminate(_:)),
-                                  keyEquivalent: "")
-        quitItem.target = NSApp
-        menu.addItem(quitItem)
-
-        item.menu = menu
-        AppModel.shared.statusBarItem = item
-        AppLogger.network.debug("Status bar item created")
-    }
-
-    @objc private func showMainWindowFromStatusBar(_ sender: AnyObject?) {
-        NSApp.activate(ignoringOtherApps: true)
     }
 
     /// Ask launchd to advertise the bridge's Mach service name by

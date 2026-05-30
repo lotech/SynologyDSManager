@@ -12,7 +12,6 @@
 //  existing implicit behaviour and makes it explicit.
 //
 
-import AppKit
 import Foundation
 import Observation
 
@@ -38,9 +37,11 @@ final class AppModel {
     /// across reconstructions of `api` (e.g. credential changes).
     let trustEvaluator = SynologyTrustEvaluator()
 
-    /// The menu-bar status item (↓DS / ↓DS: X.X MB/s). Owned here so its
-    /// lifetime matches the app, not any particular view controller.
-    var statusBarItem: NSStatusItem?
+    /// The text shown in the SwiftUI MenuBarExtra label (↓DS / ↓DS: X.X MB/s).
+    /// Updated by DownloadsHostingController.refreshDownloads on every polling cycle.
+    var statusBarTitle: String = UserDefaults.standard.bool(forKey: "hideFromStatusBar")
+        ? "↓DS"
+        : "↓DS: 0.0 B/s"
 
     // MARK: - Connection lifecycle
 
