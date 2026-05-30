@@ -2,8 +2,6 @@
 //  AddDownloadView.swift
 //  SynologyDSManager
 //
-//  SwiftUI replacement for AddDownloadViewController (Phase 4, slice 3).
-//
 
 import SwiftUI
 import UniformTypeIdentifiers
@@ -125,37 +123,5 @@ struct AddDownloadView: View {
                 }
             }
         }
-    }
-}
-
-
-// MARK: - Hosting controller
-
-final class AddDownloadHostingController: NSHostingController<AddDownloadView> {
-    private let addState: AddDownloadState
-
-    required init?(coder: NSCoder) {
-        let s = AddDownloadState()
-        self.addState = s
-        super.init(coder: coder, rootView: AddDownloadView(state: s))
-    }
-
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        sizingOptions = .preferredContentSize
-        rootView.onClose = { [weak self] in self?.view.window?.close() }
-    }
-
-    override func viewWillAppear() {
-        super.viewWillAppear()
-        view.window?.styleMask.remove(.fullScreen)
-        view.window?.styleMask.remove(.miniaturizable)
-        view.window?.styleMask.remove(.resizable)
-    }
-
-    /// Called by AppDelegate when torrent files are opened via drag-drop or
-    /// double-click. Prepopulates the text field with the file paths.
-    func populate(with torrents: [String]) {
-        addState.taskText = torrents.joined(separator: "\n")
     }
 }

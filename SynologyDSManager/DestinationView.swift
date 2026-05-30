@@ -2,9 +2,6 @@
 //  DestinationView.swift
 //  SynologyDSManager
 //
-//  Created by Антон on 22.04.2020.
-//  Copyright © 2020 skavans. All rights reserved.
-//
 
 import Foundation
 import Cocoa
@@ -13,50 +10,50 @@ import Cocoa
 class DestinationView: NSView, LoadableView {
     @IBOutlet var topView: NSView!
     @IBOutlet weak var destinationsSelector: NSPopUpButton!
-    
+
     var mainView: NSView?
-    
+
     public var selectedDir: String? = nil
-    
+
     private var selectionSaveKey: String? = nil
-    
-    
+
+
     private var values: [(String, String?)] = [
         ("Download Station default", nil),
         ("SEPARATOR", nil),
         ("Other...", nil)
     ]
-    
-        
+
+
     init() {
         super.init(frame: NSRect.zero)
         _ = load(fromNIBNamed: "DestinationView")
         setup()
     }
-    
+
     required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
         _ = load(fromNIBNamed: "DestinationView")
         setup()
     }
-    
+
     public func setSelectionSynchronizeKey(key: String) {
         self.selectionSaveKey = key
-        
+
         if let selectedTitle = userDefaults.string(forKey: "destinationSelectedTitle_\(self.selectionSaveKey!)") {
             self.destinationsSelector.selectItem(withTitle: selectedTitle)
         } else {
             self.destinationsSelector.selectItem(at: 0)
         }
         self.selectedDir = userDefaults.string(forKey: "destinationSelectedPath_\(self.selectionSaveKey!)")
-        
+
     }
-    
+
     private func setup() {
         if let storedValuesJsonString = userDefaults.string(forKey: "downloadDestinations") {
             self.values = self.JsonStringToValues(jsonString: storedValuesJsonString)
         }
-        
+
         self.destinationsSelector.removeAllItems()
         for (title, _) in self.values {
             if "SEPARATOR" == title {
@@ -66,8 +63,8 @@ class DestinationView: NSView, LoadableView {
             }
         }
     }
-    
-    
+
+
     /// Encode the `(title, path?)` list to a JSON string stored in
     /// UserDefaults under `"downloadDestinations"`. The on-disk shape
     /// matches the previous SwiftyJSON-produced format —
@@ -92,16 +89,16 @@ class DestinationView: NSView, LoadableView {
             return (title, pair[1])
         }
     }
-    
-    
-    private func addDirToListAndSelect(path: String) {
+
+
+    func addDirToListAndSelect(path: String) {
         self.values.removeAll(where: {$0.1 == path})
 
         if self.values.count == 3 {  // only default values
             self.values.insert(("SEPARATOR", nil), at: 1)
             self.destinationsSelector.menu?.insertItem(NSMenuItem.separator(), at: 1)
         }
-        
+
         let dirName = path.split(separator: "/").last!
         let title = "\(dirName) (\(path))"
         self.destinationsSelector.insertItem(withTitle: title, at: 2)
@@ -112,21 +109,23 @@ class DestinationView: NSView, LoadableView {
             userDefaults.set(path, forKey: "destinationSelectedPath_\(self.selectionSaveKey!)")
         }
         self.selectedDir = path
-        
+
         // store all directories
         let dirsJsonString = self.valuesToJsonString(values: self.values)
         userDefaults.set(dirsJsonString, forKey: "downloadDestinations")
     }
-    
-    
+
+
     @IBAction func destinationSelectorSelected(_ sender: Any) {
         if self.destinationsSelector.selectedItem?.title == "Other..." {
             self.destinationsSelector.selectItem(at: 0)
-            let selectorVC = mainViewController!.storyboard?.instantiateController(withIdentifier: "dirSelectorVC") as! ChooseDestHostingController
-            selectorVC.completion = { selectedPath in
-                self.addDirToListAndSelect(path: selectedPath!)
+            let selectorVC = ChooseDestHostingController()
+            selectorVC.completion = { [weak self] selectedPath in
+                if let path = selectedPath {
+                    self?.addDirToListAndSelect(path: path)
+                }
             }
-            currentViewController!.presentAsSheet(selectorVC)
+            NSApp.keyWindow?.contentViewController?.presentAsSheet(selectorVC)
         } else {
             let (selectedTitle, selectedPath) = self.values[self.destinationsSelector.indexOfSelectedItem]
             self.selectedDir = selectedPath

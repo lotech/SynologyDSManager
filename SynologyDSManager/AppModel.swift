@@ -2,18 +2,10 @@
 //  AppModel.swift
 //  SynologyDSManager
 //
-//  Phase 4 replacement for the nonisolated(unsafe) globals in Shared.swift.
-//  Owns the live SynologyAPI client, the shared TLS evaluator, and the
-//  connection lifecycle state that was previously scattered across
-//  Shared.swift and accessed from every view controller.
-//
-//  Concurrency contract: @MainActor throughout. All reads and writes from
-//  view controllers are already on the main actor, so this matches the
-//  existing implicit behaviour and makes it explicit.
-//
 
 import Foundation
 import Observation
+import UserNotifications
 
 
 @Observable
@@ -27,44 +19,149 @@ final class AppModel {
 
     // MARK: - App-wide singletons
 
-    /// The active DSM API client. Nil until the user completes their
-    /// first Settings → "Connect and save" flow. View controllers guard
-    /// on this value before issuing any API calls.
     private(set) var api: SynologyAPI?
-
-    /// Shared TLS trust evaluator. Long-lived so the SPKI pin store and
-    /// the first-use approval callback installed by AppDelegate survive
-    /// across reconstructions of `api` (e.g. credential changes).
     let trustEvaluator = SynologyTrustEvaluator()
 
-    /// The text shown in the SwiftUI MenuBarExtra label (↓DS / ↓DS: X.X MB/s).
-    /// Updated by DownloadsHostingController.refreshDownloads on every polling cycle.
+    // MARK: - Live state (observed by views)
+
+    var tasks: [DSMTask] = []
+    var bandwidth: Double = 0
+
+    /// Text shown in the MenuBarExtra label (↓DS / ↓DS: X.X MB/s).
     var statusBarTitle: String = UserDefaults.standard.bool(forKey: "hideFromStatusBar")
         ? "↓DS"
         : "↓DS: 0.0 B/s"
 
+    // MARK: - Pending items from URL/file open events
+
+    /// Torrent file paths set by AppDelegate; consumed by AddDownloadRootView.
+    var pendingTorrentPaths: [String] = []
+
+    /// External download URL set by AppDelegate; consumed by DownloadsView.
+    var pendingExternalURL: String?
+
     // MARK: - Connection lifecycle
 
-    /// Set to true after `doWork` runs for the first time. SettingsView
-    /// uses this to decide whether a successful test-connection should
-    /// start the refresh loop or just update existing credentials.
     private(set) var workStarted = false
+    private var pollingTask: Task<Void, Never>?
+    private var finishedTaskTitles: Set<String> = []
 
-    /// Set by DownloadsViewController.viewDidLoad; called by SettingsView
-    /// when the user saves credentials for the first time (i.e. !workStarted).
-    var connect: ((StoredCredentials) -> Void)?
+    // MARK: - Polling
 
-    // MARK: - Mutators called by DownloadsViewController
+    func startPolling(credentials: StoredCredentials) {
+        pollingTask?.cancel()
 
-    func setAPI(_ newAPI: SynologyAPI) {
+        let newAPI = SynologyAPI(credentials: credentials.apiCredentials, trustEvaluator: trustEvaluator)
         api = newAPI
-    }
 
-    func markWorkStarted() {
+        start_webserver()
+
+        pollingTask = Task { [weak self] in
+            guard let self else { return }
+            guard let api = self.api else { return }
+            do {
+                _ = try await api.authenticate()
+            } catch {
+                AppLogger.auth.error(
+                    "SynologyAPI auth failed: \(error.localizedDescription, privacy: .public)"
+                )
+                return
+            }
+            while !Task.isCancelled {
+                await self.refreshDownloads()
+                try? await Task.sleep(nanoseconds: 3_000_000_000)
+            }
+        }
+
         workStarted = true
     }
 
-    // MARK: - Credential persistence (delegating to Settings.swift helpers)
+    @MainActor
+    private func refreshDownloads() async {
+        guard let api else { return }
+        let newTasks: [DSMTask]
+        do {
+            newTasks = try await api.listTasks()
+        } catch {
+            AppLogger.network.error("listTasks failed: \(error.localizedDescription, privacy: .public)")
+            return
+        }
+
+        let isFirst = tasks.isEmpty && finishedTaskTitles.isEmpty
+        for task in newTasks where task.isFinished {
+            if !finishedTaskTitles.contains(task.title) {
+                if !isFirst { notifyFinished(title: task.title) }
+                finishedTaskTitles.insert(task.title)
+            }
+            if userDefaults.bool(forKey: "clearFinishedTasks") {
+                let id = task.id
+                Task { try? await api.deleteTask(id: id) }
+            }
+        }
+
+        tasks = newTasks
+        bandwidth = newTasks.reduce(0.0) { acc, t in
+            acc + Double(t.additional?.transfer?.speedDownload ?? 0)
+        }
+
+        let speed = prettifySpeed(speed: bandwidth)
+        statusBarTitle = userDefaults.bool(forKey: "hideFromStatusBar")
+            ? "↓DS"
+            : "↓DS: \(speed)"
+    }
+
+    // MARK: - Bulk task actions
+
+    func pauseAll() async {
+        guard let api else { return }
+        for id in tasks.map(\.id) { try? await api.pauseTask(id: id) }
+    }
+
+    func resumeAll() async {
+        guard let api else { return }
+        for id in tasks.map(\.id) { try? await api.resumeTask(id: id) }
+    }
+
+    func clearFinished() async {
+        guard let api else { return }
+        for id in tasks.filter(\.isFinished).map(\.id) { try? await api.deleteTask(id: id) }
+    }
+
+    // MARK: - Extension / URL-scheme download
+
+    func enqueueDownload(url: String) {
+        guard let api else { return }
+        let content = UNMutableNotificationContent()
+        content.title = "Download started"
+        content.subtitle = "URL content is downloading at Synology DS"
+        UNUserNotificationCenter.current().add(
+            UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil)
+        )
+        let destination = userDefaults.string(forKey: "destinationSelectedPath_extension")
+        Task.detached { [api] in
+            do {
+                try await api.createTask(url: url, destination: destination)
+            } catch {
+                AppLogger.network.error(
+                    "createTask(url:) from extension failed: \(error.localizedDescription, privacy: .public)"
+                )
+            }
+        }
+    }
+
+    // MARK: - Notifications
+
+    private func notifyFinished(title: String) {
+        let content = UNMutableNotificationContent()
+        content.title = "Task finished"
+        content.body = title
+        content.sound = .default
+        UNUserNotificationCenter.current().add(
+            UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil)
+        )
+    }
+
+    // MARK: - Credential persistence
 
     func loadCredentials() -> StoredCredentials? {
         readSettings()

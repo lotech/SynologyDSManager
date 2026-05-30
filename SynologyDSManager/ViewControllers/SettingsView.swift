@@ -2,10 +2,6 @@
 //  SettingsView.swift
 //  SynologyDSManager
 //
-//  SwiftUI replacement for SettingsViewController (Phase 4, slice 1).
-//  Hosted by SettingsHostingController which is wired into Main.storyboard
-//  in place of the old SettingsViewController.
-//
 
 import SwiftUI
 import SafariServices.SFSafariApplication
@@ -32,8 +28,7 @@ struct DestinationViewRepresentable: NSViewRepresentable {
 
 struct SettingsView: View {
 
-    // Dismissal callback injected by SettingsHostingController.
-    var onClose: (() -> Void)?
+    @Environment(\.dismiss) private var dismiss
 
     // MARK: Connection fields
     @State private var host = ""
@@ -86,7 +81,7 @@ struct SettingsView: View {
                 message: Text(item.message),
                 dismissButton: .default(Text("OK")) {
                     if item.isSuccess {
-                        onClose?()
+                        dismiss()
                     }
                 }
             )
@@ -209,7 +204,7 @@ struct SettingsView: View {
                 AppModel.shared.saveCredentials(stored)
 
                 if !AppModel.shared.workStarted {
-                    AppModel.shared.connect?(stored)
+                    AppModel.shared.startPolling(credentials: stored)
                 } else {
                     let newCredentials = SynologyAPI.Credentials(
                         host: host,
@@ -249,43 +244,7 @@ struct SettingsView: View {
             NSApplication.shared.activate(ignoringOtherApps: true)
         } else {
             NSApplication.shared.setActivationPolicy(.regular)
-            mainViewController?.view.window?.makeKeyAndOrderFront(nil)
             NSApplication.shared.activate(ignoringOtherApps: false)
         }
-    }
-}
-
-
-// MARK: - Hosting controller
-
-/// Thin NSHostingController that loads SettingsView from the storyboard
-/// slot previously occupied by SettingsViewController. The storyboard's
-/// SettingsWC window controller is unchanged; this class just replaces
-/// the content view controller it hosts.
-final class SettingsHostingController: NSHostingController<SettingsView> {
-
-    required init?(coder: NSCoder) {
-        super.init(coder: coder, rootView: SettingsView())
-    }
-
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        sizingOptions = .preferredContentSize
-        rootView = SettingsView { [weak self] in
-            self?.view.window?.close()
-        }
-    }
-
-    override func viewWillAppear() {
-        super.viewWillAppear()
-        view.window?.styleMask.remove(.fullScreen)
-        view.window?.styleMask.remove(.miniaturizable)
-        view.window?.styleMask.remove(.resizable)
-    }
-
-    override func viewDidDisappear() {
-        super.viewDidDisappear()
-        NSApplication.shared.activate(ignoringOtherApps: true)
-        mainViewController?.view.window?.makeKey()
     }
 }

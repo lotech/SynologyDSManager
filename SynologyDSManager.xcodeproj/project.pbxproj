@@ -13,7 +13,6 @@
 		AA40000000000006000000B0 /* ChooseDestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA40000000000006000000A0 /* ChooseDestView.swift */; };
 		AA40000000000003000000B0 /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA40000000000003000000A0 /* AboutView.swift */; };
 		3A2D5EF023D248B500B924EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A2D5EEF23D248B500B924EE /* AppDelegate.swift */; };
-		3A2D5EF323D248B500B924EE /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3A2D5EF123D248B500B924EE /* Main.storyboard */; };
 		AA40000000000001000000B0 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA40000000000001000000A0 /* AppModel.swift */; };
 		AA40000000000002000000B0 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA40000000000002000000A0 /* SettingsView.swift */; };
 		3A2D5EF723D248B700B924EE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3A2D5EF623D248B700B924EE /* Assets.xcassets */; };
@@ -110,7 +109,6 @@
 		3A2D5EEA23D248B500B924EE /* SynologyDSManager.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SynologyDSManager.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3A2D5EED23D248B500B924EE /* SynologyDSManager.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SynologyDSManager.entitlements; sourceTree = "<group>"; };
 		3A2D5EEF23D248B500B924EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		3A2D5EF223D248B500B924EE /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		AA40000000000001000000A0 /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
 		AA40000000000002000000A0 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		3A2D5EF623D248B700B924EE /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -227,7 +225,6 @@
 				3A2D5EED23D248B500B924EE /* SynologyDSManager.entitlements */,
 				3A2D5EEF23D248B500B924EE /* AppDelegate.swift */,
 				AA40000000000001000000A0 /* AppModel.swift */,
-				3A2D5EF123D248B500B924EE /* Main.storyboard */,
 				3A2D5EF623D248B700B924EE /* Assets.xcassets */,
 				3A2D5EF823D248B700B924EE /* Info.plist */,
 				3A42ADC8241CF39900F470ED /* Settings.swift */,
@@ -473,7 +470,6 @@
 			files = (
 				3A098F7B244FAB46001D2C8B /* DestinationView.xib in Resources */,
 				3A2D5EF723D248B700B924EE /* Assets.xcassets in Resources */,
-				3A2D5EF323D248B500B924EE /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -583,14 +579,6 @@
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
-		3A2D5EF123D248B500B924EE /* Main.storyboard */ = {
-			isa = PBXVariantGroup;
-			children = (
-				3A2D5EF223D248B500B924EE /* Base */,
-			);
-			name = Main.storyboard;
-			sourceTree = "<group>";
-		};
 		3A2D5F0923D248B700B924EE /* SafariExtensionViewController.xib */ = {
 			isa = PBXVariantGroup;
 			children = (

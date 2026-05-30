@@ -2,9 +2,6 @@
 //  BTSearchView.swift
 //  SynologyDSManager
 //
-//  SwiftUI replacement for BTSearchController (Phase 4, slice 3).
-//  Dead link to synoboost.com removed per MODERNIZATION_PLAN Phase 4 task.
-//
 
 import SwiftUI
 
@@ -196,29 +193,5 @@ struct BTSearchView: View {
                 }
             }
         }
-    }
-}
-
-
-// MARK: - Hosting controller
-
-final class BTSearchHostingController: NSHostingController<BTSearchView> {
-    private let searchState: BTSearchState
-
-    required init?(coder: NSCoder) {
-        let s = BTSearchState()
-        self.searchState = s
-        super.init(coder: coder, rootView: BTSearchView(state: s))
-    }
-
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        rootView.onClose = { [weak self] in self?.view.window?.close() }
-    }
-
-    override func viewWillAppear() {
-        super.viewWillAppear()
-        view.window?.styleMask.remove(.fullScreen)
-        view.window?.styleMask.remove(.miniaturizable)
     }
 }

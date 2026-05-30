@@ -26,21 +26,3 @@ struct AboutView: View {
         .frame(width: 280)
     }
 }
-
-final class AboutHostingController: NSHostingController<AboutView> {
-    required init?(coder: NSCoder) {
-        super.init(coder: coder, rootView: AboutView())
-    }
-
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        sizingOptions = .preferredContentSize
-    }
-
-    override func viewWillAppear() {
-        super.viewWillAppear()
-        view.window?.styleMask.remove(.fullScreen)
-        view.window?.styleMask.remove(.miniaturizable)
-        view.window?.styleMask.remove(.resizable)
-    }
-}

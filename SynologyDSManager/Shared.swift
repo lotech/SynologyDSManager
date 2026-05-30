@@ -2,28 +2,14 @@
 //  Shared.swift
 //  SynologyDSManager
 //
-//  AppKit navigation anchors used across view controllers while the
-//  storyboard-based screens are still AppKit. These go away as each
-//  remaining screen is ported to SwiftUI in Phase 4.
-//
-//  The four former globals (synologyAPI, synologyTrustEvaluator,
-//  workStarted, mainMethod) now live in AppModel.
+//  Utility functions and global constants shared across all targets.
+//  AppKit navigation anchors (mainViewController, currentViewController)
+//  were removed in Phase 4 when the storyboard was replaced with
+//  pure SwiftUI Window scenes.
 //
 
 import Foundation
 import Cocoa
-
-
-/// The main downloads window controller. Set by
-/// DownloadsHostingController.viewDidLoad. Used by DestinationView to find
-/// a storyboard to instantiate dirSelectorVC from, and by SettingsView
-/// to refocus the main window after Settings closes.
-nonisolated(unsafe) var mainViewController: DownloadsHostingController?
-
-/// The view controller currently displayed in a secondary window (e.g.
-/// Settings, AddDownload, BTSearch). Set by showStoryboardWindowCenteredToMainWindow.
-/// Used by DestinationView to call presentAsSheet on the right host.
-nonisolated(unsafe) var currentViewController: NSViewController?
 
 
 extension Double {

@@ -4,9 +4,9 @@
 //
 
 import Cocoa
-import Observation
 import ServiceManagement
 import SwiftUI
+import UserNotifications
 
 // MARK: - App entry point
 
@@ -15,14 +15,102 @@ struct SynologyDSManagerApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     var body: some Scene {
-        // SwiftUI requires at least one scene. This placeholder creates no
-        // visible UI. The status bar item is managed by NSStatusBar in
-        // AppDelegate (reliable on all macOS versions). The main window comes
-        // from the storyboard loaded in applicationDidFinishLaunching.
-        //
-        // TODO: Replace with MenuBarExtra once macOS 26.x resolves the silent
-        //       scene-registration failure that prevents it from appearing.
-        Settings { EmptyView() }
+        Window("Downloads", id: "main") {
+            DownloadsView()
+        }
+        .defaultSize(width: 520, height: 420)
+
+        MenuBarExtra {
+            StatusBarMenuContent()
+        } label: {
+            MenuBarLabel()
+        }
+
+        Window("Settings", id: "settings") {
+            SettingsView()
+        }
+        .defaultVisibility(.hidden)
+        .windowResizability(.contentSize)
+
+        Window("Add Download", id: "add-download") {
+            AddDownloadRootView()
+        }
+        .defaultVisibility(.hidden)
+        .windowResizability(.contentSize)
+
+        Window("BT Search", id: "bt-search") {
+            BTSearchRootView()
+        }
+        .defaultVisibility(.hidden)
+
+        Window("About", id: "about") {
+            AboutView()
+        }
+        .defaultVisibility(.hidden)
+        .windowResizability(.contentSize)
+    }
+}
+
+// MARK: - Menu bar label (separate view so @Observable tracking works)
+
+private struct MenuBarLabel: View {
+    var body: some View {
+        Text(AppModel.shared.statusBarTitle)
+            .monospacedDigit()
+    }
+}
+
+// MARK: - Menu bar menu content
+
+private struct StatusBarMenuContent: View {
+    @Environment(\.openWindow) private var openWindow
+
+    var body: some View {
+        Button("Pause all")      { Task { await AppModel.shared.pauseAll() } }
+        Button("Start all")      { Task { await AppModel.shared.resumeAll() } }
+        Button("Clear finished") { Task { await AppModel.shared.clearFinished() } }
+        Divider()
+        Button("Show window") {
+            openWindow(id: "main")
+            NSApp.activate(ignoringOtherApps: true)
+        }
+        Divider()
+        Button("About") { openWindow(id: "about") }
+        Divider()
+        Button("Quit") { NSApp.terminate(nil) }
+    }
+}
+
+// MARK: - Window root views for scenes with owned state
+
+@MainActor
+struct AddDownloadRootView: View {
+    @State private var state = AddDownloadState()
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        AddDownloadView(state: state, onClose: { dismiss() })
+            .onAppear { consumePendingPaths() }
+            .onChange(of: AppModel.shared.pendingTorrentPaths) { _, _ in
+                consumePendingPaths()
+            }
+    }
+
+    private func consumePendingPaths() {
+        let paths = AppModel.shared.pendingTorrentPaths
+        guard !paths.isEmpty else { return }
+        state.taskText = paths.joined(separator: "\n")
+        AppModel.shared.pendingTorrentPaths = []
+    }
+}
+
+@MainActor
+struct BTSearchRootView: View {
+    @State private var state = BTSearchState()
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        BTSearchView(state: state, onClose: { dismiss() })
     }
 }
 
@@ -32,9 +120,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     /// Long-lived XPC listener that services the Safari Web Extension.
     private let bridgeListener = SynologyBridgeListener()
-
-    /// The status bar item that shows download speed and opens the menu.
-    private var statusItem: NSStatusItem?
 
     // MARK: Lifecycle
 
@@ -48,69 +133,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        let storyboard = NSStoryboard(name: "Main", bundle: nil)
-        if let wc = storyboard.instantiateController(withIdentifier: "MainWC") as? NSWindowController {
-            wc.showWindow(nil)
-        }
-        setupStatusItem()
-    }
-
-    // MARK: - Status bar item
-
-    @MainActor
-    private func setupStatusItem() {
-        statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        statusItem?.menu = buildStatusMenu()
-        observeStatusBarTitle()
-    }
-
-    /// Re-registers observation on every change so the title stays in sync
-    /// with AppModel.shared.statusBarTitle throughout the app's lifetime.
-    @MainActor
-    private func observeStatusBarTitle() {
-        withObservationTracking {
-            statusItem?.button?.title = AppModel.shared.statusBarTitle
-        } onChange: {
-            Task { @MainActor [weak self] in
-                self?.observeStatusBarTitle()
-            }
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, _ in }
+        if let creds = AppModel.shared.loadCredentials() {
+            Task { @MainActor in AppModel.shared.startPolling(credentials: creds) }
         }
     }
-
-    private func buildStatusMenu() -> NSMenu {
-        let menu = NSMenu()
-
-        func add(_ title: String, _ sel: Selector) {
-            let item = NSMenuItem(title: title, action: sel, keyEquivalent: "")
-            item.target = self
-            menu.addItem(item)
-        }
-
-        add("Pause all",      #selector(pauseAll))
-        add("Start all",      #selector(startAll))
-        add("Clear finished", #selector(clearFinished))
-        menu.addItem(.separator())
-        add("Show window",    #selector(showWindow))
-        menu.addItem(.separator())
-        add("About",          #selector(showAbout))
-        menu.addItem(.separator())
-
-        let quit = NSMenuItem(
-            title: "Quit",
-            action: #selector(NSApplication.terminate(_:)),
-            keyEquivalent: "q"
-        )
-        quit.target = NSApp
-        menu.addItem(quit)
-
-        return menu
-    }
-
-    @objc private func pauseAll()      { mainViewController?.pauseAllToolbarItemClicked(nil) }
-    @objc private func startAll()      { mainViewController?.resumeAllToolbarItemClicked(nil) }
-    @objc private func clearFinished() { mainViewController?.cleanToolbarItemClicked(nil) }
-    @objc private func showWindow()    { NSApp.activate(ignoringOtherApps: true) }
-    @objc private func showAbout()     { mainViewController?.aboutMenuItemClicked(nil) }
 
     // MARK: - Bridge / TLS helpers
 
@@ -152,38 +179,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     // MARK: - URL / file open
 
+    @MainActor
     func application(_ application: NSApplication, open urls: [URL]) {
-        Timer.scheduledTimer(withTimeInterval: 1, repeats: false) { _ in
-            DispatchQueue.main.async {
-                var torrents: [String] = []
-
-                for url in urls {
-                    switch url.scheme {
-                    case "synologydsmanager":
-                        if url.host == "download",
-                           let queryItems = URLComponents(string: url.absoluteString)?.queryItems,
-                           let downloadURL = queryItems.first(where: { $0.name == "downloadURL" }),
-                           let value = downloadURL.value, !value.isEmpty {
-                            mainViewController?.downloadByURLFromExtension(URL: value)
-                        }
-
-                    case "file":
-                        torrents.append(url.path)
-
-                    default:
-                        break
-                    }
+        var torrentPaths: [String] = []
+        for url in urls {
+            switch url.scheme {
+            case "synologydsmanager":
+                if url.host == "download",
+                   let queryItems = URLComponents(string: url.absoluteString)?.queryItems,
+                   let downloadURL = queryItems.first(where: { $0.name == "downloadURL" }),
+                   let value = downloadURL.value, !value.isEmpty {
+                    AppModel.shared.enqueueDownload(url: value)
                 }
-
-                if !torrents.isEmpty {
-                    mainViewController?.showStoryboardWindowCenteredToMainWindow(
-                        storyboardWindowControllerIdentifier: "addDownloadWC"
-                    )
-                    if let vc = currentViewController as? AddDownloadHostingController {
-                        vc.populate(with: torrents)
-                    }
-                }
+            case "file":
+                torrentPaths.append(url.path)
+            default:
+                break
             }
+        }
+        if !torrentPaths.isEmpty {
+            AppModel.shared.pendingTorrentPaths = torrentPaths
         }
     }
 }
