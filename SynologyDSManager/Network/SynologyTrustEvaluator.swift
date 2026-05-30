@@ -37,6 +37,14 @@
 import Foundation
 import CryptoKit
 
+/// Boxes a non-Sendable value for crossing a Task boundary when the caller
+/// can assert that concurrent access is safe (e.g. URLSession completion
+/// handlers that are documented as callable from any thread).
+private struct _UncheckedSendable<T>: @unchecked Sendable {
+    let value: T
+    init(_ value: T) { self.value = value }
+}
+
 /// Actor that owns the pin store and services `URLSession` trust challenges.
 /// Made an actor so the pin dictionary is mutated without locks.
 final class SynologyTrustEvaluator: NSObject, URLSessionDelegate, @unchecked Sendable {
@@ -47,21 +55,19 @@ final class SynologyTrustEvaluator: NSObject, URLSessionDelegate, @unchecked Sen
     private let defaultsKey = "synologyPinnedSPKIs"
     private let queue = DispatchQueue(label: "com.skavans.synologyDSManager.trust")
 
-    /// Synchronous decision callback invoked when a host presents a
-    /// previously-unseen self-signed certificate. The callback is called
-    /// on `URLSession`'s delegate queue (NOT the main queue), so if it
-    /// needs to show UI it must dispatch to the main queue and block
-    /// until the user has decided — e.g. via `NSAlert.runModal()` inside
-    /// `DispatchQueue.main.sync { … }`.
+    /// Async decision callback invoked when a host presents a previously-unseen
+    /// self-signed certificate. Called on an unstructured `Task` spawned from
+    /// the `URLSession` delegate queue, so implementations should use
+    /// `await MainActor.run { }` to show UI rather than `DispatchQueue.main.sync`.
     ///
-    /// Return `true` to trust this certificate for this host; the pin is
-    /// then persisted automatically and subsequent requests succeed
-    /// without prompting. Return `false` to refuse — the originating
-    /// request fails with `.cancelAuthenticationChallenge`.
+    /// Return `true` to trust this certificate for this host; the pin is then
+    /// persisted automatically and subsequent requests succeed without prompting.
+    /// Return `false` to refuse — the originating request fails with
+    /// `.cancelAuthenticationChallenge`.
     ///
-    /// If `firstUseDecision` is unset, first-use certificates are
-    /// always refused (the safe default).
-    var firstUseDecision: (@Sendable (_ host: String, _ spkiBase64: String) -> Bool)?
+    /// If `firstUseDecision` is unset, first-use certificates are always refused
+    /// (the safe default).
+    var firstUseDecision: (@Sendable (_ host: String, _ spkiBase64: String) async -> Bool)?
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
@@ -146,17 +152,30 @@ final class SynologyTrustEvaluator: NSObject, URLSessionDelegate, @unchecked Sen
             return
         }
 
-        // Step 3: first time we've seen this host. Ask the UI for a
-        // decision. The callback blocks until the user responds (it's
-        // expected to run an NSAlert modally); if the user approves we
-        // persist the pin and accept the challenge, otherwise we refuse.
+        // Step 3: first time we've seen this host. Ask the UI for a decision
+        // without blocking any thread. The URLSession delegate queue stays
+        // free; URLSession waits for the completion handler regardless of
+        // when it's called.
         AppLogger.security.notice("First-use cert for \(host, privacy: .private) — asking user")
-        if let decide = firstUseDecision, decide(host, spki) {
-            approve(host: host, spki: spki)
-            completionHandler(.useCredential, URLCredential(trust: serverTrust))
-        } else {
-            AppLogger.security.notice("First-use cert refused for \(host, privacy: .private)")
+        guard let decide = firstUseDecision else {
+            AppLogger.security.notice("First-use cert refused for \(host, privacy: .private) — no handler")
             completionHandler(.cancelAuthenticationChallenge, nil)
+            return
+        }
+
+        // URLSession documents that completionHandler may be called from any
+        // thread. The @unchecked Sendable wrapper asserts this — the closure
+        // only captures Sendable types at the call sites.
+        let credential = URLCredential(trust: serverTrust)
+        let sendableCompletion = _UncheckedSendable(completionHandler)
+        Task {
+            if await decide(host, spki) {
+                approve(host: host, spki: spki)
+                sendableCompletion.value(.useCredential, credential)
+            } else {
+                AppLogger.security.notice("First-use cert refused for \(host, privacy: .private)")
+                sendableCompletion.value(.cancelAuthenticationChallenge, nil)
+            }
         }
     }
 
