@@ -162,7 +162,7 @@ struct SettingsView: View {
                 .onChange(of: hideDockIcon) { _, hide in
                     applyDockIconPolicy(hide: hide)
                 }
-            Text("If the Dock icon is hidden, use "Show window" in the ↓DS status bar menu.")
+            Text("If the Dock icon is hidden, use \"Show window\" in the ↓DS status bar menu.")
                 .font(.caption)
                 .foregroundStyle(.tertiary)
             Toggle("Hide download speed from Status Bar", isOn: $hideFromStatusBar)
