@@ -11,6 +11,17 @@ commit that makes them.
 
 ## [Unreleased]
 
+### Removed
+- Deleted `DownloadsCellView.swift` and `DownloadsCellView.xib` — dead code
+  since the Downloads screen was ported to SwiftUI in Phase 4 slice 3.
+
+### Fixed
+- **Activation policy set before SwiftUI scene lifecycle.** Moved
+  `NSApp.setActivationPolicy(.regular)` from `DownloadsHostingController.viewDidLoad`
+  to `AppDelegate.applicationWillFinishLaunching` so the dock-icon preference is
+  applied before the `MenuBarExtra` scene initialises, removing a possible timing
+  cause of the status bar item not appearing.
+
 ### Fixed
 - **Status bar item now appears reliably.** Replaced the `NSStatusItem`-based
   menu bar item with a SwiftUI `MenuBarExtra` (the planned Phase 4 approach).
