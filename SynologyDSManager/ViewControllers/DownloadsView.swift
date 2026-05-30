@@ -178,7 +178,6 @@ final class DownloadsHostingController: NSHostingController<DownloadsView>,
 
     private var refreshTask: Task<Void, Never>?
     private var finishedTasks: Set<String> = []
-    var statusBarItem: NSStatusItem?
 
     // MARK: Init
 
@@ -203,15 +202,6 @@ final class DownloadsHostingController: NSHostingController<DownloadsView>,
     override func viewDidAppear() {
         super.viewDidAppear()
         view.window?.delegate = self
-        // Create the status bar item on first appearance. viewDidAppear is
-        // the earliest reliable callback for NSHostingController where AppKit
-        // status-bar API works correctly — viewDidLoad fires during the
-        // NSHostingController setup phase and init?(coder:) fires before the
-        // run loop is fully live, both of which silently drop the item on
-        // macOS 14+.
-        if statusBarItem == nil {
-            initStatusBar()
-        }
         DispatchQueue.main.async {
             if let settings = AppModel.shared.loadCredentials() {
                 self.doWork(settings: settings)
@@ -367,7 +357,7 @@ final class DownloadsHostingController: NSHostingController<DownloadsView>,
         dlState.update(with: newTasks)
 
         let speed = prettifySpeed(speed: dlState.bandwidth)
-        statusBarItem?.button?.title = userDefaults.bool(forKey: "hideFromStatusBar")
+        AppModel.shared.statusBarItem?.button?.title = userDefaults.bool(forKey: "hideFromStatusBar")
             ? "↓DS"
             : "↓DS: \(speed)"
     }
@@ -384,62 +374,5 @@ final class DownloadsHostingController: NSHostingController<DownloadsView>,
         )
     }
 
-    // MARK: Status bar
-
-    @objc func showMainWindow() {
-        NSApp.activate(ignoringOtherApps: true)
-    }
-
-    @objc func quitApp() {
-        NSApplication.shared.terminate(self)
-    }
-
-    private func initStatusBar() {
-        let bar = NSStatusBar.system
-        statusBarItem = bar.statusItem(withLength: NSStatusItem.variableLength)
-        statusBarItem?.button?.title = userDefaults.bool(forKey: "hideFromStatusBar")
-            ? "↓DS"
-            : "↓DS: 0.0 B/s"
-
-        let menu = NSMenu(title: "Synology DS Manager Status Bar Menu")
-        menu.addItem(NSMenuItem.separator())
-
-        let pauseItem = NSMenuItem(title: "Pause all",
-                                   action: #selector(pauseAllToolbarItemClicked), keyEquivalent: "")
-        pauseItem.target = self
-        menu.addItem(pauseItem)
-
-        let startItem = NSMenuItem(title: "Start all",
-                                   action: #selector(resumeAllToolbarItemClicked), keyEquivalent: "")
-        startItem.target = self
-        menu.addItem(startItem)
-
-        let cleanItem = NSMenuItem(title: "Clear finished",
-                                   action: #selector(cleanToolbarItemClicked), keyEquivalent: "")
-        cleanItem.target = self
-        menu.addItem(cleanItem)
-
-        menu.addItem(NSMenuItem.separator())
-
-        let showItem = NSMenuItem(title: "Show window",
-                                  action: #selector(showMainWindow), keyEquivalent: "")
-        showItem.target = self
-        menu.addItem(showItem)
-
-        menu.addItem(NSMenuItem.separator())
-
-        let aboutItem = NSMenuItem(title: "About",
-                                   action: #selector(aboutMenuItemClicked), keyEquivalent: "")
-        aboutItem.target = self
-        menu.addItem(aboutItem)
-
-        menu.addItem(NSMenuItem.separator())
-
-        let quitItem = NSMenuItem(title: "Quit",
-                                  action: #selector(quitApp), keyEquivalent: "")
-        quitItem.target = self
-        menu.addItem(quitItem)
-
-        statusBarItem?.menu = menu
-    }
 }
+
