@@ -198,6 +198,7 @@ final class DownloadsHostingController: NSHostingController<DownloadsView>,
     override func viewDidAppear() {
         super.viewDidAppear()
         view.window?.delegate = self
+        applyToolbarSymbols()
         DispatchQueue.main.async {
             if let settings = AppModel.shared.loadCredentials() {
                 self.doWork(settings: settings)
@@ -212,6 +213,28 @@ final class DownloadsHostingController: NSHostingController<DownloadsView>,
     func windowShouldClose(_ sender: NSWindow) -> Bool {
         NSApp.hide(nil)
         return false
+    }
+
+    // MARK: Toolbar icons
+
+    // The storyboard sets image= attributes on toolbar items by name, which
+    // ibtool resolves against the bundle asset catalog — it does not know
+    // these are SF Symbol names. Set them programmatically so the system
+    // symbol API is used directly.
+    private static let toolbarSymbols: [String: String] = [
+        "Settings":      "gear",
+        "Add":           "plus",
+        "Search":        "magnifyingglass",
+        "Pause all":     "pause.fill",
+        "Start all":     "play.fill",
+        "Clear finished": "broom",
+    ]
+
+    private func applyToolbarSymbols() {
+        view.window?.toolbar?.items.forEach { item in
+            guard let sym = Self.toolbarSymbols[item.label] else { return }
+            item.image = NSImage(systemSymbolName: sym, accessibilityDescription: item.label)
+        }
     }
 
     // MARK: Toolbar / menu @objc actions (hit via responder chain from storyboard)
