@@ -122,7 +122,7 @@ class DestinationView: NSView, LoadableView {
     @IBAction func destinationSelectorSelected(_ sender: Any) {
         if self.destinationsSelector.selectedItem?.title == "Other..." {
             self.destinationsSelector.selectItem(at: 0)
-            let selectorVC = mainViewController!.storyboard?.instantiateController(withIdentifier: "dirSelectorVC") as! ChooseDestViewController
+            let selectorVC = mainViewController!.storyboard?.instantiateController(withIdentifier: "dirSelectorVC") as! ChooseDestHostingController
             selectorVC.completion = { selectedPath in
                 self.addDirToListAndSelect(path: selectedPath!)
             }

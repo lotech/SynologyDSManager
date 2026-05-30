@@ -4,7 +4,7 @@ Living document. Tick boxes as tasks land. When all tasks in a phase are
 complete, move the phase status from **In progress** / **Planned** to
 **Shipped** with the date.
 
-Last updated: 2026-05-29 (Phase 3 deferred — Safari Web Extension runtime is blocked on a macOS 26.x / Safari 26.x bug outside our control; see 3b-2b-RT. Active work moves to Phase 4 SwiftUI rewrite. Phase 3c remains blocked behind 3b-2b-RT and is parked, not abandoned.)
+Last updated: 2026-05-30 (Phase 4 slice 3 — all four remaining AppKit screens ported to SwiftUI; synoboost.com link removed.)
 
 ---
 
@@ -511,15 +511,17 @@ test bundle was already there, and the plan explicitly required `Observation`).
       `AppDelegate.installCertificateApprovalHandler` now uses `await MainActor.run`.
 - [x] Port About screen to SwiftUI (`AboutView` + `AboutHostingController`);
       deleted `AboutViewController.swift`.
-- [ ] Port remaining screens in this order: Add Download →
+- [x] Port remaining screens in this order: Add Download →
       BT Search → Choose Destination → Downloads list
+- [x] Remove `synoboost.com` link from the ported BT Search screen
+      (carried forward from Phase 1 leftover)
 - [ ] Replace the status item with `MenuBarExtra`
 - [ ] Replace PNG toolbar icons with SF Symbols
 - [ ] Delete `Main.storyboard` and all `.xib` files when the last screen
       has been ported
 - [ ] Add localisation scaffolding (`String Catalog`), starting with English
-- [ ] Remove `swiftapps.skavans.ru` mailto and `synoboost.com` link from
-      the ported BT Search screen (carried forward from Phase 1 leftover)
+- [ ] Remove remaining `swiftapps.skavans.ru` mailto from the ported
+      Settings screen
 
 ## Phase 5 — Release engineering · **Planned**
 

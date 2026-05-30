@@ -15,15 +15,23 @@ import Cocoa
 
 
 /// The main downloads window controller. Set by
-/// DownloadsViewController.viewDidLoad. Used by DestinationView to find
+/// DownloadsHostingController.viewDidLoad. Used by DestinationView to find
 /// a storyboard to instantiate dirSelectorVC from, and by SettingsView
 /// to refocus the main window after Settings closes.
-nonisolated(unsafe) var mainViewController: DownloadsViewController?
+nonisolated(unsafe) var mainViewController: DownloadsHostingController?
 
 /// The view controller currently displayed in a secondary window (e.g.
 /// Settings, AddDownload, BTSearch). Set by showStoryboardWindowCenteredToMainWindow.
 /// Used by DestinationView to call presentAsSheet on the right host.
 nonisolated(unsafe) var currentViewController: NSViewController?
+
+
+extension Double {
+    func round(to places: Int) -> Double {
+        let divisor = pow(10.0, Double(places))
+        return (self * divisor).rounded() / divisor
+    }
+}
 
 
 func prettifyBytesCount(bytesCount: Double) -> String {
