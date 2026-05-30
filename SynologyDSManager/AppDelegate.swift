@@ -17,11 +17,7 @@ struct SynologyDSManagerApp: App {
         MenuBarExtra {
             StatusBarMenu()
         } label: {
-            // Inject AppModel via environment so the Observation framework
-            // tracks statusBarTitle inside View.body. App.body does not
-            // reliably re-evaluate on @Observable changes on macOS 14+.
             MenuBarLabel()
-                .environment(AppModel.shared)
         }
         .menuBarExtraStyle(.menu)
     }
@@ -29,11 +25,12 @@ struct SynologyDSManagerApp: App {
 
 // MARK: - Status bar label
 
+// Access AppModel.shared directly rather than via @Environment so that
+// @Observable's automatic tracking wires up inside View.body without
+// requiring the caller to inject the environment value.
 private struct MenuBarLabel: View {
-    @Environment(AppModel.self) private var model
-
     var body: some View {
-        Text(model.statusBarTitle)
+        Text(AppModel.shared.statusBarTitle)
             .monospacedDigit()
     }
 }
