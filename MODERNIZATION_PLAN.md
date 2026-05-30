@@ -515,8 +515,8 @@ test bundle was already there, and the plan explicitly required `Observation`).
       BT Search → Choose Destination → Downloads list
 - [x] Remove `synoboost.com` link from the ported BT Search screen
       (carried forward from Phase 1 leftover)
-- [ ] Replace the status item with `MenuBarExtra`
-- [ ] Replace PNG toolbar icons with SF Symbols
+- [x] Replace the status item with `MenuBarExtra`
+- [x] Replace PNG toolbar icons with SF Symbols
 - [ ] Delete `Main.storyboard` and all `.xib` files when the last screen
       has been ported
 - [ ] Add localisation scaffolding (`String Catalog`), starting with English
