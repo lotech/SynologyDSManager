@@ -50,6 +50,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let bridgeListener = SynologyBridgeListener()
 
     func applicationWillFinishLaunching(_ notification: Notification) {
+        // Set activation policy before SwiftUI initialises the MenuBarExtra
+        // scene so the status-bar item appears on first launch.
+        if !(UserDefaults.standard.value(forKey: "hideDockIcon") as? Bool ?? true) {
+            NSApp.setActivationPolicy(.regular)
+        }
+
         installCertificateApprovalHandler()
         bridgeListener.start()
         registerBridgeLaunchAgent()

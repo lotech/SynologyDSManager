@@ -11,6 +11,23 @@ commit that makes them.
 
 ## [Unreleased]
 
+### Removed
+- Deleted `DownloadsCellView.swift` and `DownloadsCellView.xib` — dead code
+  since the Downloads screen was ported to SwiftUI in Phase 4 slice 3.
+- **Replaced all PNG toolbar icons with SF Symbols.** The six custom PNG
+  images (`add`, `broom`, `pause_all`, `resume_all`, `search`, `settings`)
+  and the unused `logo.png` and `ToolbarItemIcon.pdf` have been removed from
+  the bundle. The storyboard's toolbar items now reference SF Symbol names
+  (`plus`, `broom`, `pause.fill`, `play.fill`, `magnifyingglass`, `gear`,
+  `NSCaution`) which AppKit resolves automatically on macOS 11+.
+
+### Fixed
+- **Activation policy set before SwiftUI scene lifecycle.** Moved
+  `NSApp.setActivationPolicy(.regular)` from `DownloadsHostingController.viewDidLoad`
+  to `AppDelegate.applicationWillFinishLaunching` so the dock-icon preference is
+  applied before the `MenuBarExtra` scene initialises, removing a possible timing
+  cause of the status bar item not appearing.
+
 ### Fixed
 - **Status bar item now appears reliably.** Replaced the `NSStatusItem`-based
   menu bar item with a SwiftUI `MenuBarExtra` (the planned Phase 4 approach).

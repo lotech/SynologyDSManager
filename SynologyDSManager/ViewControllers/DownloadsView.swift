@@ -193,10 +193,6 @@ final class DownloadsHostingController: NSHostingController<DownloadsView>,
         AppModel.shared.connect = self.doWork
 
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, _ in }
-
-        if !(userDefaults.value(forKey: "hideDockIcon") as? Bool ?? true) {
-            NSApp.setActivationPolicy(.regular)
-        }
     }
 
     override func viewDidAppear() {
