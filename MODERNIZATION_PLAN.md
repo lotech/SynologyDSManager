@@ -503,6 +503,14 @@ test bundle was already there, and the plan explicitly required `Observation`).
 
 ### Remaining Phase 4 tasks
 
+- [ ] Make `SynologyTrustEvaluator.firstUseDecision` an `async` callback so
+      the URLSession delegate queue `await`s the user's TOFU decision without
+      blocking any thread. Currently `AppDelegate` uses `DispatchQueue.main.sync`
+      to show the `NSAlert`, which Xcode's Thread Performance Checker flags as
+      a hang risk (user-interactive QoS main thread blocked during modal). Fix:
+      change the callback type to `((String, String) async -> Bool)?` and update
+      `AppDelegate.installCertificateApprovalHandler` to use `await` instead of
+      `DispatchQueue.main.sync`.
 - [ ] Port screens in this order: About → Add Download →
       BT Search → Choose Destination → Downloads list
 - [ ] Replace the status item with `MenuBarExtra`
