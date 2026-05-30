@@ -52,16 +52,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     /// Wire the shared TLS trust evaluator to an AppKit modal prompt so
-    /// self-signed NAS certs can be approved on first use. Runs on the
-    /// URLSession delegate queue; the NSAlert must be shown on the main
-    /// thread, and the delegate must block until the user decides. We
-    /// achieve that with a synchronous `DispatchQueue.main.sync { … }`
-    /// — safe here because the delegate queue is neither the main queue
-    /// nor a queue any main-thread work depends on.
+    /// self-signed NAS certs can be approved on first use. The callback is
+    /// `async`; `await MainActor.run { }` schedules the alert on the main
+    /// actor without blocking any thread. `NSAlert.runModal()` runs a nested
+    /// event loop, so the main actor stays responsive while the user decides.
     private func installCertificateApprovalHandler() {
         AppModel.shared.trustEvaluator.firstUseDecision = { host, spkiBase64 in
-            var approved = false
-            DispatchQueue.main.sync {
+            await MainActor.run {
                 let alert = NSAlert()
                 alert.alertStyle = .warning
                 alert.messageText = "Trust this Synology server?"
@@ -77,9 +74,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 """
                 alert.addButton(withTitle: "Trust")
                 alert.addButton(withTitle: "Cancel")
-                approved = alert.runModal() == .alertFirstButtonReturn
+                return alert.runModal() == .alertFirstButtonReturn
             }
-            return approved
         }
     }
 

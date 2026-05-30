@@ -29,7 +29,7 @@
         <!--About View Controller-->
         <scene sceneID="8uZ-J6-xpd">
             <objects>
-                <viewController storyboardIdentifier="aboutVC" id="eGf-5g-mAs" customClass="AboutViewController" customModule="SynologyDSManager" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="aboutVC" id="eGf-5g-mAs" customClass="AboutHostingController" customModule="SynologyDSManager" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" id="vFq-BO-TSh">
                         <rect key="frame" x="0.0" y="0.0" width="280" height="172"/>
                         <autoresizingMask key="autoresizingMask"/>
@@ -64,9 +64,6 @@
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                     <font key="font" metaFont="system"/>
                                 </buttonCell>
-                                <connections>
-                                    <action selector="iconsButtonClicked:" target="eGf-5g-mAs" id="gqc-Tt-7ei"/>
-                                </connections>
                             </button>
                             <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="guu-zW-VjM">
                                 <rect key="frame" x="43" y="20" width="196" height="16"/>
@@ -79,10 +76,6 @@
                             </textField>
                         </subviews>
                     </view>
-                    <connections>
-                        <outlet property="iconsButton" destination="BXR-26-xlK" id="ynu-ft-Sca"/>
-                        <outlet property="versionLabel" destination="CJ8-Ef-DUp" id="02t-zc-MMU"/>
-                    </connections>
                 </viewController>
                 <customObject id="YJE-9U-CIJ" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>

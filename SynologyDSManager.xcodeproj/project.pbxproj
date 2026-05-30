@@ -16,7 +16,7 @@
 		3A2BEB3D2443C22F004B94A0 /* pause_all.png in Resources */ = {isa = PBXBuildFile; fileRef = 3A2BEB3C2443C22F004B94A0 /* pause_all.png */; };
 		3A2BEB3F2443C23F004B94A0 /* resume_all.png in Resources */ = {isa = PBXBuildFile; fileRef = 3A2BEB3E2443C23F004B94A0 /* resume_all.png */; };
 		3A2BEB492443C88D004B94A0 /* settings.png in Resources */ = {isa = PBXBuildFile; fileRef = 3A2BEB482443C88C004B94A0 /* settings.png */; };
-		3A2BEB4E2443DE8A004B94A0 /* AboutViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A2BEB4D2443DE8A004B94A0 /* AboutViewController.swift */; };
+		AA40000000000003000000B0 /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA40000000000003000000A0 /* AboutView.swift */; };
 		3A2D5EF023D248B500B924EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A2D5EEF23D248B500B924EE /* AppDelegate.swift */; };
 		3A2D5EF323D248B500B924EE /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3A2D5EF123D248B500B924EE /* Main.storyboard */; };
 		AA40000000000001000000B0 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA40000000000001000000A0 /* AppModel.swift */; };
@@ -121,7 +121,7 @@
 		3A2BEB3C2443C22F004B94A0 /* pause_all.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = pause_all.png; sourceTree = "<group>"; };
 		3A2BEB3E2443C23F004B94A0 /* resume_all.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = resume_all.png; sourceTree = "<group>"; };
 		3A2BEB482443C88C004B94A0 /* settings.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = settings.png; sourceTree = "<group>"; };
-		3A2BEB4D2443DE8A004B94A0 /* AboutViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutViewController.swift; sourceTree = "<group>"; };
+		AA40000000000003000000A0 /* AboutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutView.swift; sourceTree = "<group>"; };
 		3A2D5EEA23D248B500B924EE /* SynologyDSManager.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SynologyDSManager.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3A2D5EED23D248B500B924EE /* SynologyDSManager.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SynologyDSManager.entitlements; sourceTree = "<group>"; };
 		3A2D5EEF23D248B500B924EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -292,7 +292,7 @@
 			children = (
 				3A42ADC6241CE9AB00F470ED /* DownloadsViewController.swift */,
 				AA40000000000002000000A0 /* SettingsView.swift */,
-				3A2BEB4D2443DE8A004B94A0 /* AboutViewController.swift */,
+				AA40000000000003000000A0 /* AboutView.swift */,
 				3A42ADD2241EA37800F470ED /* AddDownloadViewController.swift */,
 				3A098F6C244CCFB3001D2C8B /* BTSearchViewController.swift */,
 				3A098F7C244FB7C2001D2C8B /* ChooseDestViewController.swift */,
@@ -561,7 +561,7 @@
 				AA40000000000001000000B0 /* AppModel.swift in Sources */,
 				AA40000000000002000000B0 /* SettingsView.swift in Sources */,
 				3A098F6D244CCFB3001D2C8B /* BTSearchViewController.swift in Sources */,
-				3A2BEB4E2443DE8A004B94A0 /* AboutViewController.swift in Sources */,
+				AA40000000000003000000B0 /* AboutView.swift in Sources */,
 				3A42ADD3241EA37800F470ED /* AddDownloadViewController.swift in Sources */,
 				3A42ADCD241CFD4900F470ED /* DownloadsCellView.swift in Sources */,
 				3A098F79244FA9CF001D2C8B /* DestinationView.swift in Sources */,

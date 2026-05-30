@@ -12,6 +12,13 @@ commit that makes them.
 ## [Unreleased]
 
 ### Changed
+- **Phase 4 slice 2 — async TLS approval + About screen (SwiftUI).**
+  `SynologyTrustEvaluator.firstUseDecision` is now an `async` callback;
+  `AppDelegate` shows the TOFU certificate-approval `NSAlert` via
+  `await MainActor.run` instead of `DispatchQueue.main.sync`, eliminating
+  the Xcode Thread Performance Checker hang-risk warning. About screen is
+  now pure SwiftUI (`AboutView` / `AboutHostingController`);
+  `AboutViewController.swift` deleted.
 - **Phase 4 slice 1 — AppModel foundation + Settings screen (SwiftUI).**
   The five `nonisolated(unsafe)` globals in `Shared.swift` that held the
   DSM API client, TLS evaluator, connection lifecycle state, and the

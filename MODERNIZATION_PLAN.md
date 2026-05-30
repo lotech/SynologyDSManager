@@ -503,7 +503,15 @@ test bundle was already there, and the plan explicitly required `Observation`).
 
 ### Remaining Phase 4 tasks
 
-- [ ] Port screens in this order: About → Add Download →
+- [x] Make `SynologyTrustEvaluator.firstUseDecision` an `async` callback so
+      the URLSession delegate queue `await`s the user's TOFU decision without
+      blocking any thread. Previously `AppDelegate` used `DispatchQueue.main.sync`
+      to show the `NSAlert`, which Xcode's Thread Performance Checker flagged as
+      a hang risk. Changed callback type to `((String, String) async -> Bool)?`;
+      `AppDelegate.installCertificateApprovalHandler` now uses `await MainActor.run`.
+- [x] Port About screen to SwiftUI (`AboutView` + `AboutHostingController`);
+      deleted `AboutViewController.swift`.
+- [ ] Port remaining screens in this order: Add Download →
       BT Search → Choose Destination → Downloads list
 - [ ] Replace the status item with `MenuBarExtra`
 - [ ] Replace PNG toolbar icons with SF Symbols
