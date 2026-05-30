@@ -104,48 +104,34 @@ read_marketing_version() {
 # ----- Actions -------------------------------------------------------------
 
 action_pull_main() {
-    local current_branch
-    current_branch="$(git rev-parse --abbrev-ref HEAD)"
-
-    # When on a feature branch, pull that branch and also keep local main
-    # in sync — but do NOT switch branches.
-    if [[ "$current_branch" != "main" ]]; then
-        info "On branch '${current_branch}' — pulling it from origin…"
-        if ! git fetch origin; then
-            err "git fetch failed — check network / auth and try again."
-            return 1
-        fi
-        if git pull --ff-only origin "$current_branch"; then
-            ok "Branch '${current_branch}' is up to date with origin/${current_branch}."
-        else
-            err "Fast-forward pull of '${current_branch}' failed. Resolve manually."
-            return 1
-        fi
-        # Also advance local main ref if it exists and can be fast-forwarded.
-        if git rev-parse --verify main >/dev/null 2>&1; then
-            git fetch origin main:main 2>/dev/null \
-                && ok "Local 'main' also updated." \
-                || warn "Could not fast-forward local 'main' — resolve separately if needed."
-        fi
-        return 0
-    fi
-
     info "Fetching origin/main…"
     if ! git fetch origin main; then
         err "git fetch origin main failed — check network / auth and try again."
         return 1
     fi
 
-    # --- From here: on main. ---
-    # If there are uncommitted tracked-file changes that overlap with
-    # incoming commits, `git pull --ff-only` will refuse. Detect dirty
-    # state up-front and offer the user a clean way out.
-    local dirty=0
+    # If the working tree is dirty, offer stash / discard / cancel before
+    # fast-forwarding.  Only relevant when already on main.
+    local current_branch dirty=0 did_stash=0
+    current_branch="$(git rev-parse --abbrev-ref HEAD)"
+
+    if [[ "$current_branch" != "main" ]]; then
+        # Not on main — just advance the local main ref without switching.
+        if git rev-parse --verify main >/dev/null 2>&1; then
+            git fetch origin main:main 2>/dev/null \
+                && ok "Local 'main' updated (still on '${current_branch}')." \
+                || warn "Could not fast-forward local 'main' — resolve separately if needed."
+        else
+            ok "origin/main fetched (no local 'main' ref to update)."
+        fi
+        return 0
+    fi
+
+    # --- On main: check for dirty state then pull. ---
     if ! git diff --quiet || ! git diff --cached --quiet; then
         dirty=1
     fi
 
-    local did_stash=0
     if (( dirty )); then
         echo
         warn "You have uncommitted changes on 'main'."
@@ -469,7 +455,7 @@ print_menu() {
 ${BOLD}SynologyDSManager — deploy.sh${RESET}
 ${DIM}$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo '(no git branch)') · ${status_line}${DIM}${RESET}
 
-  ${BOLD}p${RESET}   Pull current branch (and main) from origin
+  ${BOLD}p${RESET}   Pull main from origin (fast-forward local main only)
   ${BOLD}o${RESET}   Open in Xcode
   ${BOLD}s${RESET}   Configure signing (Apple Developer Team ID)
   ${BOLD}i${RESET}   Build Debug and install to /Applications (local testing)
