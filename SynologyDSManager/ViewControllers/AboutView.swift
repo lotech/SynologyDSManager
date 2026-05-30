@@ -18,11 +18,7 @@ struct AboutView: View {
             Text("version \(version)")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
-            Button("Icons by icons8") {
-                NSWorkspace.shared.open(URL(string: "https://icons8.com")!)
-            }
-            .buttonStyle(.link)
-            Text("© 2021 Anton Subbotin (skavans)")
+            Text("© 2020–2026 SynologyDSManager contributors")
                 .font(.caption)
                 .foregroundStyle(.tertiary)
         }

@@ -9,6 +9,15 @@ Entries are grouped under **Added / Changed / Deprecated / Removed / Fixed /
 Security**. Add new user-visible changes under `## [Unreleased]` in the same
 commit that makes them.
 
+## [2.1.0] — 2026-05-30
+
+### Removed
+- Removed "Icons by icons8" attribution link from the About window; all
+  toolbar icons are now SF Symbols (no third-party icon assets remain).
+
+### Changed
+- Bumped version to 2.1.0 / build 13.
+
 ## [Unreleased]
 
 ### Removed
