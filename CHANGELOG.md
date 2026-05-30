@@ -12,14 +12,18 @@ commit that makes them.
 ## [Unreleased]
 
 ### Fixed
-- **Status-bar `NSStatusItem` not appearing after Phase 4 slice 3.**
-  `DownloadsHostingController` previously called `initStatusBar()` from
-  `viewDidLoad()` and later from `init?(coder:)`; both fire during
-  `NSHostingController`'s internal setup phase on macOS 14 + and the item
-  was silently dropped. Moving the call to `viewDidAppear()` (guarded by a
-  `statusBarItem == nil` check so it only runs once) ensures the item is
-  created after the hosting controller is fully live, matching when
-  `NSWindowDelegate` and the polling loop are also established.
+- **Status bar item now appears reliably.** Replaced the `NSStatusItem`-based
+  menu bar item with a SwiftUI `MenuBarExtra` (the planned Phase 4 approach).
+  Four previous attempts to create an `NSStatusItem` from different lifecycle
+  points all failed silently on macOS 14+; `MenuBarExtra` avoids the lifecycle
+  dependency entirely. The label (`↓DS` / `↓DS: X.X MB/s`) is driven directly
+  by an `@Observable` `AppModel.statusBarTitle` property and updates live as
+  bandwidth changes.
+- **Downloads list populates correctly again** after the prior commit
+  introduced a regression where the polling loop's `AppModel.shared.statusBarItem`
+  access (an `NSStatusItem?` wrapped in `@Observable`) silently interfered with
+  SwiftUI's observation of `DownloadsState`. Replacing it with the plain
+  `String` property `AppModel.shared.statusBarTitle` eliminates the interference.
 - Removed dead `SPUStandardUpdaterController` custom object and its
   "Check for Updates…" menu item from the storyboard MainMenu scene.
   These Sparkle remnants caused `Unknown class` and `Could not connect
