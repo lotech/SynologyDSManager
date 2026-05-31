@@ -2,10 +2,6 @@
 //  SettingsView.swift
 //  SynologyDSManager
 //
-//  SwiftUI replacement for SettingsViewController (Phase 4, slice 1).
-//  Hosted by SettingsHostingController which is wired into Main.storyboard
-//  in place of the old SettingsViewController.
-//
 
 import SwiftUI
 import SafariServices.SFSafariApplication
@@ -13,8 +9,6 @@ import SafariServices.SFSafariApplication
 
 // MARK: - DestinationView bridge
 
-/// Wraps the AppKit DestinationView XIB for use inside SwiftUI until the
-/// Choose Destination screen is ported to SwiftUI later in Phase 4.
 struct DestinationViewRepresentable: NSViewRepresentable {
     let synchronizeKey: String
 
@@ -28,14 +22,43 @@ struct DestinationViewRepresentable: NSViewRepresentable {
 }
 
 
+// MARK: - Row helpers
+
+private struct FieldRow<Control: View>: View {
+    let label: String
+    let control: Control
+
+    init(_ label: String, @ViewBuilder control: () -> Control) {
+        self.label = label
+        self.control = control()
+    }
+
+    var body: some View {
+        HStack {
+            Text(label)
+                .frame(width: 90, alignment: .trailing)
+                .foregroundStyle(.secondary)
+            control
+        }
+    }
+}
+
+private struct SectionTitle: View {
+    let title: String
+    var body: some View {
+        Text(title)
+            .font(.headline)
+            .padding(.bottom, 4)
+    }
+}
+
+
 // MARK: - Settings view
 
 struct SettingsView: View {
 
-    // Dismissal callback injected by SettingsHostingController.
-    var onClose: (() -> Void)?
+    @Environment(\.dismiss) private var dismiss
 
-    // MARK: Connection fields
     @State private var host = ""
     @State private var port = "5001"
     @State private var username = ""
@@ -43,12 +66,10 @@ struct SettingsView: View {
     @State private var otpEnabled = false
     @State private var otp = ""
 
-    // MARK: Prefs
-    @AppStorage("hideDockIcon") private var hideDockIcon = true
-    @AppStorage("hideFromStatusBar") private var hideFromStatusBar = false
-    @AppStorage("clearFinishedTasks") private var clearFinishedTasks = false
+    @AppStorage("hideDockIcon")          private var hideDockIcon = true
+    @AppStorage("hideFromStatusBar")     private var hideFromStatusBar = false
+    @AppStorage("clearFinishedTasks")    private var clearFinishedTasks = false
 
-    // MARK: Transient UI state
     @State private var isLoading = false
     @State private var alertItem: AlertItem?
 
@@ -60,113 +81,132 @@ struct SettingsView: View {
     }
 
     var body: some View {
-        Form {
-            connectionSection
-            extensionSection
-            behaviorSection
-        }
-        .formStyle(.grouped)
-        .padding()
-        .frame(minWidth: 460)
-        .disabled(isLoading)
-        .overlay {
+        ZStack {
+            content
             if isLoading {
-                ZStack {
-                    Color.black.opacity(0.4)
-                    ProgressView()
-                        .controlSize(.large)
-                        .tint(.white)
-                }
+                Color.black.opacity(0.35)
+                    .ignoresSafeArea()
+                ProgressView()
+                    .controlSize(.large)
+                    .tint(.white)
             }
         }
+        .frame(width: 400)
+        .fixedSize(horizontal: true, vertical: true)
         .onAppear(perform: loadStoredCredentials)
+        .disabled(isLoading)
         .alert(item: $alertItem) { item in
             Alert(
                 title: Text(item.title),
                 message: Text(item.message),
                 dismissButton: .default(Text("OK")) {
-                    if item.isSuccess {
-                        onClose?()
-                    }
+                    if item.isSuccess { dismiss() }
                 }
             )
         }
     }
 
-    // MARK: - Sections
+    // MARK: - Content layout
 
-    private var connectionSection: some View {
-        Section("NAS Connection") {
-            LabeledContent("Host/IP") {
-                TextField("", text: $host)
-                    .textFieldStyle(.roundedBorder)
-            }
-            LabeledContent("HTTPS port") {
-                TextField("", text: $port)
-                    .textFieldStyle(.roundedBorder)
-                    .frame(maxWidth: 100)
-            }
-            LabeledContent("Username") {
-                TextField("", text: $username)
-                    .textFieldStyle(.roundedBorder)
-            }
-            LabeledContent("Password") {
-                SecureField("", text: $password)
-                    .textFieldStyle(.roundedBorder)
-            }
-            Toggle("2-step code", isOn: $otpEnabled)
-                .onChange(of: otpEnabled) { _, enabled in
-                    if !enabled { otp = "" }
-                }
-            if otpEnabled {
-                LabeledContent("Code") {
-                    SecureField("", text: $otp)
+    private var content: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            // ── NAS Connection ──────────────────────────────────
+            Group {
+                SectionTitle(title: "NAS Connection")
+
+                FieldRow("Host/IP") {
+                    TextField("192.168.x.x or hostname", text: $host)
                         .textFieldStyle(.roundedBorder)
-                        .frame(maxWidth: 160)
                 }
-            }
-            Button("Connect and save settings") {
-                testConnection()
-            }
-            .keyboardShortcut(.defaultAction)
-            .frame(maxWidth: .infinity)
-        }
-    }
-
-    private var extensionSection: some View {
-        Section("Safari Extension") {
-            Text("""
-            You can add downloads right from Safari by right-clicking links \
-            and choosing "Download with Synology DS Manager". \
-            Activate the Safari extension first.
-            """)
-            .font(.callout)
-            .foregroundStyle(.secondary)
-
-            Button("Open in Safari Extensions Preferences…") {
-                SFSafariApplication.showPreferencesForExtension(
-                    withIdentifier: "com.skavans.synologyDSManager.extension"
-                ) { _ in }
-            }
-
-            LabeledContent("Extension tasks destination") {
-                DestinationViewRepresentable(synchronizeKey: "extension")
-                    .frame(width: 230, height: 22)
-            }
-        }
-    }
-
-    private var behaviorSection: some View {
-        Section("Behavior") {
-            Toggle("Hide Dock icon", isOn: $hideDockIcon)
-                .onChange(of: hideDockIcon) { _, hide in
-                    applyDockIconPolicy(hide: hide)
+                FieldRow("HTTPS port") {
+                    TextField("5001", text: $port)
+                        .textFieldStyle(.roundedBorder)
+                        .frame(width: 70)
+                    Spacer()
                 }
-            Text("If the Dock icon is hidden, use \"Show window\" in the ↓DS status bar menu.")
-                .font(.caption)
-                .foregroundStyle(.tertiary)
-            Toggle("Hide download speed from Status Bar", isOn: $hideFromStatusBar)
-            Toggle("Clear finished tasks automatically", isOn: $clearFinishedTasks)
+                FieldRow("Username") {
+                    TextField("", text: $username)
+                        .textFieldStyle(.roundedBorder)
+                }
+                FieldRow("Password") {
+                    SecureField("", text: $password)
+                        .textFieldStyle(.roundedBorder)
+                }
+
+                Toggle("2-step verification code", isOn: $otpEnabled)
+                    .padding(.leading, 98)
+                    .onChange(of: otpEnabled) { _, enabled in
+                        if !enabled { otp = "" }
+                    }
+
+                if otpEnabled {
+                    FieldRow("Code") {
+                        SecureField("6-digit code", text: $otp)
+                            .textFieldStyle(.roundedBorder)
+                            .frame(width: 120)
+                        Spacer()
+                    }
+                }
+
+                Button("Connect and save settings", action: testConnection)
+                    .keyboardShortcut(.defaultAction)
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 6)
+            }
+            .padding(16)
+
+            Divider()
+
+            // ── Safari Extension ────────────────────────────────
+            Group {
+                SectionTitle(title: "Safari Extension")
+
+                HStack(alignment: .top, spacing: 8) {
+                    Image(systemName: "safari")
+                        .foregroundStyle(.secondary)
+                    Text("Right-click any link in Safari and choose \"Download with Synology DS Manager\".")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                HStack {
+                    Button("Open Safari Extension Preferences…") {
+                        SFSafariApplication.showPreferencesForExtension(
+                            withIdentifier: "com.skavans.synologyDSManager.extension"
+                        ) { _ in }
+                    }
+                    Spacer()
+                }
+                .padding(.top, 4)
+
+                FieldRow("Destination") {
+                    DestinationViewRepresentable(synchronizeKey: "extension")
+                        .frame(width: 220, height: 22)
+                    Spacer()
+                }
+                .padding(.top, 4)
+            }
+            .padding(16)
+
+            Divider()
+
+            // ── Behavior ────────────────────────────────────────
+            Group {
+                SectionTitle(title: "Behavior")
+
+                Toggle("Hide Dock icon", isOn: $hideDockIcon)
+                    .onChange(of: hideDockIcon) { _, hide in applyDockIconPolicy(hide: hide) }
+                Text("Use \"Show window\" in the ↓DS status bar menu to bring the window back.")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+                    .padding(.leading, 20)
+                    .padding(.bottom, 4)
+
+                Toggle("Hide download speed from status bar", isOn: $hideFromStatusBar)
+                Toggle("Clear finished tasks automatically", isOn: $clearFinishedTasks)
+            }
+            .padding(16)
         }
     }
 
@@ -182,7 +222,6 @@ struct SettingsView: View {
 
     private func testConnection() {
         isLoading = true
-
         let credentials = SynologyAPI.Credentials(
             host: host,
             port: Int(port) ?? 5001,
@@ -190,36 +229,28 @@ struct SettingsView: View {
             password: password,
             otp: otpEnabled && !otp.isEmpty ? otp : nil
         )
-        let testAPI = SynologyAPI(
-            credentials: credentials,
-            trustEvaluator: AppModel.shared.trustEvaluator
-        )
+        let testAPI = SynologyAPI(credentials: credentials, trustEvaluator: AppModel.shared.trustEvaluator)
 
         Task { @MainActor in
             defer { isLoading = false }
             do {
                 _ = try await testAPI.authenticate()
                 let stored = StoredCredentials(
-                    host: host,
-                    port: port,
-                    username: username,
-                    password: password,
+                    host: host, port: port, username: username, password: password,
                     otp: otpEnabled ? otp : ""
                 )
                 AppModel.shared.saveCredentials(stored)
 
                 if !AppModel.shared.workStarted {
-                    AppModel.shared.connect?(stored)
+                    AppModel.shared.startPolling(credentials: stored)
                 } else {
-                    let newCredentials = SynologyAPI.Credentials(
-                        host: host,
-                        port: Int(port) ?? 5001,
-                        username: username,
-                        password: password,
+                    let updated = SynologyAPI.Credentials(
+                        host: host, port: Int(port) ?? 5001,
+                        username: username, password: password,
                         otp: otpEnabled && !otp.isEmpty ? otp : nil
                     )
                     do {
-                        await AppModel.shared.api?.updateCredentials(newCredentials)
+                        await AppModel.shared.api?.updateCredentials(updated)
                         _ = try await AppModel.shared.api?.authenticate()
                     } catch {
                         AppLogger.auth.error(
@@ -227,18 +258,13 @@ struct SettingsView: View {
                         )
                     }
                 }
-
                 alertItem = AlertItem(
                     title: "Success",
-                    message: "Connection attempt is successful. Your settings are saved.",
+                    message: "Connection successful. Settings saved.",
                     isSuccess: true
                 )
             } catch {
-                alertItem = AlertItem(
-                    title: "Error",
-                    message: error.localizedDescription,
-                    isSuccess: false
-                )
+                alertItem = AlertItem(title: "Error", message: error.localizedDescription, isSuccess: false)
             }
         }
     }
@@ -249,43 +275,7 @@ struct SettingsView: View {
             NSApplication.shared.activate(ignoringOtherApps: true)
         } else {
             NSApplication.shared.setActivationPolicy(.regular)
-            mainViewController?.view.window?.makeKeyAndOrderFront(nil)
             NSApplication.shared.activate(ignoringOtherApps: false)
         }
-    }
-}
-
-
-// MARK: - Hosting controller
-
-/// Thin NSHostingController that loads SettingsView from the storyboard
-/// slot previously occupied by SettingsViewController. The storyboard's
-/// SettingsWC window controller is unchanged; this class just replaces
-/// the content view controller it hosts.
-final class SettingsHostingController: NSHostingController<SettingsView> {
-
-    required init?(coder: NSCoder) {
-        super.init(coder: coder, rootView: SettingsView())
-    }
-
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        sizingOptions = .preferredContentSize
-        rootView = SettingsView { [weak self] in
-            self?.view.window?.close()
-        }
-    }
-
-    override func viewWillAppear() {
-        super.viewWillAppear()
-        view.window?.styleMask.remove(.fullScreen)
-        view.window?.styleMask.remove(.miniaturizable)
-        view.window?.styleMask.remove(.resizable)
-    }
-
-    override func viewDidDisappear() {
-        super.viewDidDisappear()
-        NSApplication.shared.activate(ignoringOtherApps: true)
-        mainViewController?.view.window?.makeKey()
     }
 }

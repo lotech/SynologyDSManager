@@ -104,30 +104,19 @@ read_marketing_version() {
 # ----- Actions -------------------------------------------------------------
 
 action_pull_main() {
-    info "Fetching origin/main…"
-    if ! git fetch origin main; then
-        err "git fetch origin main failed — check network / auth and try again."
-        return 1
-    fi
-
-    # If the working tree is dirty, offer stash / discard / cancel before
-    # fast-forwarding.  Only relevant when already on main.
-    local current_branch dirty=0 did_stash=0
+    # Switch to main if we're on a different branch.
+    local current_branch
     current_branch="$(git rev-parse --abbrev-ref HEAD)"
-
     if [[ "$current_branch" != "main" ]]; then
-        # Not on main — just advance the local main ref without switching.
-        if git rev-parse --verify main >/dev/null 2>&1; then
-            git fetch origin main:main 2>/dev/null \
-                && ok "Local 'main' updated (still on '${current_branch}')." \
-                || warn "Could not fast-forward local 'main' — resolve separately if needed."
-        else
-            ok "origin/main fetched (no local 'main' ref to update)."
+        info "Switching from '${current_branch}' to 'main'…"
+        if ! git checkout main; then
+            err "Could not switch to 'main' — commit or stash your changes first."
+            return 1
         fi
-        return 0
     fi
 
-    # --- On main: check for dirty state then pull. ---
+    # Handle a dirty working tree before pulling.
+    local dirty=0 did_stash=0
     if ! git diff --quiet || ! git diff --cached --quiet; then
         dirty=1
     fi
@@ -179,19 +168,16 @@ action_pull_main() {
         esac
     fi
 
-    # Now safe to pull.
+    info "Pulling main from origin…"
     if ! git pull --ff-only origin main; then
         err "Fast-forward pull failed. Resolve the divergence manually."
         if (( did_stash )); then
-            warn "Your changes are safely in 'git stash' (top of the stack)."
-            warn "Reapply with:  git stash pop"
+            warn "Your changes are safely in 'git stash'. Reapply with: git stash pop"
         fi
         return 1
     fi
-    ok "Local 'main' is now up to date with origin/main."
+    ok "main is up to date."
 
-    # Pop the stash if we made one. `git stash pop` exits non-zero on
-    # merge conflicts (but leaves the stash intact for manual recovery).
     if (( did_stash )); then
         info "Reapplying stashed changes…"
         if git stash pop >/dev/null 2>&1; then
@@ -199,7 +185,6 @@ action_pull_main() {
         else
             warn "Stash pop produced conflicts — resolve manually:"
             warn "  git status          # see conflicted files"
-            warn "  (edit files to resolve the <<<<<<< / ======= / >>>>>>> markers)"
             warn "  git add <file>      # mark each as resolved"
             warn "  git stash drop      # remove the now-applied stash entry"
             return 1
@@ -455,7 +440,7 @@ print_menu() {
 ${BOLD}SynologyDSManager — deploy.sh${RESET}
 ${DIM}$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo '(no git branch)') · ${status_line}${DIM}${RESET}
 
-  ${BOLD}p${RESET}   Pull main from origin (fast-forward local main only)
+  ${BOLD}p${RESET}   Pull main from origin
   ${BOLD}o${RESET}   Open in Xcode
   ${BOLD}s${RESET}   Configure signing (Apple Developer Team ID)
   ${BOLD}i${RESET}   Build Debug and install to /Applications (local testing)

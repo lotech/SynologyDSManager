@@ -2,19 +2,12 @@
 //  ChooseDestView.swift
 //  SynologyDSManager
 //
-//  SwiftUI replacement for ChooseDestViewController (Phase 4, slice 3).
-//  Uses DisclosureGroup-inside-List for lazy-loaded directory tree, replacing
-//  the NSOutlineView with shouldExpandItem-based lazy fetch.
-//
 
 import SwiftUI
 
 
 // MARK: - RemoteDir
 
-/// Observable tree node for the destination picker. Reference type required:
-/// `@Bindable` rows mutate it in place during lazy child loading. Supersedes
-/// the RemoteDir class previously defined in ChooseDestViewController.swift.
 @Observable
 final class RemoteDir: Identifiable {
     let id = UUID()
@@ -141,23 +134,32 @@ struct ChooseDestView: View {
 }
 
 
-// MARK: - Hosting controller
+// MARK: - Hosting controller (used by DestinationView for "Other..." sheet)
 
 final class ChooseDestHostingController: NSHostingController<ChooseDestView> {
-    /// Set before presentAsSheet to receive the selected path (or nil for cancel).
     var completion: ((String?) -> Void)?
     private let destState: ChooseDestState
 
-    required init?(coder: NSCoder) {
+    // Plain init for programmatic use (no storyboard needed).
+    init() {
         let s = ChooseDestState()
-        self.destState = s
-        super.init(coder: coder, rootView: ChooseDestView(state: s))
+        destState = s
+        super.init(rootView: ChooseDestView(state: s))
+        sizingOptions = .preferredContentSize
+        s.onDismiss = { [weak self] path in
+            guard let self else { return }
+            let comp = self.completion
+            self.dismiss(self)
+            if let path { comp?(path) }
+        }
     }
 
-    override func viewDidLoad() {
-        super.viewDidLoad()
+    required init?(coder: NSCoder) {
+        let s = ChooseDestState()
+        destState = s
+        super.init(coder: coder, rootView: ChooseDestView(state: s))
         sizingOptions = .preferredContentSize
-        destState.onDismiss = { [weak self] path in
+        s.onDismiss = { [weak self] path in
             guard let self else { return }
             let comp = self.completion
             self.dismiss(self)
