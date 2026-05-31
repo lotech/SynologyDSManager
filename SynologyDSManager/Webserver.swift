@@ -30,7 +30,7 @@ private func handle_new_download_task(request: HttpRequest) -> HttpResponse {
     // this is a warnings-clean-up stop-gap.)
     let url = data.url
     Task { @MainActor in
-        mainViewController?.downloadByURLFromExtension(URL: url)
+        AppModel.shared.enqueueDownload(url: url)
     }
 
     return HttpResponse.raw(200, "OK", ["Access-Control-Allow-Origin": "*"], {try! $0.write("OK".data(using: String.Encoding.utf8)!)})
