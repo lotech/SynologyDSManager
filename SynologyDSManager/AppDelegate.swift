@@ -29,24 +29,20 @@ struct SynologyDSManagerApp: App {
         Window("Settings", id: "settings") {
             SettingsView()
         }
-        .defaultVisibility(.hidden)
         .windowResizability(.contentSize)
 
         Window("Add Download", id: "add-download") {
             AddDownloadRootView()
         }
-        .defaultVisibility(.hidden)
         .windowResizability(.contentSize)
 
         Window("BT Search", id: "bt-search") {
             BTSearchRootView()
         }
-        .defaultVisibility(.hidden)
 
         Window("About", id: "about") {
             AboutView()
         }
-        .defaultVisibility(.hidden)
         .windowResizability(.contentSize)
     }
 }
