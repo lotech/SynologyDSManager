@@ -108,19 +108,21 @@ struct DownloadsView: View {
 
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
-        ToolbarItem(placement: .automatic) {
+        // Settings sits on the leading edge, set apart from the
+        // download actions grouped on the trailing edge.
+        ToolbarItem(placement: .navigation) {
             Button { openWindow(id: "settings") } label: {
                 Label("Settings", systemImage: "gear")
             }
             .help("Settings")
         }
-        ToolbarItem(placement: .automatic) {
+        ToolbarItem(placement: .primaryAction) {
             Button { openWindow(id: "add-download") } label: {
                 Label("Add", systemImage: "plus")
             }
             .help("Add download")
         }
-        ToolbarItem(placement: .automatic) {
+        ToolbarItem(placement: .primaryAction) {
             Button { openWindow(id: "bt-search") } label: {
                 Label("Search", systemImage: "magnifyingglass")
             }
