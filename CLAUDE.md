@@ -30,8 +30,15 @@ human, `README.md` is a better starting point.
   working replacement. Revisit when a Safari/macOS point release unblocks
   the worker.
 - 🚧 **Phase 4** — SwiftUI + Observation; retire `Shared.swift` globals.
-  **Active phase.** Pure macOS rewrite (a future iOS port would refactor
-  the portable network/keychain core into a shared package at that point).
+  **Active phase.** Pure macOS rewrite. App lifecycle is now fully SwiftUI:
+  `@main struct SynologyDSManagerApp: App` with `Window` scenes +
+  `MenuBarExtra`; `Main.storyboard` deleted; all `NSHostingController`
+  subclasses gone. `mainViewController` / `currentViewController` globals
+  removed from `Shared.swift`. `DestinationView.xib` is the only XIB still
+  in the main app target (DestinationView is a custom NSView bridged via
+  `NSViewRepresentable`; its XIB can be removed once it's ported to SwiftUI).
+  (A future iOS port would refactor the portable network/keychain core into a
+  shared package at that point, not now.)
 - ⏳ **Phase 5** — release engineering (Sparkle, notarised DMGs via CI).
 
 See `MODERNIZATION_PLAN.md` for the per-phase task checklist.
@@ -40,8 +47,9 @@ See `MODERNIZATION_PLAN.md` for the per-phase task checklist.
 
 - **Product**: native macOS app + Safari extension that drives a Synology NAS's
   Download Station over its HTTP API.
-- **Language / UI**: Swift 5.9, AppKit + Storyboards (plus one XIB-based
-  `NSTableCellView`). No SwiftUI yet — moving there in Phase 4.
+- **Language / UI**: Swift 5.9, SwiftUI (`Window` scenes, `MenuBarExtra`,
+  `@Observable`). `Main.storyboard` deleted. One XIB-backed `NSView` remains
+  (`DestinationView.xib`); everything else is pure SwiftUI.
 - **Min OS**: macOS 14 (app and test bundle — bumped from 13 in Phase 4
   slice 1 to enable `@Observable` from the Observation framework).
 - **Build system**: Xcode project (`SynologyDSManager.xcodeproj`), SwiftPM for
@@ -61,7 +69,7 @@ See `MODERNIZATION_PLAN.md` for the per-phase task checklist.
 
 | File | Role |
 |---|---|
-| `AppDelegate.swift` | `@main` entry point, handles URL-scheme deep links and `.torrent` file opens. Installs the TLS first-use approval handler. Retains the `SynologyBridgeListener`. |
+| `AppDelegate.swift` | Contains both `@main struct SynologyDSManagerApp: App` (SwiftUI lifecycle with `Window` scenes + `MenuBarExtra`) and `AppDelegate: NSObject, NSApplicationDelegate` (wired via `@NSApplicationDelegateAdaptor`). Handles URL-scheme deep links and `.torrent` file opens. Installs the TLS first-use approval handler. Retains the `SynologyBridgeListener`. |
 | `Bridge/SynologyBridgeProtocol.swift` | `@objc` protocol exposed over XPC to the Safari Web Extension's `SafariWebExtensionHandler`. Currently one method: `enqueueDownload(url:reply:)`. Kept deliberately minimal so the wire surface stays easy to audit. Target-membership-shared with the Web Extension target so both sides compile against the same `@objc` definition. |
 | `Bridge/SynologyBridgeService.swift` | `NSObject` implementation of `SynologyBridgeProtocol`. Validates incoming URLs (scheme allowlist, length cap), hops to `@MainActor` to read the global `synologyAPI`, and forwards to `SynologyAPI.createTask(url:)`. |
 | `Bridge/SynologyBridgeListener.swift` | `NSXPCListener` + `NSXPCListenerDelegate` on the named Mach service `com.skavans.synologyDSManager.bridge`. Published to launchd via a bundled LaunchAgent plist + `SMAppService.agent(plistName:)` registration at launch. |
@@ -73,10 +81,11 @@ See `MODERNIZATION_PLAN.md` for the per-phase task checklist.
 | `Network/AppLogger.swift` | `os.Logger` categories — `network`, `auth`, `security`, `keychain`. Always use these; never `print(…)` in shipped code. |
 | `Settings.swift` | `StoredCredentials` type + Keychain persistence via the in-house `KeychainStore`. Phase 2b replaced the KeychainAccess dependency with a direct `SecItem*` wrapper. |
 | `KeychainStore.swift` | Thin `SecItem*` wrapper used by `Settings.swift`. `.whenUnlockedThisDeviceOnly` accessibility, service identifier `com.skavans.synologyDSManager`. |
-| `Shared.swift` | Global mutable state (`synologyAPI`, `mainViewController`, `currentViewController`, etc.), annotated `nonisolated(unsafe)` under complete concurrency. Replaced by an `@Observable` app model in Phase 4. |
-| `Webserver.swift` | Loopback HTTP server on port 11863 used by the Safari extension to enqueue downloads. **Unauthenticated** — scheduled for removal in Phase 3 in favour of `NSXPCConnection`. |
-| `ViewControllers/` | Cocoa view controllers, one per screen. |
-| `DestinationView.swift`, `DownloadsCellView.swift`, `LoadableView.swift` | Custom `NSView` subclasses loaded from XIB. |
+| `AppModel.swift` | `@Observable @MainActor` singleton. Owns the polling loop, task list, bandwidth, notifications, pending torrent paths, and the `SynologyAPI` instance. All screens read/write via `AppModel.shared`. |
+| `Shared.swift` | Utility functions only: `prettifyBytesCount`, `prettifySpeed`, `Double.round(to:)`. All mutable globals (`mainViewController`, `currentViewController`, etc.) have been removed in Phase 4. |
+| `Webserver.swift` | Loopback HTTP server on port 11863 used by the Safari extension to enqueue downloads. **Unauthenticated** — scheduled for removal in Phase 3 in favour of `NSXPCConnection`. Forwards to `AppModel.shared.enqueueDownload(url:)`. |
+| `ViewControllers/` | Pure SwiftUI views, one per screen. All `NSHostingController` subclasses removed in Phase 4. |
+| `DestinationView.swift` | Custom `NSView` subclass loaded from `DestinationView.xib`. Bridged into SwiftUI via `DestinationViewRepresentable` (`NSViewRepresentable`) in `SettingsView`. The last XIB in the main app target; will be replaced with a pure-SwiftUI picker in a future slice. |
 | `LaunchAgents/com.skavans.synologyDSManager.bridge.plist` | launchd plist bundled at `Contents/Library/LaunchAgents/` that advertises the bridge's Mach service name. Registered programmatically via `SMAppService.agent(plistName:)` at first launch. |
 
 ## Web Extension source (`WebExtension/`)

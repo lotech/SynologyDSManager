@@ -4,7 +4,7 @@ Living document. Tick boxes as tasks land. When all tasks in a phase are
 complete, move the phase status from **In progress** / **Planned** to
 **Shipped** with the date.
 
-Last updated: 2026-06-01 (Deleted the orphaned `Main.storyboard`; documented the two remaining `.xib`s and why they stay.)
+Last updated: 2026-06-01 (Phase 4 pure-SwiftUI lifecycle complete; Main.storyboard deleted; MenuBarExtra live; Settings and toolbar tidied.)
 
 ---
 
@@ -527,9 +527,17 @@ test bundle was already there, and the plan explicitly required `Observation`).
       `SafariExtensionViewController.xib` belongs to the legacy extension
       target, which is retired wholesale in Phase 3c (parked behind the
       Safari runtime blocker).
-- [ ] Add localisation scaffolding (`String Catalog`), starting with English
-- [ ] Remove remaining `swiftapps.skavans.ru` mailto from the ported
+- [x] Eliminate all `NSHostingController` subclasses and the storyboard
+      wrapper; replace with a pure SwiftUI `@main App` lifecycle using
+      `Window` scenes + `MenuBarExtra`. `Main.storyboard` removed from
+      the project and deleted from disk. `mainViewController` and
+      `currentViewController` globals removed from `Shared.swift`.
+- [x] Remove remaining `swiftapps.skavans.ru` mailto from the ported
       Settings screen
+- [ ] Delete `DestinationView.xib` once `DestinationView` is ported to
+      a pure-SwiftUI picker (the only `.xib` still in the main app
+      target; `SafariExtensionViewController.xib` stays until Phase 3c)
+- [ ] Add localisation scaffolding (`String Catalog`), starting with English
 
 ## Phase 5 — Release engineering · **Planned**
 

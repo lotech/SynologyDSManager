@@ -29,6 +29,31 @@ commit that makes them.
 - **Downloads toolbar regrouped.** The Settings gear moved to the leading edge
   of the toolbar, visually separated from the download actions (add, search,
   pause-all, resume-all, clear) which stay grouped on the trailing edge.
+- **Phase 4 — Pure SwiftUI app lifecycle.** All `NSHostingController`
+  subclasses and the `Main.storyboard` wrapper have been removed. The app
+  now uses a `@main struct SynologyDSManagerApp: App` lifecycle with SwiftUI
+  `Window` scenes and `MenuBarExtra` — no storyboard at all. Secondary
+  windows (`Settings`, `Add Download`, `BT Search`, `About`) are `Window`
+  scenes opened programmatically via `openWindow(id:)` from toolbar buttons
+  and the menu bar menu. `Main.storyboard` has been removed from the project
+  and deleted from disk. The `mainViewController` and `currentViewController`
+  globals have been removed from `Shared.swift`; `Shared.swift` now contains
+  only the `prettifyBytesCount`, `prettifySpeed`, and `Double.round(to:)`
+  utility functions.
+- **`deploy.sh` pull (`p`) simplified.** Always switches to `main` and pulls
+  with `--ff-only`; the previous branch-aware merge step has been removed.
+
+### Fixed
+- **`Webserver.swift` build error after Phase 4 refactor.** The
+  `handle_new_download_task` handler referenced the removed
+  `mainViewController` global. Updated to call
+  `AppModel.shared.enqueueDownload(url:)`, which is the direct equivalent on
+  the new app model.
+- **Removed `.defaultVisibility(.hidden)` from secondary `Window` scenes.**
+  `SceneVisibility.hidden` is available from macOS 14+ but the deployment
+  target on the `main` branch is still 13.0. `Window` scenes don't
+  auto-open on first launch anyway (unlike `WindowGroup`), so the modifier
+  was providing no benefit while causing a build failure on 13.0 targets.
 
 ### Removed
 - Deleted the orphaned `Main.storyboard` — the app has launched its UI from
