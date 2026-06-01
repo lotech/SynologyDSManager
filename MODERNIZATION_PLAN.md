@@ -4,7 +4,7 @@ Living document. Tick boxes as tasks land. When all tasks in a phase are
 complete, move the phase status from **In progress** / **Planned** to
 **Shipped** with the date.
 
-Last updated: 2026-05-30 (Phase 4 slice 3 — all four remaining AppKit screens ported to SwiftUI; synoboost.com link removed.)
+Last updated: 2026-06-01 (Deleted the orphaned `Main.storyboard`; documented the two remaining `.xib`s and why they stay.)
 
 ---
 
@@ -517,8 +517,16 @@ test bundle was already there, and the plan explicitly required `Observation`).
       (carried forward from Phase 1 leftover)
 - [x] Replace the status item with `MenuBarExtra`
 - [x] Replace PNG toolbar icons with SF Symbols
-- [ ] Delete `Main.storyboard` and all `.xib` files when the last screen
-      has been ported
+- [~] Delete `Main.storyboard` and all `.xib` files when the last screen
+      has been ported. `Main.storyboard` deleted (it was already orphaned —
+      no pbxproj membership, no `NSMainStoryboardFile`, app launches from
+      SwiftUI Window scenes). Two `.xib`s remain: `DestinationView.xib` is
+      still live (loaded at runtime via `LoadableView` and bridged into
+      Settings / Add Download / BT Search through `NSViewRepresentable`), so
+      it goes when the Destination view is reworked as native SwiftUI;
+      `SafariExtensionViewController.xib` belongs to the legacy extension
+      target, which is retired wholesale in Phase 3c (parked behind the
+      Safari runtime blocker).
 - [ ] Add localisation scaffolding (`String Catalog`), starting with English
 - [ ] Remove remaining `swiftapps.skavans.ru` mailto from the ported
       Settings screen

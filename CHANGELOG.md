@@ -21,6 +21,9 @@ commit that makes them.
 ## [Unreleased]
 
 ### Removed
+- Deleted the orphaned `Main.storyboard` — the app has launched its UI from
+  pure SwiftUI Window scenes since the Phase 4 rewrite, and the storyboard was
+  no longer referenced by the project, the Info.plist, or any runtime code.
 - Deleted `DownloadsCellView.swift` and `DownloadsCellView.xib` — dead code
   since the Downloads screen was ported to SwiftUI in Phase 4 slice 3.
 - **Replaced all PNG toolbar icons with SF Symbols.** The six custom PNG
