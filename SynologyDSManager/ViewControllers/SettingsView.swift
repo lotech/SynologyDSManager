@@ -45,10 +45,41 @@ private struct FieldRow<Control: View>: View {
 
 private struct SectionTitle: View {
     let title: String
+    var trailing: String?
+
+    init(title: String, trailing: String? = nil) {
+        self.title = title
+        self.trailing = trailing
+    }
+
     var body: some View {
-        Text(title)
-            .font(.headline)
-            .padding(.bottom, 4)
+        HStack(alignment: .firstTextBaseline) {
+            Text(title)
+                .font(.headline)
+            if let trailing {
+                Text(trailing)
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+            }
+        }
+    }
+}
+
+/// A titled settings block: leading-aligned, consistent inner spacing,
+/// uniform padding. Keeps every section visually identical.
+private struct SettingsSection<Content: View>: View {
+    let content: Content
+
+    init(@ViewBuilder content: () -> Content) {
+        self.content = content()
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            content
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(16)
     }
 }
 
@@ -111,7 +142,7 @@ struct SettingsView: View {
     private var content: some View {
         VStack(alignment: .leading, spacing: 0) {
             // ── NAS Connection ──────────────────────────────────
-            Group {
+            SettingsSection {
                 SectionTitle(title: "NAS Connection")
 
                 FieldRow("Host/IP") {
@@ -151,15 +182,17 @@ struct SettingsView: View {
                 Button("Connect and save settings", action: testConnection)
                     .keyboardShortcut(.defaultAction)
                     .frame(maxWidth: .infinity)
-                    .padding(.top, 6)
+                    .padding(.top, 4)
             }
-            .padding(16)
 
             Divider()
 
             // ── Safari Extension ────────────────────────────────
-            Group {
-                SectionTitle(title: "Safari Extension")
+            // Disabled for now: the Web Extension's service worker won't
+            // start on current Safari (Phase 3b-2b-RT blocker), so the
+            // whole section is greyed out until the bridge is shippable.
+            SettingsSection {
+                SectionTitle(title: "Safari Extension", trailing: "Coming soon")
 
                 HStack(alignment: .top, spacing: 8) {
                     Image(systemName: "safari")
@@ -170,43 +203,39 @@ struct SettingsView: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
 
-                HStack {
-                    Button("Open Safari Extension Preferences…") {
-                        SFSafariApplication.showPreferencesForExtension(
-                            withIdentifier: "com.skavans.synologyDSManager.extension"
-                        ) { _ in }
-                    }
-                    Spacer()
+                Button("Open Safari Extension Preferences…") {
+                    SFSafariApplication.showPreferencesForExtension(
+                        withIdentifier: "com.skavans.synologyDSManager.extension"
+                    ) { _ in }
                 }
-                .padding(.top, 4)
 
                 FieldRow("Destination") {
                     DestinationViewRepresentable(synchronizeKey: "extension")
                         .frame(width: 220, height: 22)
                     Spacer()
                 }
-                .padding(.top, 4)
             }
-            .padding(16)
+            .disabled(true)
+            .opacity(0.45)
 
             Divider()
 
             // ── Behavior ────────────────────────────────────────
-            Group {
+            SettingsSection {
                 SectionTitle(title: "Behavior")
 
-                Toggle("Hide Dock icon", isOn: $hideDockIcon)
-                    .onChange(of: hideDockIcon) { _, hide in applyDockIconPolicy(hide: hide) }
-                Text("Use \"Show window\" in the ↓DS status bar menu to bring the window back.")
-                    .font(.caption)
-                    .foregroundStyle(.tertiary)
-                    .padding(.leading, 20)
-                    .padding(.bottom, 4)
+                VStack(alignment: .leading, spacing: 2) {
+                    Toggle("Hide Dock icon", isOn: $hideDockIcon)
+                        .onChange(of: hideDockIcon) { _, hide in applyDockIconPolicy(hide: hide) }
+                    Text("Use \"Show window\" in the ↓DS status bar menu to bring the window back.")
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+                        .padding(.leading, 20)
+                }
 
                 Toggle("Hide download speed from status bar", isOn: $hideFromStatusBar)
                 Toggle("Clear finished tasks automatically", isOn: $clearFinishedTasks)
             }
-            .padding(16)
         }
     }
 

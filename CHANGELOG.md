@@ -20,6 +20,16 @@ commit that makes them.
 
 ## [Unreleased]
 
+### Changed
+- **Settings window tidied up.** Every section now uses one consistent block
+  layout with uniform padding and even row spacing, replacing the uneven
+  vertical gaps. The **Safari Extension** section is greyed out and disabled
+  with a "Coming soon" tag — the Web Extension bridge isn't shippable yet, so
+  it no longer looks like a working feature.
+- **Downloads toolbar regrouped.** The Settings gear moved to the leading edge
+  of the toolbar, visually separated from the download actions (add, search,
+  pause-all, resume-all, clear) which stay grouped on the trailing edge.
+
 ### Removed
 - Deleted the orphaned `Main.storyboard` — the app has launched its UI from
   pure SwiftUI Window scenes since the Phase 4 rewrite, and the storyboard was
