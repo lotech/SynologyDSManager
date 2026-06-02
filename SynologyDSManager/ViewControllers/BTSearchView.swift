@@ -147,8 +147,8 @@ struct BTSearchView: View {
 
     private var bottomBar: some View {
         HStack {
-            DestinationViewRepresentable(synchronizeKey: "main")
-                .frame(height: 24)
+            DestinationPicker(synchronizeKey: "main")
+                .frame(maxWidth: 280)
 
             Spacer()
 

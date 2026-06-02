@@ -7,21 +7,6 @@ import SwiftUI
 import SafariServices.SFSafariApplication
 
 
-// MARK: - DestinationView bridge
-
-struct DestinationViewRepresentable: NSViewRepresentable {
-    let synchronizeKey: String
-
-    func makeNSView(context: Context) -> DestinationView {
-        let view = DestinationView()
-        view.setSelectionSynchronizeKey(key: synchronizeKey)
-        return view
-    }
-
-    func updateNSView(_ nsView: DestinationView, context: Context) {}
-}
-
-
 // MARK: - Row helpers
 
 private struct FieldRow<Control: View>: View {
@@ -210,8 +195,8 @@ struct SettingsView: View {
                 }
 
                 FieldRow("Destination") {
-                    DestinationViewRepresentable(synchronizeKey: "extension")
-                        .frame(width: 220, height: 22)
+                    DestinationPicker(synchronizeKey: "extension")
+                        .frame(width: 220)
                     Spacer()
                 }
             }

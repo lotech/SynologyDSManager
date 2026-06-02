@@ -4,7 +4,7 @@ Living document. Tick boxes as tasks land. When all tasks in a phase are
 complete, move the phase status from **In progress** / **Planned** to
 **Shipped** with the date.
 
-Last updated: 2026-06-01 (Phase 4 pure-SwiftUI lifecycle complete; Main.storyboard deleted; MenuBarExtra live; Settings and toolbar tidied.)
+Last updated: 2026-06-02 (Reworked `DestinationView` as the SwiftUI `DestinationPicker` and added the English String Catalog scaffolding — Phase 4 now effectively complete, with only the Phase 3c-gated legacy-extension XIB deletion outstanding.)
 
 ---
 
@@ -15,8 +15,8 @@ Goal: a clean, lintable, CI-backed baseline for everything that follows.
 - [x] Remove `xcuserdata` from version control (`git rm -r --cached`)
 - [x] Bump `objectVersion` (52 → 56), `compatibilityVersion` (Xcode 9.3 →
       Xcode 14.0), `LastUpgradeCheck` (1130 → 1520)
-- [x] Remove stale `DEVELOPMENT_TEAM = GVS9699BGK` from both targets' build
-      configs
+- [x] Remove stale hard-coded `DEVELOPMENT_TEAM` (an Apple Team ID literal)
+      from both targets' build configs
 - [x] Remove dead `FRAMEWORK_SEARCH_PATHS` entries referencing an absent
       `Sparkle Updater` directory
 - [x] Remove unused `StoreKit.framework` reference (was left over from the
@@ -468,13 +468,23 @@ Out-of-scope-until-asked. The original Chrome extension is referenced
 in the README but isn't in this repo. If a user wants it revived, it'd
 follow the same MV3 + native-messaging-host shape as 3b.
 
-## Phase 4 — SwiftUI rewrite · **In progress** (active phase as of 2026-05-29)
+## Phase 4 — SwiftUI rewrite · **In progress** (effectively complete; one task parked behind Phase 3c)
 
 Goal: storyboards out, SwiftUI in — screen by screen, behind
 `NSHostingController` so we can ship as we go. Scope is a **pure macOS**
 rewrite (decided 2026-05-29); a future iOS/iPadOS port would refactor the
 already-portable network/keychain core into a shared package at that
 point, not now.
+
+> **Status 2026-06-02.** Every independently-doable task is done: all
+> screens are SwiftUI, `Shared.swift`'s globals are gone (replaced by
+> `AppModel`), the menu-bar item, SF Symbol icons, and the English String
+> Catalog have landed, and the main app ships zero storyboards/XIBs. The
+> only unchecked item — deleting the *last* `.xib`
+> (`SafariExtensionViewController.xib`) — is gated on retiring the legacy
+> extension target in **Phase 3c**, which is itself parked behind the
+> Safari service-worker runtime blocker. So Phase 4 stays *In progress*
+> only as a bookkeeping link to 3c; there is no further SwiftUI work to do.
 
 ### Phase 4 slice 1 — AppModel foundation + Settings screen · **Shipped 2026-05-29**
 
@@ -518,26 +528,34 @@ test bundle was already there, and the plan explicitly required `Observation`).
 - [x] Replace the status item with `MenuBarExtra`
 - [x] Replace PNG toolbar icons with SF Symbols
 - [~] Delete `Main.storyboard` and all `.xib` files when the last screen
-      has been ported. `Main.storyboard` deleted (it was already orphaned —
-      no pbxproj membership, no `NSMainStoryboardFile`, app launches from
-      SwiftUI Window scenes). Two `.xib`s remain: `DestinationView.xib` is
-      still live (loaded at runtime via `LoadableView` and bridged into
-      Settings / Add Download / BT Search through `NSViewRepresentable`), so
-      it goes when the Destination view is reworked as native SwiftUI;
-      `SafariExtensionViewController.xib` belongs to the legacy extension
-      target, which is retired wholesale in Phase 3c (parked behind the
-      Safari runtime blocker).
-- [x] Eliminate all `NSHostingController` subclasses and the storyboard
-      wrapper; replace with a pure SwiftUI `@main App` lifecycle using
-      `Window` scenes + `MenuBarExtra`. `Main.storyboard` removed from
-      the project and deleted from disk. `mainViewController` and
-      `currentViewController` globals removed from `Shared.swift`.
+      has been ported. **The main app now ships zero storyboards and zero
+      XIBs.** `Main.storyboard` was deleted (orphaned — no pbxproj membership,
+      no `NSMainStoryboardFile`). `DestinationView` was reworked as the native
+      SwiftUI `DestinationPicker`, retiring `DestinationView.xib`; with it gone
+      `LoadableView.swift` (the XIB-loading shim) and `DownloadsCellView.*`
+      were dead and removed too — so no `loadNibNamed`/`NSNib` call path
+      remains in the app. The one remaining `.xib`
+      (`SafariExtensionViewController.xib`) belongs to the legacy extension
+      target, retired wholesale in Phase 3c (parked behind the Safari runtime
+      blocker), so this box stays `[~]` until 3c.
+- [x] Move to a pure SwiftUI `@main App` lifecycle (`Window` scenes +
+      `MenuBarExtra`, with `@NSApplicationDelegateAdaptor` for AppKit hooks);
+      retire the storyboard wrapper and the main-screen `NSHostingController`
+      subclasses. `mainViewController` / `currentViewController` globals
+      removed from `Shared.swift`. One small hosting shim survives —
+      `ChooseDestHostingController`, used by `DestinationPicker` for the
+      Choose Destination sheet.
+- [x] Add localisation scaffolding (`String Catalog`), starting with English.
+      Added `SynologyDSManager/Localizable.xcstrings` (source language `en`)
+      wired into the main target's resources. The project already carried the
+      enabling build settings (`SWIFT_EMIT_LOC_STRINGS = YES`,
+      `LOCALIZATION_PREFERS_STRING_CATALOGS = YES`, `knownRegions = (en, Base)`),
+      so the compiler auto-extracts UI strings into the catalog on build; new
+      languages are added by selecting them in the catalog editor.
 - [x] Remove remaining `swiftapps.skavans.ru` mailto from the ported
-      Settings screen
-- [ ] Delete `DestinationView.xib` once `DestinationView` is ported to
-      a pure-SwiftUI picker (the only `.xib` still in the main app
-      target; `SafariExtensionViewController.xib` stays until Phase 3c)
-- [ ] Add localisation scaffolding (`String Catalog`), starting with English
+      Settings screen (the contact button was dropped when Settings was
+      ported to SwiftUI in slice 1; no `swiftapps.skavans.ru` reference
+      remains in any Swift source)
 
 ## Phase 5 — Release engineering · **Planned**
 
