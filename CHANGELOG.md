@@ -20,6 +20,14 @@ commit that makes them.
 
 ## [Unreleased]
 
+### Added
+- **Native SwiftUI download-destination picker (`DestinationPicker`).** Replaces
+  the XIB-backed AppKit `DestinationView` used on the Add Download, BT Search,
+  and Settings screens. Behaviour and on-disk persistence are unchanged — the
+  saved-directory list and per-screen selection still round-trip through the
+  same UserDefaults keys, so existing installs keep their destinations. Picking
+  "Other…" still opens the NAS directory browser.
+
 ### Changed
 - **Settings window tidied up.** Every section now uses one consistent block
   layout with uniform padding and even row spacing, replacing the uneven
@@ -31,6 +39,12 @@ commit that makes them.
   pause-all, resume-all, clear) which stay grouped on the trailing edge.
 
 ### Removed
+- Deleted `DestinationView.swift` + `DestinationView.xib` (replaced by the
+  SwiftUI `DestinationPicker`) and `LoadableView.swift` (the XIB-loading shim
+  that only `DestinationView`/`DownloadsCellView` ever used). With these gone
+  the main app no longer loads any XIB — there is no `loadNibNamed`/`NSNib`
+  call path left in it. The only remaining XIB belongs to the parked legacy
+  Safari App Extension.
 - Deleted the orphaned `Main.storyboard` — the app has launched its UI from
   pure SwiftUI Window scenes since the Phase 4 rewrite, and the storyboard was
   no longer referenced by the project, the Info.plist, or any runtime code.
@@ -766,8 +780,8 @@ commit that makes them.
   is cut.
 
 ### Removed
-- Stale `DEVELOPMENT_TEAM = GVS9699BGK` (the previous maintainer's Apple
-  team) from both targets' build configurations. The current developer's
+- Stale hard-coded `DEVELOPMENT_TEAM` (the previous maintainer's Apple Team
+  ID literal) from both targets' build configurations. The current developer's
   Team ID is now supplied via the gitignored `Signing.local.xcconfig`.
 - Target-level hard-coded `CODE_SIGN_IDENTITY = "Apple Development"`, so the
   xcconfig's conditional identity (Apple Development for Debug, Developer ID

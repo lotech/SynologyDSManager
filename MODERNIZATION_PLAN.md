@@ -4,7 +4,7 @@ Living document. Tick boxes as tasks land. When all tasks in a phase are
 complete, move the phase status from **In progress** / **Planned** to
 **Shipped** with the date.
 
-Last updated: 2026-06-01 (Deleted the orphaned `Main.storyboard`; documented the two remaining `.xib`s and why they stay.)
+Last updated: 2026-06-02 (Reworked `DestinationView` as the SwiftUI `DestinationPicker`; deleted the last main-app XIBs + `LoadableView`; main app now ships zero storyboards/XIBs.)
 
 ---
 
@@ -15,8 +15,8 @@ Goal: a clean, lintable, CI-backed baseline for everything that follows.
 - [x] Remove `xcuserdata` from version control (`git rm -r --cached`)
 - [x] Bump `objectVersion` (52 → 56), `compatibilityVersion` (Xcode 9.3 →
       Xcode 14.0), `LastUpgradeCheck` (1130 → 1520)
-- [x] Remove stale `DEVELOPMENT_TEAM = GVS9699BGK` from both targets' build
-      configs
+- [x] Remove stale hard-coded `DEVELOPMENT_TEAM` (an Apple Team ID literal)
+      from both targets' build configs
 - [x] Remove dead `FRAMEWORK_SEARCH_PATHS` entries referencing an absent
       `Sparkle Updater` directory
 - [x] Remove unused `StoreKit.framework` reference (was left over from the
@@ -518,18 +518,21 @@ test bundle was already there, and the plan explicitly required `Observation`).
 - [x] Replace the status item with `MenuBarExtra`
 - [x] Replace PNG toolbar icons with SF Symbols
 - [~] Delete `Main.storyboard` and all `.xib` files when the last screen
-      has been ported. `Main.storyboard` deleted (it was already orphaned —
-      no pbxproj membership, no `NSMainStoryboardFile`, app launches from
-      SwiftUI Window scenes). Two `.xib`s remain: `DestinationView.xib` is
-      still live (loaded at runtime via `LoadableView` and bridged into
-      Settings / Add Download / BT Search through `NSViewRepresentable`), so
-      it goes when the Destination view is reworked as native SwiftUI;
-      `SafariExtensionViewController.xib` belongs to the legacy extension
-      target, which is retired wholesale in Phase 3c (parked behind the
-      Safari runtime blocker).
+      has been ported. **The main app now ships zero storyboards and zero
+      XIBs.** `Main.storyboard` was deleted (orphaned — no pbxproj membership,
+      no `NSMainStoryboardFile`). `DestinationView` was reworked as the native
+      SwiftUI `DestinationPicker`, retiring `DestinationView.xib`; with it gone
+      `LoadableView.swift` (the XIB-loading shim) and `DownloadsCellView.*`
+      were dead and removed too — so no `loadNibNamed`/`NSNib` call path
+      remains in the app. The one remaining `.xib`
+      (`SafariExtensionViewController.xib`) belongs to the legacy extension
+      target, retired wholesale in Phase 3c (parked behind the Safari runtime
+      blocker), so this box stays `[~]` until 3c.
 - [ ] Add localisation scaffolding (`String Catalog`), starting with English
-- [ ] Remove remaining `swiftapps.skavans.ru` mailto from the ported
-      Settings screen
+- [x] Remove remaining `swiftapps.skavans.ru` mailto from the ported
+      Settings screen (the contact button was dropped when Settings was
+      ported to SwiftUI in slice 1; no `swiftapps.skavans.ru` reference
+      remains in any Swift source)
 
 ## Phase 5 — Release engineering · **Planned**
 

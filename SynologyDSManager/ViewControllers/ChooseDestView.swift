@@ -134,7 +134,7 @@ struct ChooseDestView: View {
 }
 
 
-// MARK: - Hosting controller (used by DestinationView for "Other..." sheet)
+// MARK: - Hosting controller (used by DestinationPicker for "Other…" sheet)
 
 final class ChooseDestHostingController: NSHostingController<ChooseDestView> {
     var completion: ((String?) -> Void)?

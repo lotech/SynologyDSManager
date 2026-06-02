@@ -59,8 +59,9 @@ struct AddDownloadView: View {
 
             Divider()
 
-            DestinationViewRepresentable(synchronizeKey: "main")
-                .frame(height: 24)
+            DestinationPicker(synchronizeKey: "main")
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
 
             Divider()
 

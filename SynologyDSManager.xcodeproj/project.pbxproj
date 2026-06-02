@@ -8,9 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		AA40000000000005000000B0 /* BTSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA40000000000005000000A0 /* BTSearchView.swift */; };
-		3A098F79244FA9CF001D2C8B /* DestinationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A098F78244FA9CF001D2C8B /* DestinationView.swift */; };
-		3A098F7B244FAB46001D2C8B /* DestinationView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 3A098F7A244FAB46001D2C8B /* DestinationView.xib */; };
 		AA40000000000006000000B0 /* ChooseDestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA40000000000006000000A0 /* ChooseDestView.swift */; };
+		AA40000000000008000000B0 /* DestinationPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA40000000000008000000A0 /* DestinationPicker.swift */; };
 		AA40000000000003000000B0 /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA40000000000003000000A0 /* AboutView.swift */; };
 		3A2D5EF023D248B500B924EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A2D5EEF23D248B500B924EE /* AppDelegate.swift */; };
 		AA40000000000001000000B0 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA40000000000001000000A0 /* AppModel.swift */; };
@@ -24,7 +23,6 @@
 		3A2D5F0E23D248B700B924EE /* script.js in Resources */ = {isa = PBXBuildFile; fileRef = 3A2D5F0D23D248B700B924EE /* script.js */; };
 		AA40000000000007000000B0 /* DownloadsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA40000000000007000000A0 /* DownloadsView.swift */; };
 		3A42ADC9241CF39900F470ED /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A42ADC8241CF39900F470ED /* Settings.swift */; };
-		3A42ADD1241D1BBB00F470ED /* LoadableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A42ADD0241D1BBB00F470ED /* LoadableView.swift */; };
 		AA40000000000004000000B0 /* AddDownloadView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA40000000000004000000A0 /* AddDownloadView.swift */; };
 		3A42ADD5241F56CD00F470ED /* Shared.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A42ADD4241F56CC00F470ED /* Shared.swift */; };
 		47F4D01C24E54BE500A1E222 /* Swifter in Frameworks */ = {isa = PBXBuildFile; productRef = 47F4D01B24E54BE500A1E222 /* Swifter */; };
@@ -102,9 +100,8 @@
 
 /* Begin PBXFileReference section */
 		AA40000000000005000000A0 /* BTSearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BTSearchView.swift; sourceTree = "<group>"; };
-		3A098F78244FA9CF001D2C8B /* DestinationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DestinationView.swift; sourceTree = "<group>"; };
-		3A098F7A244FAB46001D2C8B /* DestinationView.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = DestinationView.xib; sourceTree = "<group>"; };
 		AA40000000000006000000A0 /* ChooseDestView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChooseDestView.swift; sourceTree = "<group>"; };
+		AA40000000000008000000A0 /* DestinationPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DestinationPicker.swift; sourceTree = "<group>"; };
 		AA40000000000003000000A0 /* AboutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutView.swift; sourceTree = "<group>"; };
 		3A2D5EEA23D248B500B924EE /* SynologyDSManager.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SynologyDSManager.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3A2D5EED23D248B500B924EE /* SynologyDSManager.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SynologyDSManager.entitlements; sourceTree = "<group>"; };
@@ -123,7 +120,6 @@
 		3A2D5F1123D248B700B924EE /* SynologyDSManager_Extension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SynologyDSManager_Extension.entitlements; sourceTree = "<group>"; };
 		AA40000000000007000000A0 /* DownloadsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadsView.swift; sourceTree = "<group>"; };
 		3A42ADC8241CF39900F470ED /* Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
-		3A42ADD0241D1BBB00F470ED /* LoadableView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadableView.swift; sourceTree = "<group>"; };
 		AA40000000000004000000A0 /* AddDownloadView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddDownloadView.swift; sourceTree = "<group>"; };
 		3A42ADD4241F56CC00F470ED /* Shared.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shared.swift; sourceTree = "<group>"; };
 		47F4D01D24E54BF300A1E222 /* Webserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Webserver.swift; sourceTree = "<group>"; };
@@ -228,10 +224,7 @@
 				3A2D5EF623D248B700B924EE /* Assets.xcassets */,
 				3A2D5EF823D248B700B924EE /* Info.plist */,
 				3A42ADC8241CF39900F470ED /* Settings.swift */,
-				3A42ADD0241D1BBB00F470ED /* LoadableView.swift */,
 				3A42ADD4241F56CC00F470ED /* Shared.swift */,
-				3A098F78244FA9CF001D2C8B /* DestinationView.swift */,
-				3A098F7A244FAB46001D2C8B /* DestinationView.xib */,
 				47F4D01D24E54BF300A1E222 /* Webserver.swift */,
 				7E7E0030000000000000A000 /* KeychainStore.swift */,
 			);
@@ -269,6 +262,7 @@
 				AA40000000000004000000A0 /* AddDownloadView.swift */,
 				AA40000000000005000000A0 /* BTSearchView.swift */,
 				AA40000000000006000000A0 /* ChooseDestView.swift */,
+				AA40000000000008000000A0 /* DestinationPicker.swift */,
 			);
 			path = ViewControllers;
 			sourceTree = "<group>";
@@ -468,7 +462,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				3A098F7B244FAB46001D2C8B /* DestinationView.xib in Resources */,
 				3A2D5EF723D248B700B924EE /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -512,8 +505,8 @@
 				AA40000000000005000000B0 /* BTSearchView.swift in Sources */,
 				AA40000000000003000000B0 /* AboutView.swift in Sources */,
 				AA40000000000004000000B0 /* AddDownloadView.swift in Sources */,
-				3A098F79244FA9CF001D2C8B /* DestinationView.swift in Sources */,
 				AA40000000000006000000B0 /* ChooseDestView.swift in Sources */,
+				AA40000000000008000000B0 /* DestinationPicker.swift in Sources */,
 				AA40000000000007000000B0 /* DownloadsView.swift in Sources */,
 				3A2D5EF023D248B500B924EE /* AppDelegate.swift in Sources */,
 				47F4D01E24E54BF300A1E222 /* Webserver.swift in Sources */,
@@ -523,7 +516,6 @@
 				7E7E0043000000000000B000 /* ClientAuthorization.swift in Sources */,
 				7E7E0044000000000000B000 /* SynologyBridgeListener.swift in Sources */,
 				3A42ADD5241F56CD00F470ED /* Shared.swift in Sources */,
-				3A42ADD1241D1BBB00F470ED /* LoadableView.swift in Sources */,
 				3A42ADC9241CF39900F470ED /* Settings.swift in Sources */,
 				7E7E0010000000000000B000 /* AppLogger.swift in Sources */,
 				7E7E0011000000000000B000 /* SynologyError.swift in Sources */,

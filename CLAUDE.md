@@ -40,8 +40,12 @@ See `MODERNIZATION_PLAN.md` for the per-phase task checklist.
 
 - **Product**: native macOS app + Safari extension that drives a Synology NAS's
   Download Station over its HTTP API.
-- **Language / UI**: Swift 5.9, AppKit + Storyboards (plus one XIB-based
-  `NSTableCellView`). No SwiftUI yet — moving there in Phase 4.
+- **Language / UI**: Swift 5.9. **SwiftUI** for all screens (Phase 4); the
+  storyboard and every main-app XIB have been deleted. A handful of AppKit
+  shims remain via `NSHostingController` / `NSApplication` (e.g. the Choose
+  Destination sheet, dock-icon policy). The only XIB left in the repo belongs
+  to the parked legacy Safari App Extension (`SynologyDSManager Extension`),
+  retired wholesale in Phase 3c.
 - **Min OS**: macOS 14 (app and test bundle — bumped from 13 in Phase 4
   slice 1 to enable `@Observable` from the Observation framework).
 - **Build system**: Xcode project (`SynologyDSManager.xcodeproj`), SwiftPM for
@@ -73,10 +77,10 @@ See `MODERNIZATION_PLAN.md` for the per-phase task checklist.
 | `Network/AppLogger.swift` | `os.Logger` categories — `network`, `auth`, `security`, `keychain`. Always use these; never `print(…)` in shipped code. |
 | `Settings.swift` | `StoredCredentials` type + Keychain persistence via the in-house `KeychainStore`. Phase 2b replaced the KeychainAccess dependency with a direct `SecItem*` wrapper. |
 | `KeychainStore.swift` | Thin `SecItem*` wrapper used by `Settings.swift`. `.whenUnlockedThisDeviceOnly` accessibility, service identifier `com.skavans.synologyDSManager`. |
-| `Shared.swift` | Global mutable state (`synologyAPI`, `mainViewController`, `currentViewController`, etc.), annotated `nonisolated(unsafe)` under complete concurrency. Replaced by an `@Observable` app model in Phase 4. |
+| `AppModel.swift` | `@Observable` app model (`AppModel.shared`) holding `api`, `trustEvaluator`, `workStarted`, task list, and the polling loop. Introduced in Phase 4 slice 1; replaced the mutable globals that used to live in `Shared.swift`. |
+| `Shared.swift` | Now just stateless utility helpers (`prettifyBytesCount`, `prettifySpeed`, `Double.round(to:)`). The old `nonisolated(unsafe)` globals moved to `AppModel`; the navigation anchors went away with the storyboard. |
 | `Webserver.swift` | Loopback HTTP server on port 11863 used by the Safari extension to enqueue downloads. **Unauthenticated** — scheduled for removal in Phase 3 in favour of `NSXPCConnection`. |
-| `ViewControllers/` | Cocoa view controllers, one per screen. |
-| `DestinationView.swift`, `DownloadsCellView.swift`, `LoadableView.swift` | Custom `NSView` subclasses loaded from XIB. |
+| `ViewControllers/` | SwiftUI views, one per screen (`DownloadsView`, `SettingsView`, `AddDownloadView`, `BTSearchView`, `ChooseDestView`, `AboutView`), plus `DestinationPicker` (the SwiftUI download-destination pop-up that replaced the XIB-backed `DestinationView`). Each is hosted by a small `NSHostingController` where AppKit interop is still needed. |
 | `LaunchAgents/com.skavans.synologyDSManager.bridge.plist` | launchd plist bundled at `Contents/Library/LaunchAgents/` that advertises the bridge's Mach service name. Registered programmatically via `SMAppService.agent(plistName:)` at first launch. |
 
 ## Web Extension source (`WebExtension/`)
