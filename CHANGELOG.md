@@ -21,6 +21,13 @@ commit that makes them.
 ## [Unreleased]
 
 ### Added
+- **`NSLocalNetworkUsageDescription` in the app's `Info.plist`.** macOS 15+
+  gates access to local-network devices behind a privacy permission; without
+  a usage-description string the prompt is unclear and a fresh install can be
+  silently blocked (`NSURLErrorNWPathKey = unsatisfied (Local network
+  prohibited)`) when reaching the NAS at a LAN address. Declaring it makes the
+  permission grant explicit for an app whose whole purpose is talking to a NAS
+  on the local network.
 - **Localisation scaffolding.** Added an English `Localizable.xcstrings`
   String Catalog wired into the app. The build already enabled compiler
   string extraction, so UI strings are now collected into the catalog and
