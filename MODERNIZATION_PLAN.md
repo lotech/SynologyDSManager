@@ -4,7 +4,7 @@ Living document. Tick boxes as tasks land. When all tasks in a phase are
 complete, move the phase status from **In progress** / **Planned** to
 **Shipped** with the date.
 
-Last updated: 2026-06-02 (Added the English String Catalog scaffolding — Phase 4 now effectively complete, with only the Phase 3c-gated legacy-extension XIB deletion outstanding.)
+Last updated: 2026-06-02 (Reworked `DestinationView` as the SwiftUI `DestinationPicker` and added the English String Catalog scaffolding — Phase 4 now effectively complete, with only the Phase 3c-gated legacy-extension XIB deletion outstanding.)
 
 ---
 
@@ -538,6 +538,13 @@ test bundle was already there, and the plan explicitly required `Observation`).
       (`SafariExtensionViewController.xib`) belongs to the legacy extension
       target, retired wholesale in Phase 3c (parked behind the Safari runtime
       blocker), so this box stays `[~]` until 3c.
+- [x] Move to a pure SwiftUI `@main App` lifecycle (`Window` scenes +
+      `MenuBarExtra`, with `@NSApplicationDelegateAdaptor` for AppKit hooks);
+      retire the storyboard wrapper and the main-screen `NSHostingController`
+      subclasses. `mainViewController` / `currentViewController` globals
+      removed from `Shared.swift`. One small hosting shim survives —
+      `ChooseDestHostingController`, used by `DestinationPicker` for the
+      Choose Destination sheet.
 - [x] Add localisation scaffolding (`String Catalog`), starting with English.
       Added `SynologyDSManager/Localizable.xcstrings` (source language `en`)
       wired into the main target's resources. The project already carried the

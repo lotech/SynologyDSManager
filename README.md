@@ -1,6 +1,6 @@
 # SynologyDSManager
 
-A native macOS app (and Safari extension) for managing a Synology DownloadStation remotely.
+A native macOS app (and and eventually a Safari extension) for managing a Synology DownloadStation remotely.
 
 This is a maintained fork of the excellent original project by
 [**Anton (@skavans)**](https://github.com/skavans), which lived at
