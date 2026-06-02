@@ -21,6 +21,11 @@ commit that makes them.
 ## [Unreleased]
 
 ### Added
+- **Localisation scaffolding.** Added an English `Localizable.xcstrings`
+  String Catalog wired into the app. The build already enabled compiler
+  string extraction, so UI strings are now collected into the catalog and
+  additional languages can be added from the catalog editor. No user-visible
+  change yet — this is the groundwork for translations.
 - **Native SwiftUI download-destination picker (`DestinationPicker`).** Replaces
   the XIB-backed AppKit `DestinationView` used on the Add Download, BT Search,
   and Settings screens. Behaviour and on-disk persistence are unchanged — the

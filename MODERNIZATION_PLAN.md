@@ -4,7 +4,7 @@ Living document. Tick boxes as tasks land. When all tasks in a phase are
 complete, move the phase status from **In progress** / **Planned** to
 **Shipped** with the date.
 
-Last updated: 2026-06-02 (Reworked `DestinationView` as the SwiftUI `DestinationPicker`; deleted the last main-app XIBs + `LoadableView`; main app now ships zero storyboards/XIBs.)
+Last updated: 2026-06-02 (Added the English String Catalog scaffolding — Phase 4 now effectively complete, with only the Phase 3c-gated legacy-extension XIB deletion outstanding.)
 
 ---
 
@@ -468,13 +468,23 @@ Out-of-scope-until-asked. The original Chrome extension is referenced
 in the README but isn't in this repo. If a user wants it revived, it'd
 follow the same MV3 + native-messaging-host shape as 3b.
 
-## Phase 4 — SwiftUI rewrite · **In progress** (active phase as of 2026-05-29)
+## Phase 4 — SwiftUI rewrite · **In progress** (effectively complete; one task parked behind Phase 3c)
 
 Goal: storyboards out, SwiftUI in — screen by screen, behind
 `NSHostingController` so we can ship as we go. Scope is a **pure macOS**
 rewrite (decided 2026-05-29); a future iOS/iPadOS port would refactor the
 already-portable network/keychain core into a shared package at that
 point, not now.
+
+> **Status 2026-06-02.** Every independently-doable task is done: all
+> screens are SwiftUI, `Shared.swift`'s globals are gone (replaced by
+> `AppModel`), the menu-bar item, SF Symbol icons, and the English String
+> Catalog have landed, and the main app ships zero storyboards/XIBs. The
+> only unchecked item — deleting the *last* `.xib`
+> (`SafariExtensionViewController.xib`) — is gated on retiring the legacy
+> extension target in **Phase 3c**, which is itself parked behind the
+> Safari service-worker runtime blocker. So Phase 4 stays *In progress*
+> only as a bookkeeping link to 3c; there is no further SwiftUI work to do.
 
 ### Phase 4 slice 1 — AppModel foundation + Settings screen · **Shipped 2026-05-29**
 
@@ -528,7 +538,13 @@ test bundle was already there, and the plan explicitly required `Observation`).
       (`SafariExtensionViewController.xib`) belongs to the legacy extension
       target, retired wholesale in Phase 3c (parked behind the Safari runtime
       blocker), so this box stays `[~]` until 3c.
-- [ ] Add localisation scaffolding (`String Catalog`), starting with English
+- [x] Add localisation scaffolding (`String Catalog`), starting with English.
+      Added `SynologyDSManager/Localizable.xcstrings` (source language `en`)
+      wired into the main target's resources. The project already carried the
+      enabling build settings (`SWIFT_EMIT_LOC_STRINGS = YES`,
+      `LOCALIZATION_PREFERS_STRING_CATALOGS = YES`, `knownRegions = (en, Base)`),
+      so the compiler auto-extracts UI strings into the catalog on build; new
+      languages are added by selecting them in the catalog editor.
 - [x] Remove remaining `swiftapps.skavans.ru` mailto from the ported
       Settings screen (the contact button was dropped when Settings was
       ported to SwiftUI in slice 1; no `swiftapps.skavans.ru` reference

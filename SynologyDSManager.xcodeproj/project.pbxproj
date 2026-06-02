@@ -15,6 +15,7 @@
 		AA40000000000001000000B0 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA40000000000001000000A0 /* AppModel.swift */; };
 		AA40000000000002000000B0 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA40000000000002000000A0 /* SettingsView.swift */; };
 		3A2D5EF723D248B700B924EE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3A2D5EF623D248B700B924EE /* Assets.xcassets */; };
+		AA40000000000009000000B0 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = AA40000000000009000000A0 /* Localizable.xcstrings */; };
 		3A2D5EFE23D248B700B924EE /* SynologyDSManager Extension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 3A2D5EFD23D248B700B924EE /* SynologyDSManager Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		3A2D5F0323D248B700B924EE /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3A2D5F0223D248B700B924EE /* Cocoa.framework */; };
 		3A2D5F0623D248B700B924EE /* SafariExtensionHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A2D5F0523D248B700B924EE /* SafariExtensionHandler.swift */; };
@@ -109,6 +110,7 @@
 		AA40000000000001000000A0 /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
 		AA40000000000002000000A0 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		3A2D5EF623D248B700B924EE /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		AA40000000000009000000A0 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		3A2D5EF823D248B700B924EE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		3A2D5EFD23D248B700B924EE /* SynologyDSManager Extension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "SynologyDSManager Extension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
 		3A2D5F0223D248B700B924EE /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
@@ -222,6 +224,7 @@
 				3A2D5EEF23D248B500B924EE /* AppDelegate.swift */,
 				AA40000000000001000000A0 /* AppModel.swift */,
 				3A2D5EF623D248B700B924EE /* Assets.xcassets */,
+				AA40000000000009000000A0 /* Localizable.xcstrings */,
 				3A2D5EF823D248B700B924EE /* Info.plist */,
 				3A42ADC8241CF39900F470ED /* Settings.swift */,
 				3A42ADD4241F56CC00F470ED /* Shared.swift */,
@@ -463,6 +466,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				3A2D5EF723D248B700B924EE /* Assets.xcassets in Resources */,
+				AA40000000000009000000B0 /* Localizable.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

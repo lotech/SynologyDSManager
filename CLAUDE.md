@@ -30,8 +30,13 @@ human, `README.md` is a better starting point.
   working replacement. Revisit when a Safari/macOS point release unblocks
   the worker.
 - 🚧 **Phase 4** — SwiftUI + Observation; retire `Shared.swift` globals.
-  **Active phase.** Pure macOS rewrite (a future iOS port would refactor
-  the portable network/keychain core into a shared package at that point).
+  **Effectively complete.** Pure macOS rewrite: all screens are SwiftUI,
+  the globals moved to `AppModel`, the menu-bar item / SF Symbols / English
+  String Catalog are in, and the main app ships zero storyboards/XIBs. The
+  one open task — deleting the last `.xib` (the legacy extension's) — is
+  gated on Phase 3c, so Phase 4 stays open only as a link to that. (A future
+  iOS port would refactor the portable network/keychain core into a shared
+  package at that point.)
 - ⏳ **Phase 5** — release engineering (Sparkle, notarised DMGs via CI).
 
 See `MODERNIZATION_PLAN.md` for the per-phase task checklist.
