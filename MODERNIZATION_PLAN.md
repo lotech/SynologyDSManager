@@ -4,7 +4,7 @@ Living document. Tick boxes as tasks land. When all tasks in a phase are
 complete, move the phase status from **In progress** / **Planned** to
 **Shipped** with the date.
 
-Last updated: 2026-06-02 (Reworked `DestinationView` as the SwiftUI `DestinationPicker` and added the English String Catalog scaffolding — Phase 4 now effectively complete, with only the Phase 3c-gated legacy-extension XIB deletion outstanding.)
+Last updated: 2026-06-03 (Cut version **2.2.0 / build 14** — the accumulated Phase 0–4 work, the SwiftUI `DestinationPicker`, the English String Catalog, and the Local Network usage key. Phase 4 is effectively complete; only the Phase 3c-gated legacy-extension XIB deletion remains.)
 
 ---
 
@@ -561,12 +561,17 @@ test bundle was already there, and the plan explicitly required `Observation`).
 
 Goal: signed, notarised, auto-updating releases cut by CI.
 
+The version number is already at **2.2.0** (build 14) in the project and
+`CHANGELOG.md`; what's still missing is the *release engineering* — none of
+these versions has been cut as a tagged, signed, notarised GitHub Release yet.
+
 - [ ] Add Sparkle 2 with an EdDSA-signed appcast hosted on GitHub Pages or
       Releases
 - [ ] Notarisation script + `xcrun stapler` step
 - [ ] GitHub Action that on tag-push builds, signs, notarises, and attaches
       the DMG to a Release
-- [ ] Cut a clean `v2.0.0` release
+- [ ] Cut the first formally signed + notarised tagged release (`v2.2.0` or
+      later, depending on when the pipeline lands)
 
 ---
 

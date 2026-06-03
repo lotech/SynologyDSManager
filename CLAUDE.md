@@ -50,6 +50,8 @@ See `MODERNIZATION_PLAN.md` for the per-phase task checklist.
 
 - **Product**: native macOS app + Safari extension that drives a Synology NAS's
   Download Station over its HTTP API.
+- **Current version**: 2.2.0 (build 14). See `CHANGELOG.md` for the per-version
+  history.
 - **Language / UI**: Swift 5.9. **SwiftUI** for all screens with a fully
   SwiftUI app lifecycle (`@main struct … : App`, `Window` scenes,
   `MenuBarExtra`, `@Observable`). The storyboard and every main-app XIB have
@@ -320,7 +322,7 @@ When in doubt, leak nothing.
 - Never run `curl | sh` in CI or in any script we ship.
 
 **Releases:**
-- Tag releases (`v2.0.0`, `v2.1.0`, …) and cut them through GitHub Releases,
+- Tag releases (`v2.1.0`, `v2.2.0`, …) and cut them through GitHub Releases,
   not by pushing binaries directly to `main`.
 - Sign *and* notarise distribution builds before attaching them to a release.
   An unsigned `.app` off GitHub will trigger Gatekeeper prompts on every user

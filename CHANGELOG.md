@@ -9,16 +9,9 @@ Entries are grouped under **Added / Changed / Deprecated / Removed / Fixed /
 Security**. Add new user-visible changes under `## [Unreleased]` in the same
 commit that makes them.
 
-## [2.1.0] — 2026-05-30
-
-### Removed
-- Removed "Icons by icons8" attribution link from the About window; all
-  toolbar icons are now SF Symbols (no third-party icon assets remain).
-
-### Changed
-- Bumped version to 2.1.0 / build 13.
-
 ## [Unreleased]
+
+## [2.2.0] — 2026-06-03
 
 ### Added
 - **`NSLocalNetworkUsageDescription` in the app's `Info.plist`.** macOS 15+
@@ -41,6 +34,7 @@ commit that makes them.
   "Other…" still opens the NAS directory browser.
 
 ### Changed
+- **Bumped version to 2.2.0 / build 14.**
 - **Settings window tidied up.** Every section now uses one consistent block
   layout with uniform padding and even row spacing, replacing the uneven
   vertical gaps. The **Safari Extension** section is greyed out and disabled
@@ -849,6 +843,15 @@ commit that makes them.
   fail. Proper self-signed-cert / SPKI-pinning handling lands in Phase 2;
   until then, prefer an HTTPS DSM setup with a TLS 1.2+ cert.
 - You will need to re-enter your Apple Developer team on first build.
+
+## [2.1.0] — 2026-05-30
+
+### Removed
+- Removed "Icons by icons8" attribution link from the About window; all
+  toolbar icons are now SF Symbols (no third-party icon assets remain).
+
+### Changed
+- Bumped version to 2.1.0 / build 13.
 
 ---
 
