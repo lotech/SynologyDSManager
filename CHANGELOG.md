@@ -13,6 +13,11 @@ commit that makes them.
 
 ## [2.2.0] — 2026-06-03
 
+> This release bundles the whole 2.0 → 2.2 modernisation (Phases 0–4): the
+> only prior cut, 2.1.0, was a single tweak, so everything else accumulated
+> here. A few entries below reference interim version numbers (e.g. `2.0.0`,
+> build `12`) from work that ultimately shipped together as 2.2.0.
+
 ### Added
 - **`NSLocalNetworkUsageDescription` in the app's `Info.plist`.** macOS 15+
   gates access to local-network devices behind a privacy permission; without
