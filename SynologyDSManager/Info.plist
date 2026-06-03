@@ -68,6 +68,8 @@
 	<true/>
 	<key>NSHumanReadableCopyright</key>
 	<string>Copyright © 2020-2026 SynologyDSManager contributors. Released under the MIT License.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>SynologyDSManager connects to your Synology NAS on the local network to manage Download Station tasks.</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 	<key>NSSupportsAutomaticTermination</key>
