@@ -32,200 +32,6 @@ commit that makes them.
   saved-directory list and per-screen selection still round-trip through the
   same UserDefaults keys, so existing installs keep their destinations. Picking
   "Other…" still opens the NAS directory browser.
-
-### Changed
-- **Bumped version to 2.2.0 / build 14.**
-- **Settings window tidied up.** Every section now uses one consistent block
-  layout with uniform padding and even row spacing, replacing the uneven
-  vertical gaps. The **Safari Extension** section is greyed out and disabled
-  with a "Coming soon" tag — the Web Extension bridge isn't shippable yet, so
-  it no longer looks like a working feature.
-- **Downloads toolbar regrouped.** The Settings gear moved to the leading edge
-  of the toolbar, visually separated from the download actions (add, search,
-  pause-all, resume-all, clear) which stay grouped on the trailing edge.
-- **Phase 4 — Pure SwiftUI app lifecycle.** The `Main.storyboard` wrapper and
-  the main-screen `NSHostingController` subclasses have been removed (one small
-  hosting shim, `ChooseDestHostingController`, remains for the Choose
-  Destination sheet used by `DestinationPicker`). The app now uses a
-  `@main struct SynologyDSManagerApp: App` lifecycle with SwiftUI
-  `Window` scenes and `MenuBarExtra` — no storyboard at all. Secondary
-  windows (`Settings`, `Add Download`, `BT Search`, `About`) are `Window`
-  scenes opened programmatically via `openWindow(id:)` from toolbar buttons
-  and the menu bar menu. `Main.storyboard` has been removed from the project
-  and deleted from disk. The `mainViewController` and `currentViewController`
-  globals have been removed from `Shared.swift`; `Shared.swift` now contains
-  only the `prettifyBytesCount`, `prettifySpeed`, and `Double.round(to:)`
-  utility functions.
-- **`deploy.sh` pull (`p`) simplified.** Always switches to `main` and pulls
-  with `--ff-only`; the previous branch-aware merge step has been removed.
-
-### Fixed
-- **`Webserver.swift` build error after Phase 4 refactor.** The
-  `handle_new_download_task` handler referenced the removed
-  `mainViewController` global. Updated to call
-  `AppModel.shared.enqueueDownload(url:)`, which is the direct equivalent on
-  the new app model.
-- **Removed `.defaultVisibility(.hidden)` from secondary `Window` scenes.**
-  `SceneVisibility.hidden` is available from macOS 14+ but the deployment
-  target on the `main` branch is still 13.0. `Window` scenes don't
-  auto-open on first launch anyway (unlike `WindowGroup`), so the modifier
-  was providing no benefit while causing a build failure on 13.0 targets.
-
-### Removed
-- Deleted `DestinationView.swift` + `DestinationView.xib` (replaced by the
-  SwiftUI `DestinationPicker`) and `LoadableView.swift` (the XIB-loading shim
-  that only `DestinationView`/`DownloadsCellView` ever used). With these gone
-  the main app no longer loads any XIB — there is no `loadNibNamed`/`NSNib`
-  call path left in it. The only remaining XIB belongs to the parked legacy
-  Safari App Extension.
-- Deleted the orphaned `Main.storyboard` — the app has launched its UI from
-  pure SwiftUI Window scenes since the Phase 4 rewrite, and the storyboard was
-  no longer referenced by the project, the Info.plist, or any runtime code.
-- Deleted `DownloadsCellView.swift` and `DownloadsCellView.xib` — dead code
-  since the Downloads screen was ported to SwiftUI in Phase 4 slice 3.
-- **Replaced all PNG toolbar icons with SF Symbols.** The six custom PNG
-  images (`add`, `broom`, `pause_all`, `resume_all`, `search`, `settings`)
-  and the unused `logo.png` and `ToolbarItemIcon.pdf` have been removed from
-  the bundle. The storyboard's toolbar items now reference SF Symbol names
-  (`plus`, `broom`, `pause.fill`, `play.fill`, `magnifyingglass`, `gear`,
-  `NSCaution`) which AppKit resolves automatically on macOS 11+.
-
-### Fixed
-- **Activation policy set before SwiftUI scene lifecycle.** Moved
-  `NSApp.setActivationPolicy(.regular)` from `DownloadsHostingController.viewDidLoad`
-  to `AppDelegate.applicationWillFinishLaunching` so the dock-icon preference is
-  applied before the `MenuBarExtra` scene initialises, removing a possible timing
-  cause of the status bar item not appearing.
-
-### Fixed
-- **Status bar item now appears reliably.** Replaced the `NSStatusItem`-based
-  menu bar item with a SwiftUI `MenuBarExtra` (the planned Phase 4 approach).
-  Four previous attempts to create an `NSStatusItem` from different lifecycle
-  points all failed silently on macOS 14+; `MenuBarExtra` avoids the lifecycle
-  dependency entirely. The label (`↓DS` / `↓DS: X.X MB/s`) is driven directly
-  by an `@Observable` `AppModel.statusBarTitle` property and updates live as
-  bandwidth changes.
-- **Removed competing `AppDelegate` proxy from the storyboard's MainMenu
-  scene.** The `<customObject customClass="AppDelegate">` and its `delegate`
-  outlet caused AppKit to instantiate a second `AppDelegate` at storyboard-load
-  time and wire it as `NSApplication.delegate`, displacing the instance created
-  by `@NSApplicationDelegateAdaptor` and suppressing the `MenuBarExtra` scene.
-  With the proxy removed, the SwiftUI lifecycle's delegate is the only one.
-- **Downloads list populates correctly again** after the prior commit
-  introduced a regression where the polling loop's `AppModel.shared.statusBarItem`
-  access (an `NSStatusItem?` wrapped in `@Observable`) silently interfered with
-  SwiftUI's observation of `DownloadsState`. Replacing it with the plain
-  `String` property `AppModel.shared.statusBarTitle` eliminates the interference.
-- Removed dead `SPUStandardUpdaterController` custom object and its
-  "Check for Updates…" menu item from the storyboard MainMenu scene.
-  These Sparkle remnants caused `Unknown class` and `Could not connect
-  action` warnings at every launch.
-- Replaced the Downloads scene's old AppKit view hierarchy (NSTableView,
-  two NSTextFields, NSBox) in the storyboard with an empty view.
-  `NSHostingController` replaces the view at runtime anyway, but the old
-  hierarchy contained a `customClass="Downloads"` text-field cell whose
-  class no longer exists, causing silent storyboard decode warnings.
-
-### Changed
-- **Phase 4 slice 3 — remaining screens ported to SwiftUI.**
-  All four remaining AppKit screens are now pure SwiftUI, each hosted by
-  an `NSHostingController` subclass that drops into the existing storyboard
-  window slot with no visible behaviour change:
-  - **Add Download** (`AddDownloadView` / `AddDownloadHostingController`)
-    replaces `AddDownloadViewController`. URL/torrent text entry backed by
-    a `TextEditor`; destination picker bridged via `DestinationViewRepresentable`;
-    start-download action reads the saved destination from `UserDefaults`
-    at submission time and enqueues via `SynologyAPI.createTask` in a
-    detached `Task`. `AppDelegate`'s `.torrent`-file-open path updated to
-    call `populate(with:)` on the new hosting controller.
-  - **BT Search** (`BTSearchView` / `BTSearchHostingController`) replaces
-    `BTSearchController`. SwiftUI `Table` with six sortable columns and
-    multi-row selection; search state backed by `@Observable BTSearchState`
-    with a cancellable `Task`; running search cancelled on `onDisappear`.
-    Dead `synoboost.com` link removed.
-  - **Choose Destination** (`ChooseDestView` / `ChooseDestHostingController`)
-    replaces `ChooseDestViewController`. Lazy-loading directory tree built
-    from `DisclosureGroup`-inside-`List`; `@Observable RemoteDir` nodes
-    load children on first expansion via `onChange(of: isExpanded)`;
-    completion callback invoked only on non-nil selection (cancel dismisses
-    without calling back, matching the original AppKit behaviour).
-  - **Downloads list** (`DownloadsView` / `DownloadsHostingController`)
-    replaces `DownloadsViewController`. All toolbar and menu `@objc` actions
-    remain discoverable via the responder chain on `DownloadsHostingController`;
-    `NSWindowDelegate` conformance preserves hide-on-close behaviour;
-    per-row and bulk delete confirmation via SwiftUI `.alert`. Status-bar
-    `NSStatusItem` retained pending a `MenuBarExtra` migration.
-  - `DownloadsHostingController` set as `mainViewController` in `Shared.swift`
-    (type updated from `DownloadsViewController?`); `Double.round(to:)`
-    extension moved from the deleted `DownloadsViewController.swift` into
-    `Shared.swift` so `prettifyBytesCount` / `prettifySpeed` compile.
-  - Storyboard outlet `<connections>` blocks removed from all four scenes
-    (outlet references crash at load time when the class no longer has the
-    matching `@IBOutlet` properties).
-  - Deleted: `AddDownloadViewController.swift`, `BTSearchViewController.swift`,
-    `ChooseDestViewController.swift`, `DownloadsViewController.swift`.
-
-- **Phase 4 slice 2 — async TLS approval + About screen (SwiftUI).**
-  `SynologyTrustEvaluator.firstUseDecision` is now an `async` callback;
-  `AppDelegate` shows the TOFU certificate-approval `NSAlert` via
-  `await MainActor.run` instead of `DispatchQueue.main.sync`, eliminating
-  the Xcode Thread Performance Checker hang-risk warning. About screen is
-  now pure SwiftUI (`AboutView` / `AboutHostingController`);
-  `AboutViewController.swift` deleted.
-- **Phase 4 slice 1 — AppModel foundation + Settings screen (SwiftUI).**
-  The five `nonisolated(unsafe)` globals in `Shared.swift` that held the
-  DSM API client, TLS evaluator, connection lifecycle state, and the
-  connect callback have been replaced by `AppModel`, an `@Observable`
-  `@MainActor` singleton. The Settings screen is now pure SwiftUI
-  (`SettingsView` / `SettingsHostingController`), hosted in the existing
-  storyboard window slot with no change to any other screen. The dead
-  `mailto:support@swiftapps.skavans.ru` contact button has been removed.
-- Minimum macOS version raised from 13.0 to 14.0 to enable `@Observable`
-  from the Observation framework (required by the Phase 4 plan).
-
-> **Phase 3b-2b-RT (Safari service worker runtime) — still blocked on
-> macOS 26.x / Safari 26.x.** The bundle-level work below is all
-> correct and necessary (each item was shown to actually change the
-> symptom), but Safari's WebExtension subsystem still silently refuses
-> to execute `background.js` even with a minimal MV3 manifest. The
-> phase is being shipped with infrastructure complete and runtime
-> tracked as its own follow-up — see `MODERNIZATION_PLAN.md` phase
-> 3b-2b-RT for the handoff notes.
-
-### Security
-- **Loopback-only bind on the legacy webserver (`Webserver.swift`).**
-  Swifter's default `start(_:forceIPv4:priority:)` overload binds to
-  `INADDR_ANY` (`0.0.0.0`), not `127.0.0.1` — so the unauthenticated
-  `POST /add_download` endpoint that the legacy Safari App Extension
-  uses to enqueue downloads on the user's authenticated DSM session
-  was reachable from any host on the same LAN whenever the app was
-  running. Now sets `listenAddressIPv4 = "127.0.0.1"` and
-  `listenAddressIPv6 = "::1"` before `start`, restricting the
-  listener to the loopback interface as the surrounding code and
-  docs always assumed. Also dropped the response's
-  `Access-Control-Allow-Origin: *` header, which had explicitly
-  invited cross-origin POSTs from any web page the user visited.
-  The whole file still goes away in Phase 3c once the XPC bridge
-  fully supersedes the legacy Safari App Extension; this is the
-  defensive stop-gap until then.
-
-### Fixed
-- **`ENABLE_DEBUG_DYLIB` flipped off on the Web Extension target.**
-  Xcode 15+ builds Debug extensions with this on by default: the
-  "executable" in `Contents/MacOS/` becomes a stub that loads the
-  real code from a sibling `.debug.dylib` at runtime. Safari's
-  WebExtensionHandler can't follow the indirection — it loads what
-  it thinks is the extension's principal executable, finds a stub,
-  and never gets to real code. Setting `ENABLE_DEBUG_DYLIB = NO`
-  on both Debug and Release produces a single conventional
-  `Contents/MacOS/SynologyDSManager WebExtension` binary. Verified
-  on-disk via `codesign --deep --strict`: post-fix the bundle's
-  `Contents/MacOS/` contains one file of 335 kB rather than a stub
-  + `.debug.dylib` + `__preview.dylib` trio. (Necessary; not
-  sufficient — the worker still doesn't start, but for a different
-  reason we haven't localised yet.)
-
-### Added
 - **Web Extension toolbar button (`action`).** Declared a minimal
   toolbar action in `manifest.json` with the same PNGs we ship for
   the `icons` key, plus a tiny `browser.action.onClicked` handler
@@ -288,49 +94,6 @@ commit that makes them.
   the bundle. Also deleted `WebExtension/Resources/icons/README.md`
   to keep documentation out of the shipped bundle — the same info
   already lives in `WebExtension/README.md`'s step 5.
-
-### Changed
-- **`deploy.sh → i` (install) now builds Debug instead of Release.**
-  Release builds are signed with "Developer ID Application", which
-  Gatekeeper rejects without notarisation — and a Gatekeeper-rejected
-  host app means Safari silently refuses to load the bundled Web
-  Extension (the symptom: extension simply doesn't appear in the
-  Extensions panel, even though `pluginkit` sees it). Debug is signed
-  with "Apple Development", which Gatekeeper trusts on the signing
-  user's Mac without notarisation, so the full `i` flow now produces
-  a bundle Safari will actually load. Release stays reserved for `d`
-  (DMG), which is the notarisation pipeline anyway — mixing Release
-  and `i` was the worst of both worlds. Parameterised the
-  `_build_release` helper as `_build <team> <config>` so both call
-  sites pass the configuration explicitly.
-
-- **`deploy.sh` flow.** Three related fixes, one commit:
-  - **Fixed a silent `i` (install) failure** where the built app never
-    made it to `/Applications/` but the script still printed
-    *"✓ Installed"*. Root cause: `info`/`ok` log helpers wrote to
-    stdout, so a function like `_build_release` that both logged
-    progress *and* returned a path via `echo "$built"` leaked the
-    log line into the caller's `$()` capture. `cp -R "$built" "$dest"`
-    then tried to copy a garbled multi-line source and failed, but
-    `action_install` runs under `|| true` in the menu (which, per a
-    bash quirk, suppresses `set -e` inside the function), so the
-    error went unchecked. Routed `info`/`ok` to stderr, added an
-    explicit `cp` exit check, and report the installed size so the
-    copy visibly landed.
-  - **Menu no longer requires pressing a key between actions.** The
-    per-action `pause` prompts are gone and `clear` no longer runs
-    inside `print_menu`, so the last action's output stays visible
-    above a fresh menu render and the user flows straight to the
-    next command.
-  - **Build output more human-readable.** Dropped `xcbeautify`'s
-    `--quiet` flag so stage headers ("Compiling…", "Linking…",
-    "Signing…") make it through; report total build time on
-    completion; and switched the Release build's destination to
-    `generic/platform=macOS`, which silences the "multiple matching
-    destinations" warning on Apple Silicon Macs and leaves arch
-    selection to `ARCHS` as intended.
-
-### Added
 - **Phase 3b-2b — Web Extension Xcode target.** The missing half of
   Phase 3b: the `SynologyDSManager WebExtension` target itself, which
   compiles the source tree that shipped in 3b-1 and embeds the
@@ -355,52 +118,6 @@ commit that makes them.
   - Three toolbar PNGs (48 / 96 / 128) rasterised from the legacy
     extension's `ToolbarItemIcon.pdf` and wired into the target's
     Copy Bundle Resources phase.
-
-### Fixed
-- **Web Extension target's signing diverged from the main app.** Xcode's
-  "Safari Web Extension" wizard had hardcoded a handful of settings at
-  target level that should inherit from the project's `Signing.xcconfig`
-  cascade — specifically `CODE_SIGN_IDENTITY[sdk=macosx*] = "Apple
-  Development"` and `CODE_SIGN_STYLE = Automatic`. Those overrides
-  short-circuited the per-configuration logic the xcconfig uses to
-  split Debug (Automatic + Apple Development) from Release (Manual +
-  Developer ID Application) and produced *"Embedded binary is not
-  signed with the same certificate as the parent app"* at embed time.
-  Stripped them so the WebExtension target picks up identity and style
-  exactly like the main app does. Also normalised `CURRENT_PROJECT_VERSION`
-  and `MARKETING_VERSION` to match the parent (`12` / `2.0.0`), removed
-  the wizard's `GENERATE_INFOPLIST_FILE = YES` so our hand-authored
-  `WebExtension/Info.plist` is used verbatim (the `NSExtension` dict is
-  load-bearing and a merged plist can lose it), dropped two dead
-  `INFOPLIST_KEY_*` entries, and dropped the target-level
-  `MACOSX_DEPLOYMENT_TARGET = 13.5` override so the target inherits the
-  project's `13.0` floor.
-- **Web Extension handler tripped Swift 6 sendability checks.** The
-  trailing closure passed to `proxy.enqueueDownload` is `@Sendable`
-  (enforced by the protocol since the earlier Bridge-side fix), but
-  captured `self`, the `NSExtensionContext`, and the `NSXPCConnection`
-  — none of which are `Sendable`. Rewrote the handler to bridge the
-  XPC reply through a `CheckedContinuation`, so the `@Sendable`
-  boundary only carries `(Bool, String?)` (both `Sendable`); the
-  non-`Sendable` values travel into the outer `Task` in a tiny
-  `@unchecked Sendable` wrapper (`UncheckedBox`) whose values outlive
-  exactly one round-trip and aren't touched concurrently.
-- **Bridge LaunchAgent rejected by launchd at first launch.** The
-  Phase 3b-2a plist omitted `Program`/`ProgramArguments`/`BundleProgram`
-  on the theory that a pure-check-in Mach service agent doesn't need
-  one. launchd disagreed and rejected the plist with "Missing
-  program" + "plist content is invalid", which surfaced as
-  `SMAppService.register` failing with status 3. Added a
-  `BundleProgram = Contents/MacOS/SynologyDSManager` key —
-  SMAppService resolves this relative to the app bundle, so the
-  agent follows the app to whichever directory it's installed in.
-  Side effect: if the app is closed when a Safari extension click
-  reaches the Mach service, launchd will now spawn it. That's the
-  better UX (right-click → download → app launches to enqueue) vs.
-  the legacy webserver path which silently failed when the app was
-  closed.
-
-### Added
 - **Phase 3b-2a — Main-app-side Mach service wiring.** The main app
   now advertises a named Mach service for the bridge and registers
   the LaunchAgent that backs it. No behaviour change for existing
@@ -423,7 +140,6 @@ commit that makes them.
     `SynologyDSManager/LaunchAgents/com.skavans.synologyDSManager.bridge.plist`
     into the app at `Contents/Library/LaunchAgents/`, which is
     where `SMAppService.agent(plistName:)` looks for it.
-
 - **Phase 3b-1 — Safari Web Extension source scaffolding.** Source
   tree for the replacement Safari extension, in the new
   `WebExtension/` directory. No compiled-code changes yet — this
@@ -468,7 +184,6 @@ commit that makes them.
     for the `.appex` and the LaunchAgent plist, the
     `SMAppService.register()` call, and the flip from
     `NSXPCListener.anonymous()` to `NSXPCListener(machServiceName:)`).
-
 - **Phase 3a — XPC bridge scaffolding.** Introduced a new `Bridge/`
   module that sets up the wire and trust boundary the future Safari
   Web Extension will talk across. No user-visible behaviour yet; the
@@ -500,164 +215,6 @@ commit that makes them.
     `ClientAuthorization.currentTeamID()`. Cross-process peer-denial
     needs a second signed binary, so it's deferred to Phase 3b
     integration testing.
-
-### Removed
-- **Phase 2b — dropped the KeychainAccess third-party package.**
-  Replaced with a new `KeychainStore.swift` — a thin Swift wrapper
-  around Apple's `SecItem*` primitives. Uses
-  `kSecAttrAccessibleWhenUnlockedThisDeviceOnly` so credentials are
-  only readable while the device is unlocked AND don't migrate across
-  Macs via iCloud Keychain / Time Machine restores.
-  Existing installs' stored credentials keep working transparently:
-  both the old and new wrappers use `kSecClassGenericPassword` with
-  the same service identifier, so the same Keychain items are visible
-  through either API. No migration step is needed.
-- **Phase 2a-2d cleanup.** End of the Phase 2a migration:
-  - Deleted `SynologyClient.swift` — the legacy Alamofire-backed DSM
-    client (~300 lines). Every caller migrated over the course of 2a-2a
-    through 2a-2c.
-  - Removed **Alamofire** and **SwiftyJSON** from the project's Swift
-    Package Manager dependencies (both targets) and from
-    `Package.resolved`. First-clean-build time should drop noticeably
-    — Alamofire alone is ~70k LoC.
-  - Migrated `SafariExtensionHandler.swift` off Alamofire onto
-    `URLSession`. Same fallback behaviour: POST to the loopback
-    webserver, fall back to the custom URL scheme. Whole extension
-    gets replaced in Phase 3.
-  - Replaced `SynologyClient.ConnectionSettings` with a new top-level
-    `StoredCredentials` struct in `Settings.swift`. Codable, port
-    stays `String`-typed for backward compatibility with existing
-    installs, with a computed `apiCredentials` convenience that
-    produces the typed `SynologyAPI.Credentials` the actor expects.
-    Unknown keys (like the old `sid` field) decode cleanly — no
-    explicit migration needed.
-  - Deleted the `registerEvent(…)` no-op stub and its call sites in
-    `DownloadsViewController`.
-  - Removed the unused `synologyClient: SynologyClient?` global from
-    `Shared.swift`.
-
-### Changed
-- **Phase 3a code-comment clarifications.** Tightened two comments
-  in `ClientAuthorization.swift` and `SynologyBridgeListener.swift`
-  that described the Phase 3b peer as a "native messaging host
-  binary". It's actually the Safari Web Extension's
-  `SafariWebExtensionHandler` subclass, running in an `.appex`
-  bundled at `Contents/PlugIns/`. Behaviour unchanged; the comments
-  now match the finalized architecture.
-- **Strict concurrency flipped from `minimal` to `complete`.** Swift's
-  full concurrency checking is now on. Remaining globals in
-  `Shared.swift` (`synologyAPI`, `workStarted`, `mainMethod`,
-  `mainViewController`, `currentViewController`) are annotated as
-  `nonisolated(unsafe)` — an honest acknowledgement that they're
-  thread-unsafe mutable state the current architecture treats as
-  main-thread-only by convention. Phase 4 (SwiftUI + Observation)
-  replaces them with a proper `@Observable` app model.
-- **`Settings.swift` rewritten on `JSONEncoder` / `JSONDecoder`** —
-  the Keychain blob format is byte-compatible with the old SwiftyJSON
-  output, so existing installs don't need a migration. A legacy path
-  for installs where credentials still live in `UserDefaults` (from
-  pre-Keychain releases) migrates them into the Keychain on first read.
-- **Add / Search / Destination migration (Phase 2a-2c)** — the last
-  three legacy-client-backed screens now run on `SynologyAPI`:
-  - `AddDownloadViewController` enqueues downloads via
-    `createTask(url:)` and `createTask(torrentFile:)` in a detached
-    Task so the sheet can close immediately. Errors log via
-    `AppLogger.network`; the downloads list refresh surfaces what
-    actually landed.
-  - `BTSearchController` is now built on the actor's
-    `searchTorrents` (cancellable polling inside the actor, not a
-    nested `Timer.scheduledTimer`). Typed `[BTSearchResult]` replaces
-    `JSON?`; checkbox state is tracked separately in a `Set<String>`
-    so the DTO stays pure. Cancels any in-flight search when the
-    window closes.
-  - `ChooseDestViewController` uses `listDirectories`. The `RemoteDir`
-    tree-node class moved from `SynologyClient.swift` into the view
-    controller (it's the right abstraction for `NSOutlineView` but
-    nothing else needs it).
-  - `DestinationView` dropped `import SwiftyJSON` — the
-    `downloadDestinations` UserDefaults blob is now encoded/decoded
-    via `JSONEncoder`/`JSONDecoder` in a format backward-compatible
-    with the old SwiftyJSON output (existing installs keep working).
-  - `downloadByURLFromExtension` in `DownloadsViewController` uses
-    `createTask(url:)`.
-- **Removed the transitional legacy-client authentication** —
-  `DownloadsViewController.doWork` no longer creates or authenticates
-  a `SynologyClient`; `SettingsViewController`'s credentials-change
-  branch also stopped touching the legacy client. Nothing in the app
-  references `synologyClient` anymore except its declaration in
-  `Shared.swift`; the declaration + `SynologyClient.swift` itself
-  come out in Phase 2a-2d cleanup.
-- **New regression-guard tests** for `createTask(url:)` (payload
-  shape, nil-destination omission), `searchTorrents` (poll-until-done
-  behaviour, request order), and `listDirectories` (typed decoding,
-  null-files resilience).
-- **Downloads migration (Phase 2a-2b)** — the main download list, the
-  pause-all / resume-all / clear-finished toolbar actions, the per-row
-  pause/resume/delete buttons, and the 3-second refresh loop now all run
-  on `SynologyAPI` (URLSession + async/await + typed `[DSMTask]`)
-  instead of the legacy Alamofire-backed `SynologyClient`. SwiftyJSON is
-  no longer imported in `DownloadsViewController.swift`. The polling
-  loop is now an `async Task` (`refreshTask`) that honours
-  `Task.isCancelled` and auto-cancels on repeat `doWork` invocations,
-  replacing the old `Timer.scheduledTimer` which (combined with a
-  latent `workStarted` bug) could stack multiple concurrent timers
-  after credential changes.
-- `SettingsViewController`'s "already running, credentials changed"
-  branch now also calls `SynologyAPI.updateCredentials` + `authenticate`
-  so the downloads refresh keeps working after the user switches NAS
-  or rotates passwords (it was previously only re-authing the legacy
-  client).
-- `doWork` now sets `workStarted = true` at the end. The flag was
-  declared in the original codebase but never written, so every Test
-  Connection re-entered `doWork`, stacking a new legacy client and a
-  new refresh timer each time. Now the Settings else-branch fires on
-  the second and subsequent Test Connections, as originally intended.
-
-### Fixed
-- **Final two strict-concurrency warnings cleared**, completing the
-  zero-warning goal after `SWIFT_STRICT_CONCURRENCY = complete` landed
-  in Phase 2a-2d:
-  - `Settings.swift`: the module-level `userDefaults` global was flagged
-    because `UserDefaults` isn't formally `Sendable`. Annotated with
-    `nonisolated(unsafe)` (same pattern as `Shared.swift`'s globals)
-    and switched `UserDefaults()` to `.standard` which is the idiomatic
-    spelling for the shared instance.
-  - `Webserver.swift`: Swifter's HTTP handler runs on a background
-    queue but called `DownloadsViewController.downloadByURLFromExtension`
-    which is `@MainActor`-isolated. Wrapped the call in
-    `Task { @MainActor in … }`, passing the URL String (a `Sendable`
-    value) across. Same runtime behaviour (still lands on main), now
-    provably correct to the compiler. This fix is a stop-gap — the
-    whole file is deleted in Phase 3 when the unauthenticated loopback
-    bridge is replaced with a Safari Web Extension + native messaging
-    host bridge.
-- **Phase 2a-2b regression: empty task list after migrated Downloads screen
-  connected to DSM**. `SynologyAPI` was authenticating fine (and storing
-  a session cookie), but DSM returned a successful-but-empty task list
-  because URLSession's cookie jar was not sending the `id=<sid>` cookie
-  in a form DSM treats as authoritative. Fix: pass `_sid=<sid>` in the
-  POST body of every authenticated request via an `authenticated: Bool`
-  parameter on `SynologyAPI.post()` (defaults to `true`; `authenticate()`
-  explicitly passes `false`). The cookie is still installed as a
-  secondary channel. This also keeps the SID out of URL query strings,
-  which was the original motivation for not reusing the old Alamofire
-  path — `_sid` in the body doesn't leak into referer headers, proxy
-  logs, or crash reports the way a URL parameter would.
-- **Phase 2a-2a regression: crash on first refresh after Test Connection**
-  — `SynologyClient.getDownloads` and siblings force-unwrap
-  `settings.sid!`. Before Phase 2a-2a, `SettingsViewController`
-  authenticated via the legacy client, which populated the SID on the
-  `ConnectionSettings` struct passed to `DownloadsViewController.doWork`.
-  Phase 2a-2a moved auth to `SynologyAPI`, which uses a cookie jar
-  internally rather than writing to the legacy struct, so the legacy
-  client arrived in `doWork` SID-less and crashed on the first timer
-  tick. Fix: `doWork` now calls `synologyClient.authenticate` itself
-  and only starts the refresh loop on success; the `SettingsViewController`
-  "already running, credentials changed" branch does the same. Both
-  code paths go away in Phase 2a-2b when the refresh loop moves to
-  `SynologyAPI`.
-
-### Added
 - **Test target wired into the Xcode project** — `SynologyDSManagerTests`
   is now a full macOS unit-test bundle hosted by the main app, so
   `⌘U` / `xcodebuild test` just works after a fresh clone. Notable
@@ -774,6 +331,197 @@ commit that makes them.
   non-deprecated notification API.
 
 ### Changed
+- **Bumped version to 2.2.0 / build 14.**
+- **Settings window tidied up.** Every section now uses one consistent block
+  layout with uniform padding and even row spacing, replacing the uneven
+  vertical gaps. The **Safari Extension** section is greyed out and disabled
+  with a "Coming soon" tag — the Web Extension bridge isn't shippable yet, so
+  it no longer looks like a working feature.
+- **Downloads toolbar regrouped.** The Settings gear moved to the leading edge
+  of the toolbar, visually separated from the download actions (add, search,
+  pause-all, resume-all, clear) which stay grouped on the trailing edge.
+- **Phase 4 — Pure SwiftUI app lifecycle.** The `Main.storyboard` wrapper and
+  the main-screen `NSHostingController` subclasses have been removed (one small
+  hosting shim, `ChooseDestHostingController`, remains for the Choose
+  Destination sheet used by `DestinationPicker`). The app now uses a
+  `@main struct SynologyDSManagerApp: App` lifecycle with SwiftUI
+  `Window` scenes and `MenuBarExtra` — no storyboard at all. Secondary
+  windows (`Settings`, `Add Download`, `BT Search`, `About`) are `Window`
+  scenes opened programmatically via `openWindow(id:)` from toolbar buttons
+  and the menu bar menu. `Main.storyboard` has been removed from the project
+  and deleted from disk. The `mainViewController` and `currentViewController`
+  globals have been removed from `Shared.swift`; `Shared.swift` now contains
+  only the `prettifyBytesCount`, `prettifySpeed`, and `Double.round(to:)`
+  utility functions.
+- **`deploy.sh` pull (`p`) simplified.** Always switches to `main` and pulls
+  with `--ff-only`; the previous branch-aware merge step has been removed.
+- **Phase 4 slice 3 — remaining screens ported to SwiftUI.**
+  All four remaining AppKit screens are now pure SwiftUI, each hosted by
+  an `NSHostingController` subclass that drops into the existing storyboard
+  window slot with no visible behaviour change:
+  - **Add Download** (`AddDownloadView` / `AddDownloadHostingController`)
+    replaces `AddDownloadViewController`. URL/torrent text entry backed by
+    a `TextEditor`; destination picker bridged via `DestinationViewRepresentable`;
+    start-download action reads the saved destination from `UserDefaults`
+    at submission time and enqueues via `SynologyAPI.createTask` in a
+    detached `Task`. `AppDelegate`'s `.torrent`-file-open path updated to
+    call `populate(with:)` on the new hosting controller.
+  - **BT Search** (`BTSearchView` / `BTSearchHostingController`) replaces
+    `BTSearchController`. SwiftUI `Table` with six sortable columns and
+    multi-row selection; search state backed by `@Observable BTSearchState`
+    with a cancellable `Task`; running search cancelled on `onDisappear`.
+    Dead `synoboost.com` link removed.
+  - **Choose Destination** (`ChooseDestView` / `ChooseDestHostingController`)
+    replaces `ChooseDestViewController`. Lazy-loading directory tree built
+    from `DisclosureGroup`-inside-`List`; `@Observable RemoteDir` nodes
+    load children on first expansion via `onChange(of: isExpanded)`;
+    completion callback invoked only on non-nil selection (cancel dismisses
+    without calling back, matching the original AppKit behaviour).
+  - **Downloads list** (`DownloadsView` / `DownloadsHostingController`)
+    replaces `DownloadsViewController`. All toolbar and menu `@objc` actions
+    remain discoverable via the responder chain on `DownloadsHostingController`;
+    `NSWindowDelegate` conformance preserves hide-on-close behaviour;
+    per-row and bulk delete confirmation via SwiftUI `.alert`. Status-bar
+    `NSStatusItem` retained pending a `MenuBarExtra` migration.
+  - `DownloadsHostingController` set as `mainViewController` in `Shared.swift`
+    (type updated from `DownloadsViewController?`); `Double.round(to:)`
+    extension moved from the deleted `DownloadsViewController.swift` into
+    `Shared.swift` so `prettifyBytesCount` / `prettifySpeed` compile.
+  - Storyboard outlet `<connections>` blocks removed from all four scenes
+    (outlet references crash at load time when the class no longer has the
+    matching `@IBOutlet` properties).
+  - Deleted: `AddDownloadViewController.swift`, `BTSearchViewController.swift`,
+    `ChooseDestViewController.swift`, `DownloadsViewController.swift`.
+- **Phase 4 slice 2 — async TLS approval + About screen (SwiftUI).**
+  `SynologyTrustEvaluator.firstUseDecision` is now an `async` callback;
+  `AppDelegate` shows the TOFU certificate-approval `NSAlert` via
+  `await MainActor.run` instead of `DispatchQueue.main.sync`, eliminating
+  the Xcode Thread Performance Checker hang-risk warning. About screen is
+  now pure SwiftUI (`AboutView` / `AboutHostingController`);
+  `AboutViewController.swift` deleted.
+- **Phase 4 slice 1 — AppModel foundation + Settings screen (SwiftUI).**
+  The five `nonisolated(unsafe)` globals in `Shared.swift` that held the
+  DSM API client, TLS evaluator, connection lifecycle state, and the
+  connect callback have been replaced by `AppModel`, an `@Observable`
+  `@MainActor` singleton. The Settings screen is now pure SwiftUI
+  (`SettingsView` / `SettingsHostingController`), hosted in the existing
+  storyboard window slot with no change to any other screen. The dead
+  `mailto:support@swiftapps.skavans.ru` contact button has been removed.
+- Minimum macOS version raised from 13.0 to 14.0 to enable `@Observable`
+  from the Observation framework (required by the Phase 4 plan).
+- **`deploy.sh → i` (install) now builds Debug instead of Release.**
+  Release builds are signed with "Developer ID Application", which
+  Gatekeeper rejects without notarisation — and a Gatekeeper-rejected
+  host app means Safari silently refuses to load the bundled Web
+  Extension (the symptom: extension simply doesn't appear in the
+  Extensions panel, even though `pluginkit` sees it). Debug is signed
+  with "Apple Development", which Gatekeeper trusts on the signing
+  user's Mac without notarisation, so the full `i` flow now produces
+  a bundle Safari will actually load. Release stays reserved for `d`
+  (DMG), which is the notarisation pipeline anyway — mixing Release
+  and `i` was the worst of both worlds. Parameterised the
+  `_build_release` helper as `_build <team> <config>` so both call
+  sites pass the configuration explicitly.
+- **`deploy.sh` flow.** Three related fixes, one commit:
+  - **Fixed a silent `i` (install) failure** where the built app never
+    made it to `/Applications/` but the script still printed
+    *"✓ Installed"*. Root cause: `info`/`ok` log helpers wrote to
+    stdout, so a function like `_build_release` that both logged
+    progress *and* returned a path via `echo "$built"` leaked the
+    log line into the caller's `$()` capture. `cp -R "$built" "$dest"`
+    then tried to copy a garbled multi-line source and failed, but
+    `action_install` runs under `|| true` in the menu (which, per a
+    bash quirk, suppresses `set -e` inside the function), so the
+    error went unchecked. Routed `info`/`ok` to stderr, added an
+    explicit `cp` exit check, and report the installed size so the
+    copy visibly landed.
+  - **Menu no longer requires pressing a key between actions.** The
+    per-action `pause` prompts are gone and `clear` no longer runs
+    inside `print_menu`, so the last action's output stays visible
+    above a fresh menu render and the user flows straight to the
+    next command.
+  - **Build output more human-readable.** Dropped `xcbeautify`'s
+    `--quiet` flag so stage headers ("Compiling…", "Linking…",
+    "Signing…") make it through; report total build time on
+    completion; and switched the Release build's destination to
+    `generic/platform=macOS`, which silences the "multiple matching
+    destinations" warning on Apple Silicon Macs and leaves arch
+    selection to `ARCHS` as intended.
+- **Phase 3a code-comment clarifications.** Tightened two comments
+  in `ClientAuthorization.swift` and `SynologyBridgeListener.swift`
+  that described the Phase 3b peer as a "native messaging host
+  binary". It's actually the Safari Web Extension's
+  `SafariWebExtensionHandler` subclass, running in an `.appex`
+  bundled at `Contents/PlugIns/`. Behaviour unchanged; the comments
+  now match the finalized architecture.
+- **Strict concurrency flipped from `minimal` to `complete`.** Swift's
+  full concurrency checking is now on. Remaining globals in
+  `Shared.swift` (`synologyAPI`, `workStarted`, `mainMethod`,
+  `mainViewController`, `currentViewController`) are annotated as
+  `nonisolated(unsafe)` — an honest acknowledgement that they're
+  thread-unsafe mutable state the current architecture treats as
+  main-thread-only by convention. Phase 4 (SwiftUI + Observation)
+  replaces them with a proper `@Observable` app model.
+- **`Settings.swift` rewritten on `JSONEncoder` / `JSONDecoder`** —
+  the Keychain blob format is byte-compatible with the old SwiftyJSON
+  output, so existing installs don't need a migration. A legacy path
+  for installs where credentials still live in `UserDefaults` (from
+  pre-Keychain releases) migrates them into the Keychain on first read.
+- **Add / Search / Destination migration (Phase 2a-2c)** — the last
+  three legacy-client-backed screens now run on `SynologyAPI`:
+  - `AddDownloadViewController` enqueues downloads via
+    `createTask(url:)` and `createTask(torrentFile:)` in a detached
+    Task so the sheet can close immediately. Errors log via
+    `AppLogger.network`; the downloads list refresh surfaces what
+    actually landed.
+  - `BTSearchController` is now built on the actor's
+    `searchTorrents` (cancellable polling inside the actor, not a
+    nested `Timer.scheduledTimer`). Typed `[BTSearchResult]` replaces
+    `JSON?`; checkbox state is tracked separately in a `Set<String>`
+    so the DTO stays pure. Cancels any in-flight search when the
+    window closes.
+  - `ChooseDestViewController` uses `listDirectories`. The `RemoteDir`
+    tree-node class moved from `SynologyClient.swift` into the view
+    controller (it's the right abstraction for `NSOutlineView` but
+    nothing else needs it).
+  - `DestinationView` dropped `import SwiftyJSON` — the
+    `downloadDestinations` UserDefaults blob is now encoded/decoded
+    via `JSONEncoder`/`JSONDecoder` in a format backward-compatible
+    with the old SwiftyJSON output (existing installs keep working).
+  - `downloadByURLFromExtension` in `DownloadsViewController` uses
+    `createTask(url:)`.
+- **Removed the transitional legacy-client authentication** —
+  `DownloadsViewController.doWork` no longer creates or authenticates
+  a `SynologyClient`; `SettingsViewController`'s credentials-change
+  branch also stopped touching the legacy client. Nothing in the app
+  references `synologyClient` anymore except its declaration in
+  `Shared.swift`; the declaration + `SynologyClient.swift` itself
+  come out in Phase 2a-2d cleanup.
+- **New regression-guard tests** for `createTask(url:)` (payload
+  shape, nil-destination omission), `searchTorrents` (poll-until-done
+  behaviour, request order), and `listDirectories` (typed decoding,
+  null-files resilience).
+- **Downloads migration (Phase 2a-2b)** — the main download list, the
+  pause-all / resume-all / clear-finished toolbar actions, the per-row
+  pause/resume/delete buttons, and the 3-second refresh loop now all run
+  on `SynologyAPI` (URLSession + async/await + typed `[DSMTask]`)
+  instead of the legacy Alamofire-backed `SynologyClient`. SwiftyJSON is
+  no longer imported in `DownloadsViewController.swift`. The polling
+  loop is now an `async Task` (`refreshTask`) that honours
+  `Task.isCancelled` and auto-cancels on repeat `doWork` invocations,
+  replacing the old `Timer.scheduledTimer` which (combined with a
+  latent `workStarted` bug) could stack multiple concurrent timers
+  after credential changes.
+- `SettingsViewController`'s "already running, credentials changed"
+  branch now also calls `SynologyAPI.updateCredentials` + `authenticate`
+  so the downloads refresh keeps working after the user switches NAS
+  or rotates passwords (it was previously only re-authing the legacy
+  client).
+- `doWork` now sets `workStarted = true` at the end. The flag was
+  declared in the original codebase but never written, so every Test
+  Connection re-entered `doWork`, stacking a new legacy client and a
+  new refresh timer each time. Now the Settings else-branch fires on
+  the second and subsequent Test Connections, as originally intended.
 - `deploy.sh`: the `p` (pull main) action now handles uncommitted local
   changes cleanly. Previously the underlying `git pull --ff-only` would
   abort with *"Your local changes to the following files would be
@@ -812,7 +560,199 @@ commit that makes them.
   CFBundleShortVersionString will stay on `2.0.0-dev` until a Phase 5 release
   is cut.
 
+### Fixed
+- **`Webserver.swift` build error after Phase 4 refactor.** The
+  `handle_new_download_task` handler referenced the removed
+  `mainViewController` global. Updated to call
+  `AppModel.shared.enqueueDownload(url:)`, which is the direct equivalent on
+  the new app model.
+- **Removed `.defaultVisibility(.hidden)` from secondary `Window` scenes.**
+  `SceneVisibility.hidden` is available from macOS 14+ but the deployment
+  target on the `main` branch is still 13.0. `Window` scenes don't
+  auto-open on first launch anyway (unlike `WindowGroup`), so the modifier
+  was providing no benefit while causing a build failure on 13.0 targets.
+- **Activation policy set before SwiftUI scene lifecycle.** Moved
+  `NSApp.setActivationPolicy(.regular)` from `DownloadsHostingController.viewDidLoad`
+  to `AppDelegate.applicationWillFinishLaunching` so the dock-icon preference is
+  applied before the `MenuBarExtra` scene initialises, removing a possible timing
+  cause of the status bar item not appearing.
+- **Status bar item now appears reliably.** Replaced the `NSStatusItem`-based
+  menu bar item with a SwiftUI `MenuBarExtra` (the planned Phase 4 approach).
+  Four previous attempts to create an `NSStatusItem` from different lifecycle
+  points all failed silently on macOS 14+; `MenuBarExtra` avoids the lifecycle
+  dependency entirely. The label (`↓DS` / `↓DS: X.X MB/s`) is driven directly
+  by an `@Observable` `AppModel.statusBarTitle` property and updates live as
+  bandwidth changes.
+- **Removed competing `AppDelegate` proxy from the storyboard's MainMenu
+  scene.** The `<customObject customClass="AppDelegate">` and its `delegate`
+  outlet caused AppKit to instantiate a second `AppDelegate` at storyboard-load
+  time and wire it as `NSApplication.delegate`, displacing the instance created
+  by `@NSApplicationDelegateAdaptor` and suppressing the `MenuBarExtra` scene.
+  With the proxy removed, the SwiftUI lifecycle's delegate is the only one.
+- **Downloads list populates correctly again** after the prior commit
+  introduced a regression where the polling loop's `AppModel.shared.statusBarItem`
+  access (an `NSStatusItem?` wrapped in `@Observable`) silently interfered with
+  SwiftUI's observation of `DownloadsState`. Replacing it with the plain
+  `String` property `AppModel.shared.statusBarTitle` eliminates the interference.
+- Removed dead `SPUStandardUpdaterController` custom object and its
+  "Check for Updates…" menu item from the storyboard MainMenu scene.
+  These Sparkle remnants caused `Unknown class` and `Could not connect
+  action` warnings at every launch.
+- Replaced the Downloads scene's old AppKit view hierarchy (NSTableView,
+  two NSTextFields, NSBox) in the storyboard with an empty view.
+  `NSHostingController` replaces the view at runtime anyway, but the old
+  hierarchy contained a `customClass="Downloads"` text-field cell whose
+  class no longer exists, causing silent storyboard decode warnings.
+- **`ENABLE_DEBUG_DYLIB` flipped off on the Web Extension target.**
+  Xcode 15+ builds Debug extensions with this on by default: the
+  "executable" in `Contents/MacOS/` becomes a stub that loads the
+  real code from a sibling `.debug.dylib` at runtime. Safari's
+  WebExtensionHandler can't follow the indirection — it loads what
+  it thinks is the extension's principal executable, finds a stub,
+  and never gets to real code. Setting `ENABLE_DEBUG_DYLIB = NO`
+  on both Debug and Release produces a single conventional
+  `Contents/MacOS/SynologyDSManager WebExtension` binary. Verified
+  on-disk via `codesign --deep --strict`: post-fix the bundle's
+  `Contents/MacOS/` contains one file of 335 kB rather than a stub
+  + `.debug.dylib` + `__preview.dylib` trio. (Necessary; not
+  sufficient — the worker still doesn't start, but for a different
+  reason we haven't localised yet.)
+- **Web Extension target's signing diverged from the main app.** Xcode's
+  "Safari Web Extension" wizard had hardcoded a handful of settings at
+  target level that should inherit from the project's `Signing.xcconfig`
+  cascade — specifically `CODE_SIGN_IDENTITY[sdk=macosx*] = "Apple
+  Development"` and `CODE_SIGN_STYLE = Automatic`. Those overrides
+  short-circuited the per-configuration logic the xcconfig uses to
+  split Debug (Automatic + Apple Development) from Release (Manual +
+  Developer ID Application) and produced *"Embedded binary is not
+  signed with the same certificate as the parent app"* at embed time.
+  Stripped them so the WebExtension target picks up identity and style
+  exactly like the main app does. Also normalised `CURRENT_PROJECT_VERSION`
+  and `MARKETING_VERSION` to match the parent (`12` / `2.0.0`), removed
+  the wizard's `GENERATE_INFOPLIST_FILE = YES` so our hand-authored
+  `WebExtension/Info.plist` is used verbatim (the `NSExtension` dict is
+  load-bearing and a merged plist can lose it), dropped two dead
+  `INFOPLIST_KEY_*` entries, and dropped the target-level
+  `MACOSX_DEPLOYMENT_TARGET = 13.5` override so the target inherits the
+  project's `13.0` floor.
+- **Web Extension handler tripped Swift 6 sendability checks.** The
+  trailing closure passed to `proxy.enqueueDownload` is `@Sendable`
+  (enforced by the protocol since the earlier Bridge-side fix), but
+  captured `self`, the `NSExtensionContext`, and the `NSXPCConnection`
+  — none of which are `Sendable`. Rewrote the handler to bridge the
+  XPC reply through a `CheckedContinuation`, so the `@Sendable`
+  boundary only carries `(Bool, String?)` (both `Sendable`); the
+  non-`Sendable` values travel into the outer `Task` in a tiny
+  `@unchecked Sendable` wrapper (`UncheckedBox`) whose values outlive
+  exactly one round-trip and aren't touched concurrently.
+- **Bridge LaunchAgent rejected by launchd at first launch.** The
+  Phase 3b-2a plist omitted `Program`/`ProgramArguments`/`BundleProgram`
+  on the theory that a pure-check-in Mach service agent doesn't need
+  one. launchd disagreed and rejected the plist with "Missing
+  program" + "plist content is invalid", which surfaced as
+  `SMAppService.register` failing with status 3. Added a
+  `BundleProgram = Contents/MacOS/SynologyDSManager` key —
+  SMAppService resolves this relative to the app bundle, so the
+  agent follows the app to whichever directory it's installed in.
+  Side effect: if the app is closed when a Safari extension click
+  reaches the Mach service, launchd will now spawn it. That's the
+  better UX (right-click → download → app launches to enqueue) vs.
+  the legacy webserver path which silently failed when the app was
+  closed.
+- **Final two strict-concurrency warnings cleared**, completing the
+  zero-warning goal after `SWIFT_STRICT_CONCURRENCY = complete` landed
+  in Phase 2a-2d:
+  - `Settings.swift`: the module-level `userDefaults` global was flagged
+    because `UserDefaults` isn't formally `Sendable`. Annotated with
+    `nonisolated(unsafe)` (same pattern as `Shared.swift`'s globals)
+    and switched `UserDefaults()` to `.standard` which is the idiomatic
+    spelling for the shared instance.
+  - `Webserver.swift`: Swifter's HTTP handler runs on a background
+    queue but called `DownloadsViewController.downloadByURLFromExtension`
+    which is `@MainActor`-isolated. Wrapped the call in
+    `Task { @MainActor in … }`, passing the URL String (a `Sendable`
+    value) across. Same runtime behaviour (still lands on main), now
+    provably correct to the compiler. This fix is a stop-gap — the
+    whole file is deleted in Phase 3 when the unauthenticated loopback
+    bridge is replaced with a Safari Web Extension + native messaging
+    host bridge.
+- **Phase 2a-2b regression: empty task list after migrated Downloads screen
+  connected to DSM**. `SynologyAPI` was authenticating fine (and storing
+  a session cookie), but DSM returned a successful-but-empty task list
+  because URLSession's cookie jar was not sending the `id=<sid>` cookie
+  in a form DSM treats as authoritative. Fix: pass `_sid=<sid>` in the
+  POST body of every authenticated request via an `authenticated: Bool`
+  parameter on `SynologyAPI.post()` (defaults to `true`; `authenticate()`
+  explicitly passes `false`). The cookie is still installed as a
+  secondary channel. This also keeps the SID out of URL query strings,
+  which was the original motivation for not reusing the old Alamofire
+  path — `_sid` in the body doesn't leak into referer headers, proxy
+  logs, or crash reports the way a URL parameter would.
+- **Phase 2a-2a regression: crash on first refresh after Test Connection**
+  — `SynologyClient.getDownloads` and siblings force-unwrap
+  `settings.sid!`. Before Phase 2a-2a, `SettingsViewController`
+  authenticated via the legacy client, which populated the SID on the
+  `ConnectionSettings` struct passed to `DownloadsViewController.doWork`.
+  Phase 2a-2a moved auth to `SynologyAPI`, which uses a cookie jar
+  internally rather than writing to the legacy struct, so the legacy
+  client arrived in `doWork` SID-less and crashed on the first timer
+  tick. Fix: `doWork` now calls `synologyClient.authenticate` itself
+  and only starts the refresh loop on success; the `SettingsViewController`
+  "already running, credentials changed" branch does the same. Both
+  code paths go away in Phase 2a-2b when the refresh loop moves to
+  `SynologyAPI`.
+
 ### Removed
+- Deleted `DestinationView.swift` + `DestinationView.xib` (replaced by the
+  SwiftUI `DestinationPicker`) and `LoadableView.swift` (the XIB-loading shim
+  that only `DestinationView`/`DownloadsCellView` ever used). With these gone
+  the main app no longer loads any XIB — there is no `loadNibNamed`/`NSNib`
+  call path left in it. The only remaining XIB belongs to the parked legacy
+  Safari App Extension.
+- Deleted the orphaned `Main.storyboard` — the app has launched its UI from
+  pure SwiftUI Window scenes since the Phase 4 rewrite, and the storyboard was
+  no longer referenced by the project, the Info.plist, or any runtime code.
+- Deleted `DownloadsCellView.swift` and `DownloadsCellView.xib` — dead code
+  since the Downloads screen was ported to SwiftUI in Phase 4 slice 3.
+- **Replaced all PNG toolbar icons with SF Symbols.** The six custom PNG
+  images (`add`, `broom`, `pause_all`, `resume_all`, `search`, `settings`)
+  and the unused `logo.png` and `ToolbarItemIcon.pdf` have been removed from
+  the bundle. The storyboard's toolbar items now reference SF Symbol names
+  (`plus`, `broom`, `pause.fill`, `play.fill`, `magnifyingglass`, `gear`,
+  `NSCaution`) which AppKit resolves automatically on macOS 11+.
+- **Phase 2b — dropped the KeychainAccess third-party package.**
+  Replaced with a new `KeychainStore.swift` — a thin Swift wrapper
+  around Apple's `SecItem*` primitives. Uses
+  `kSecAttrAccessibleWhenUnlockedThisDeviceOnly` so credentials are
+  only readable while the device is unlocked AND don't migrate across
+  Macs via iCloud Keychain / Time Machine restores.
+  Existing installs' stored credentials keep working transparently:
+  both the old and new wrappers use `kSecClassGenericPassword` with
+  the same service identifier, so the same Keychain items are visible
+  through either API. No migration step is needed.
+- **Phase 2a-2d cleanup.** End of the Phase 2a migration:
+  - Deleted `SynologyClient.swift` — the legacy Alamofire-backed DSM
+    client (~300 lines). Every caller migrated over the course of 2a-2a
+    through 2a-2c.
+  - Removed **Alamofire** and **SwiftyJSON** from the project's Swift
+    Package Manager dependencies (both targets) and from
+    `Package.resolved`. First-clean-build time should drop noticeably
+    — Alamofire alone is ~70k LoC.
+  - Migrated `SafariExtensionHandler.swift` off Alamofire onto
+    `URLSession`. Same fallback behaviour: POST to the loopback
+    webserver, fall back to the custom URL scheme. Whole extension
+    gets replaced in Phase 3.
+  - Replaced `SynologyClient.ConnectionSettings` with a new top-level
+    `StoredCredentials` struct in `Settings.swift`. Codable, port
+    stays `String`-typed for backward compatibility with existing
+    installs, with a computed `apiCredentials` convenience that
+    produces the typed `SynologyAPI.Credentials` the actor expects.
+    Unknown keys (like the old `sid` field) decode cleanly — no
+    explicit migration needed.
+  - Deleted the `registerEvent(…)` no-op stub and its call sites in
+    `DownloadsViewController`.
+  - Removed the unused `synologyClient: SynologyClient?` global from
+    `Shared.swift`.
 - Stale hard-coded `DEVELOPMENT_TEAM` (the previous maintainer's Apple Team
   ID literal) from both targets' build configurations. The current developer's
   Team ID is now supplied via the gitignored `Signing.local.xcconfig`.
@@ -827,6 +767,21 @@ commit that makes them.
   `.gitignore`; had been committed before the ignore rule landed).
 
 ### Security
+- **Loopback-only bind on the legacy webserver (`Webserver.swift`).**
+  Swifter's default `start(_:forceIPv4:priority:)` overload binds to
+  `INADDR_ANY` (`0.0.0.0`), not `127.0.0.1` — so the unauthenticated
+  `POST /add_download` endpoint that the legacy Safari App Extension
+  uses to enqueue downloads on the user's authenticated DSM session
+  was reachable from any host on the same LAN whenever the app was
+  running. Now sets `listenAddressIPv4 = "127.0.0.1"` and
+  `listenAddressIPv6 = "::1"` before `start`, restricting the
+  listener to the loopback interface as the surrounding code and
+  docs always assumed. Also dropped the response's
+  `Access-Control-Allow-Origin: *` header, which had explicitly
+  invited cross-origin POSTs from any web page the user visited.
+  The whole file still goes away in Phase 3c once the XPC bridge
+  fully supersedes the legacy Safari App Extension; this is the
+  defensive stop-gap until then.
 - Removed the blanket `NSAllowsArbitraryLoads = true` from the main app's
   `Info.plist`. The app now honours App Transport Security defaults (HTTPS,
   TLS 1.2+, forward secrecy). The narrower `localhost` exception in the
@@ -838,11 +793,21 @@ commit that makes them.
   change what runs in our CI. Inline comment in `.github/workflows/ci.yml`
   documents how to bump the pin for future releases.
 
+> **Phase 3b-2b-RT (Safari service worker runtime) — still blocked on
+> macOS 26.x / Safari 26.x.** The Web Extension bundle work in this
+> release is all correct and necessary (each item demonstrably changed
+> the symptom), but Safari's WebExtension subsystem still silently refuses
+> to execute `background.js` even with a minimal MV3 manifest. The
+> phase is being shipped with infrastructure complete and runtime
+> tracked as its own follow-up — see `MODERNIZATION_PLAN.md` phase
+> 3b-2b-RT for the handoff notes.
+
 ### Notes for users upgrading
 - If your NAS is reachable only via HTTP or weak TLS, connections will now
   fail. Proper self-signed-cert / SPKI-pinning handling lands in Phase 2;
   until then, prefer an HTTPS DSM setup with a TLS 1.2+ cert.
 - You will need to re-enter your Apple Developer team on first build.
+
 
 ## [2.1.0] — 2026-05-30
 
