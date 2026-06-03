@@ -1,6 +1,6 @@
 # SynologyDSManager
 
-A native macOS app (and and eventually a Safari extension) for managing a Synology DownloadStation remotely.
+A native macOS app (and eventually a Safari extension) for managing a Synology DownloadStation remotely.
 
 This is a maintained fork of the excellent original project by
 [**Anton (@skavans)**](https://github.com/skavans), which lived at
@@ -29,12 +29,14 @@ See [`MODERNIZATION_PLAN.md`](./MODERNIZATION_PLAN.md) for the phased roadmap an
 - Pick any shared folder on the NAS as the download destination
 - Search BT trackers directly from the app and enqueue results in one click
 - Menu-bar status item with live bandwidth readout
-- Safari extension: "Download with Synology DS Manager" from the page context menu
 - 2-step verification (TOTP) supported
+- Safari extension ("Download with Synology DS Manager" from the page context
+  menu) — *in progress*; the Web Extension bridge isn't shippable yet, so the
+  feature is disabled in the UI for now
 
 ## Requirements
 
-- macOS 13 (Ventura) or newer
+- macOS 14 (Sonoma) or newer
 - Xcode 15 or newer to build
 - A reachable Synology DSM 6.2+ installation with Download Station installed
 
@@ -100,25 +102,30 @@ Dropped during modernisation:
 
 ```
 SynologyDSManager/            # Main macOS app target
-  AppDelegate.swift           # @main entry point; installs SPKI approval handler
+  AppDelegate.swift           # @main SwiftUI App lifecycle + AppDelegate adaptor;
+                              #   installs the SPKI approval handler
+  AppModel.swift              # @Observable app model (state + polling loop)
   Network/                    # DSM API client (Phase 2a)
     SynologyAPI.swift         #   Actor, URLSession + async/await
     SynologyAPIModels.swift   #   Codable DTOs
     SynologyTrustEvaluator.swift # SPKI pinning (RFC 7469)
     SynologyError.swift       #   Typed error surface + DSM code mapping
     AppLogger.swift           #   os.Logger categories
+  Bridge/                     # XPC bridge to the Safari Web Extension (Phase 3a/3b)
   KeychainStore.swift         # SecItem* wrapper (Phase 2b)
   Settings.swift              # StoredCredentials + Keychain persistence
-  Shared.swift                # Module-level state (Phase 4 replaces this)
+  Shared.swift                # Stateless utility helpers (bytes/speed formatting)
   Webserver.swift             # Loopback HTTP bridge — removed in Phase 3
-  ViewControllers/            # Cocoa controllers — ported to SwiftUI in Phase 4
-  Base.lproj/Main.storyboard
+  ViewControllers/            # SwiftUI views, one per screen, + DestinationPicker
+  Localizable.xcstrings       # English String Catalog (localisation scaffolding)
 
 SynologyDSManager Extension/  # Legacy Safari App Extension — replaced in Phase 3
+WebExtension/                 # Safari Web Extension source (Phase 3b)
 
 SynologyDSManagerTests/       # macOS unit-test bundle hosted by the app
   URLProtocolStub.swift       # In-memory URLSession fake
-  SynologyAPITests.swift      # 23 tests, including regression-guards
+  SynologyAPITests.swift      # 23 tests of SynologyAPI, incl. regression-guards
+  SynologyBridgeTests.swift   # 10 tests of the XPC bridge
 ```
 
 ## Contributing
@@ -153,10 +160,10 @@ you are running is built on years of their work.
 
 **Other credits:**
 
-- Toolbar and app icons originally by [Icons8](https://icons8.com), via
-  Anton's original `Assets.xcassets`.
-- `LoadableView.swift` is adapted from a tutorial by Gabriel Theodoropoulos
-  on Appcoda (© 2019).
+- The app icon originates from Anton's original `Assets.xcassets` (icon set
+  by [Icons8](https://icons8.com)). The in-app toolbar icons were replaced
+  with SF Symbols during the modernisation, so no third-party icon assets
+  remain beyond the app icon.
 
 ## Licence
 
