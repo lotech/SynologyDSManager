@@ -17,6 +17,7 @@ struct SynologyDSManagerApp: App {
     var body: some Scene {
         Window("Downloads", id: "main") {
             DownloadsView()
+                .frame(minWidth: 400, minHeight: 240)
         }
         .defaultSize(width: 520, height: 420)
 
