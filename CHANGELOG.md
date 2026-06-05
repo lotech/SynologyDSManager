@@ -11,6 +11,13 @@ commit that makes them.
 
 ## [Unreleased]
 
+### Fixed
+- **Downloads window can no longer be resized small enough to break its
+  layout.** The main window had a default size but no minimum, so dragging it
+  narrow collapsed task rows into one-character-per-line text. Added a
+  `minWidth: 400, minHeight: 240` floor (the other resizable window, BT Search,
+  already had one).
+
 ## [2.2.0] — 2026-06-03
 
 > This release bundles the whole 2.0 → 2.2 modernisation (Phases 0–4): the
