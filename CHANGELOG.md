@@ -11,7 +11,19 @@ commit that makes them.
 
 ## [Unreleased]
 
+### Added
+- **Add Download surfaces failures instead of failing silently.** Previously the
+  window closed the instant you hit Download and any `createTask` error was only
+  logged. It now stays open while the NAS responds (with a progress spinner),
+  and on failure shows an alert listing each item that couldn't be added and
+  why. Successfully-added items drop out of the field; only the failed lines
+  remain, so you can fix and retry them.
+
 ### Fixed
+- **Add Download window now clears after a successful submit.** The window's
+  text field kept the previously-submitted URL/path because the scene's state
+  persists across close/reopen; it's now reset on a fully-successful submit so
+  the next open starts empty.
 - **Downloads window can no longer be resized small enough to break its
   layout.** The main window had a default size but no minimum, so dragging it
   narrow collapsed task rows into one-character-per-line text. Added a
