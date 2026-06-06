@@ -103,6 +103,9 @@ struct AddDownloadView: View {
         let torrentPaths = state.torrents
         let urlStrings = state.urls
         let destination = userDefaults.string(forKey: "destinationSelectedPath_main")
+        // Clear the field so the window doesn't reopen with the submitted
+        // text — the scene's state persists across close/reopen.
+        state.taskText = ""
         onClose()
         Task.detached { [api] in
             for path in torrentPaths {

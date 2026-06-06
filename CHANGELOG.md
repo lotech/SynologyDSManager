@@ -12,6 +12,10 @@ commit that makes them.
 ## [Unreleased]
 
 ### Fixed
+- **Add Download window now clears after a successful submit.** The window's
+  text field kept the previously-submitted URL/path because the scene's state
+  persists across close/reopen; it's now reset on submit so the next open
+  starts empty.
 - **Downloads window can no longer be resized small enough to break its
   layout.** The main window had a default size but no minimum, so dragging it
   narrow collapsed task rows into one-character-per-line text. Added a
