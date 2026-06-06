@@ -12,6 +12,8 @@ import UniformTypeIdentifiers
 @Observable
 final class AddDownloadState {
     var taskText: String = ""
+    var isSubmitting = false
+    var failureAlert: String?
 
     var torrents: [String] { parsed.0 }
     var urls: [String] { parsed.1 }
@@ -67,14 +69,26 @@ struct AddDownloadView: View {
 
             HStack {
                 Button("Choose Torrent File…") { chooseTorrentFile() }
+                    .disabled(state.isSubmitting)
                 Spacer()
+                if state.isSubmitting {
+                    ProgressView().controlSize(.small)
+                }
                 Button(downloadButtonTitle, action: startDownload)
                     .keyboardShortcut(.defaultAction)
-                    .disabled(!state.isValid)
+                    .disabled(!state.isValid || state.isSubmitting)
             }
             .padding(12)
         }
         .frame(width: 420)
+        .alert("Some downloads couldn't be added", isPresented: Binding(
+            get: { state.failureAlert != nil },
+            set: { if !$0 { state.failureAlert = nil } }
+        )) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(state.failureAlert ?? "")
+        }
     }
 
     private var downloadButtonTitle: String {
@@ -103,15 +117,18 @@ struct AddDownloadView: View {
         let torrentPaths = state.torrents
         let urlStrings = state.urls
         let destination = userDefaults.string(forKey: "destinationSelectedPath_main")
-        // Clear the field so the window doesn't reopen with the submitted
-        // text — the scene's state persists across close/reopen.
-        state.taskText = ""
-        onClose()
-        Task.detached { [api] in
+        state.isSubmitting = true
+
+        // Keep the window open until the NAS responds so failures can be
+        // surfaced. The successfully-added items drop out; any that failed
+        // stay in the field for retry, alongside an alert explaining why.
+        Task { @MainActor in
+            var failures: [(line: String, error: String)] = []
             for path in torrentPaths {
                 do {
                     try await api.createTask(torrentFile: URL(fileURLWithPath: path), destination: destination)
                 } catch {
+                    failures.append((path, error.localizedDescription))
                     AppLogger.network.error(
                         "createTask(torrentFile:) failed: \(error.localizedDescription, privacy: .public)"
                     )
@@ -121,10 +138,22 @@ struct AddDownloadView: View {
                 do {
                     try await api.createTask(url: url, destination: destination)
                 } catch {
+                    failures.append((url, error.localizedDescription))
                     AppLogger.network.error(
                         "createTask(url:) failed: \(error.localizedDescription, privacy: .public)"
                     )
                 }
+            }
+
+            state.isSubmitting = false
+            if failures.isEmpty {
+                state.taskText = ""
+                onClose()
+            } else {
+                state.taskText = failures.map(\.line).joined(separator: "\n")
+                state.failureAlert = failures
+                    .map { "• \($0.line)\n    \($0.error)" }
+                    .joined(separator: "\n\n")
             }
         }
     }
