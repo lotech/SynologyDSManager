@@ -20,6 +20,11 @@ commit that makes them.
   remain, so you can fix and retry them.
 
 ### Fixed
+- **Add Download placeholder now matches the editor.** The grey "Enter URLs…"
+  hint used a separate monospaced font (which read as an odd serif against the
+  proportional cursor) and sat misaligned from where text actually begins. The
+  font is now set once on the container so the hint and typed text are identical,
+  and the hint is aligned to the text origin.
 - **Add Download window now clears after a successful submit.** The window's
   text field kept the previously-submitted URL/path because the scene's state
   persists across close/reopen; it's now reset on a fully-successful submit so
