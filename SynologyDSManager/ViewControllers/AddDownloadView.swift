@@ -47,17 +47,16 @@ struct AddDownloadView: View {
         VStack(spacing: 0) {
             ZStack(alignment: .topLeading) {
                 TextEditor(text: $state.taskText)
-                    .font(.system(.body, design: .monospaced))
                     .frame(minHeight: 120)
                 if state.taskText.isEmpty {
                     Text("Enter URLs or torrent file paths, one per line")
-                        .font(.system(.body, design: .monospaced))
                         .foregroundStyle(.tertiary)
-                        .padding(.horizontal, 5)
-                        .padding(.vertical, 8)
+                        .padding(.leading, 5)
+                        .padding(.top, 1)
                         .allowsHitTesting(false)
                 }
             }
+            .font(.body)
 
             Divider()
 
