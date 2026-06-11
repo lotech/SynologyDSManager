@@ -12,6 +12,16 @@ commit that makes them.
 ## [Unreleased]
 
 ### Added
+- **Downloads list is now a sortable, selectable table.** The main window
+  replaces the fixed-order list with a native macOS `Table`: columns for Name,
+  Progress, Size, Status, and Speed, each with click-to-sort headers (the chosen
+  sort is remembered between launches). Rows support single and multi-selection
+  (⌘/⇧-click), and a right-click context menu acts on the selection — **Resume**,
+  **Pause**, **Copy Link** (single item), and **Delete** — with double-click /
+  Return toggling pause-resume and ⌫ deleting the selection. (DSM's API has no
+  task reorder/priority endpoint, so ordering is client-side sorting rather than
+  manual drag-reorder.) The Downloads window's minimum size grew to fit the
+  columns.
 - **Add Download surfaces failures instead of failing silently.** Previously the
   window closed the instant you hit Download and any `createTask` error was only
   logged. It now stays open while the NAS responds (with a progress spinner),
