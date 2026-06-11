@@ -33,6 +33,9 @@ commit that makes them.
   remain, so you can fix and retry them.
 
 ### Fixed
+- **App now shows its name in Force Quit / Finder.** `CFBundleDisplayName` was
+  an empty string, which blanked the app's name in the Force Quit window and
+  anywhere else the display name is used. Set it to "Synology DS Manager".
 - **Add Download placeholder now matches the editor.** The grey "Enter URLs…"
   hint used a separate monospaced font (which read as an odd serif against the
   proportional cursor) and sat misaligned from where text actually begins. The
