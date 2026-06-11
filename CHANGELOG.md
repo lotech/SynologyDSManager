@@ -17,11 +17,14 @@ commit that makes them.
   Progress, Size, Status, and Speed, each with click-to-sort headers (the chosen
   sort is remembered between launches). Rows support single and multi-selection
   (⌘/⇧-click), and a right-click context menu acts on the selection — **Resume**,
-  **Pause**, **Copy Link** (single item), and **Delete** — with double-click /
-  Return toggling pause-resume and ⌫ deleting the selection. (DSM's API has no
-  task reorder/priority endpoint, so ordering is client-side sorting rather than
-  manual drag-reorder.) The Downloads window's minimum size grew to fit the
-  columns.
+  **Pause**, **Copy Magnet Link** (single item; falls back to "Copy Link" for
+  non-magnet URIs), and **Delete** — with double-click / Return toggling
+  pause-resume and ⌫ deleting the selection. The Status column shows a colour-coded
+  SF Symbol per state (with the word in a tooltip), and hovering a truncated name
+  shows the full title as a tooltip. (DSM's API has no task reorder/priority
+  endpoint, so ordering is client-side sorting rather than manual drag-reorder.)
+  The Downloads window's default/minimum size grew so the columns fit without a
+  horizontal scrollbar.
 - **Add Download surfaces failures instead of failing silently.** Previously the
   window closed the instant you hit Download and any `createTask` error was only
   logged. It now stays open while the NAS responds (with a progress spinner),
