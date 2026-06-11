@@ -19,6 +19,35 @@ extension DSMTask {
         guard size > 0 else { return 0 }
         return min(1, Double(downloadedBytes) / Double(size))
     }
+
+    /// Human-readable status for tooltips ("hash_checking" → "Hash Checking").
+    var statusLabel: String {
+        status.replacingOccurrences(of: "_", with: " ").capitalized
+    }
+
+    /// SF Symbol shown in the Status column in place of the raw word.
+    var statusSymbol: String {
+        switch status {
+        case "downloading":          return "arrow.down.circle.fill"
+        case "finished":             return "checkmark.circle.fill"
+        case "paused":               return "pause.circle.fill"
+        case "waiting":              return "clock.fill"
+        case "seeding":              return "arrow.up.circle.fill"
+        case "error":                return "exclamationmark.triangle.fill"
+        case "hash_checking", "extracting", "finishing":
+            return "ellipsis.circle.fill"
+        default:                     return "circle.fill"
+        }
+    }
+
+    var statusColor: Color {
+        switch status {
+        case "finished", "seeding": return .green
+        case "error":               return .red
+        case "downloading":         return .accentColor
+        default:                    return .secondary
+        }
+    }
 }
 
 
@@ -126,14 +155,16 @@ struct DownloadsView: View {
         } else {
             Table(sortedTasks, selection: $selection, sortOrder: $sortOrder) {
                 TableColumn("Name", value: \.title) { task in
-                    Text(task.title).truncationMode(.middle)
+                    Text(task.title)
+                        .truncationMode(.middle)
+                        .help(task.title)
                 }
-                .width(min: 140, ideal: 220)
+                .width(min: 140, ideal: 200)
 
                 TableColumn("Progress", value: \.fractionComplete) { task in
                     ProgressCell(task: task)
                 }
-                .width(min: 90, ideal: 130)
+                .width(min: 90, ideal: 120)
 
                 TableColumn("Size", value: \.size) { task in
                     Text(prettifyBytesCount(bytesCount: Double(task.size)))
@@ -142,15 +173,18 @@ struct DownloadsView: View {
                 .width(min: 64, ideal: 80)
 
                 TableColumn("Status", value: \.status) { task in
-                    Text(task.status.capitalized)
+                    Image(systemName: task.statusSymbol)
+                        .foregroundStyle(task.statusColor)
+                        .help(task.statusLabel)
+                        .frame(maxWidth: .infinity, alignment: .center)
                 }
-                .width(min: 70, ideal: 90)
+                .width(min: 44, ideal: 52)
 
                 TableColumn("Speed", value: \.downloadSpeed) { task in
                     Text(prettifySpeed(speed: Double(task.downloadSpeed)))
                         .monospacedDigit()
                 }
-                .width(min: 70, ideal: 90)
+                .width(min: 64, ideal: 80)
             }
             .contextMenu(forSelectionType: DSMTask.ID.self) { ids in
                 contextMenu(for: ids)
@@ -168,7 +202,9 @@ struct DownloadsView: View {
         if ids.count == 1,
            let uri = tasks(for: ids).first?.additional?.detail?.uri, !uri.isEmpty {
             Divider()
-            Button("Copy Link") { copyToPasteboard(uri) }
+            Button(uri.hasPrefix("magnet:") ? "Copy Magnet Link" : "Copy Link") {
+                copyToPasteboard(uri)
+            }
         }
         Divider()
         Button("Delete", role: .destructive) { requestDelete(ids) }

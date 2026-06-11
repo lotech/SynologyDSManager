@@ -17,9 +17,9 @@ struct SynologyDSManagerApp: App {
     var body: some Scene {
         Window("Downloads", id: "main") {
             DownloadsView()
-                .frame(minWidth: 480, minHeight: 260)
+                .frame(minWidth: 460, minHeight: 260)
         }
-        .defaultSize(width: 560, height: 440)
+        .defaultSize(width: 600, height: 440)
 
         MenuBarExtra {
             StatusBarMenuContent()
