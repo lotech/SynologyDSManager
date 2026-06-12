@@ -32,6 +32,19 @@ commit that makes them.
   why. Successfully-added items drop out of the field; only the failed lines
   remain, so you can fix and retry them.
 
+### Changed
+- **Main window tidy-up.** The Settings (gear) button moved from the toolbar's
+  leading edge to the far right, set apart from the download actions by a
+  divider, and the window title is now "SynologyDS Manager" instead of
+  "Downloads". The Status, Speed, Size, and Progress columns are now capped to
+  a compact width so the Name column absorbs the remaining space (Status is a
+  narrow icon column).
+- **Clearer delete confirmation.** The Downloads delete dialog now reads
+  "Remove from Download Station" and explains what happens to the data: completed
+  (or seeding) tasks keep their files on the NAS and only the task is removed,
+  while unfinished downloads discard their partial data. Mixed selections say so.
+  Removes the prior implication that files are always deleted.
+
 ### Fixed
 - **App now shows its name in Force Quit / Finder.** `CFBundleDisplayName` was
   an empty string, which blanked the app's name in the Force Quit window and
