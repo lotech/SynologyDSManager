@@ -33,6 +33,10 @@ commit that makes them.
   remain, so you can fix and retry them.
 
 ### Changed
+- **Main window tidy-up.** The Settings (gear) button moved from the toolbar's
+  leading edge to the far right, set apart from the download actions by a
+  divider, and the window title is now "SynologyDS Manager" instead of
+  "Downloads".
 - **Clearer delete confirmation.** The Downloads delete dialog now reads
   "Remove from Download Station" and explains what happens to the data: completed
   (or seeding) tasks keep their files on the NAS and only the task is removed,

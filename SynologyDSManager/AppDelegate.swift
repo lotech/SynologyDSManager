@@ -15,7 +15,7 @@ struct SynologyDSManagerApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     var body: some Scene {
-        Window("Downloads", id: "main") {
+        Window("SynologyDS Manager", id: "main") {
             DownloadsView()
                 .frame(minWidth: 460, minHeight: 260)
         }
