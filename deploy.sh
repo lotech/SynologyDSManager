@@ -356,6 +356,53 @@ action_install() {
     [[ "$reply" =~ ^[Yy]$ ]] && open "$dest"
 }
 
+# Report distribution readiness of a built DMG + app: signature validity,
+# notarisation stapling, and the definitive Gatekeeper verdict. Machine-
+# independent — doesn't rely on whether a file happened to be quarantined.
+verify_dmg() {
+    local dmg="$1"
+    local app="$2"
+
+    echo
+    info "Verifying distribution readiness…"
+
+    # 1. DMG signature.
+    if codesign --verify --strict "$dmg" >/dev/null 2>&1; then
+        ok "DMG signature: valid."
+    else
+        warn "DMG signature: not signed or invalid."
+    fi
+
+    # 2. App signature (and which authority signed it).
+    if codesign --verify --deep --strict "$app" >/dev/null 2>&1; then
+        local authority
+        authority="$(codesign -dvv "$app" 2>&1 | sed -nE 's/^Authority=(.*)/\1/p' | head -1)"
+        ok "App signature: valid${authority:+ — ${authority}}."
+    else
+        warn "App signature: invalid."
+    fi
+
+    # 3. Notarisation ticket stapled to the DMG.
+    if xcrun stapler validate "$dmg" >/dev/null 2>&1; then
+        ok "Notarisation: ticket stapled."
+    else
+        warn "Notarisation: no stapled ticket (not notarised, or not yet stapled)."
+    fi
+
+    # 4. Gatekeeper verdict — the check that actually decides what a clean Mac does.
+    local spctl_out
+    spctl_out="$(spctl -a -t open --context context:primary-signature -vv "$dmg" 2>&1)"
+    if grep -q "accepted" <<<"$spctl_out"; then
+        local source
+        source="$(sed -nE 's/.*source=(.*)/\1/p' <<<"$spctl_out" | head -1)"
+        ok "Gatekeeper: accepted${source:+ (source: ${source})}."
+    else
+        warn "Gatekeeper: rejected — a clean Mac will block this until it's both signed AND notarised."
+        sed 's/^/      /' <<<"$spctl_out"
+    fi
+    echo
+}
+
 action_dmg() {
     require_xcodebuild
     local team
@@ -444,6 +491,8 @@ action_dmg() {
         info "No .notary-profile-name file found — skipping notarisation."
         info "To enable, run 'xcrun notarytool store-credentials' and write the profile name to .notary-profile-name."
     fi
+
+    verify_dmg "$dmg" "$built"
 }
 
 # ----- Menu ----------------------------------------------------------------

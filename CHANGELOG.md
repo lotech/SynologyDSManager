@@ -42,6 +42,11 @@ commit that makes them.
   and on failure shows an alert listing each item that couldn't be added and
   why. Successfully-added items drop out of the field; only the failed lines
   remain, so you can fix and retry them.
+- **`deploy.sh → d` verifies distribution readiness.** After building the DMG
+  (and any notarisation), it auto-runs `codesign`, `xcrun stapler`, and `spctl`
+  and prints a clear pass/fail for the DMG signature, the app signature (and its
+  signing authority), the notarisation ticket, and the Gatekeeper verdict — so
+  "it opened on my Mac" is no longer mistaken for "ready to ship".
 
 ### Changed
 - **Bumped version to 2.2.1 / build 15.**
