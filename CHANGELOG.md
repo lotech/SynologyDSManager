@@ -11,6 +11,12 @@ commit that makes them.
 
 ## [Unreleased]
 
+### Added
+- **About window now links to the project and credits the authors.** Added a
+  "View on GitHub" link and a line — "Originally created by @skavans, and
+  updated to Swift by @lotech" — with both handles linking to their GitHub
+  profiles.
+
 ## [2.2.1] — 2026-06-12
 
 ### Added
