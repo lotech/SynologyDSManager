@@ -34,11 +34,12 @@ commit that makes them.
 
 ### Changed
 - **Main window tidy-up.** The Settings (gear) button moved from the toolbar's
-  leading edge to the far right, set apart from the download actions by a
-  divider, and the window title is now "SynologyDS Manager" instead of
-  "Downloads". The Status, Speed, Size, and Progress columns are now capped to
-  a compact width so the Name column absorbs the remaining space (Status is a
-  narrow icon column).
+  leading edge to the far right, in its own toolbar container separate from the
+  download actions (a `ToolbarSpacer` on macOS 26+, a divider on older systems).
+  The window title is now "Synology DS Manager" (matching the app's display
+  name) instead of "Downloads". The Status, Speed, Size, and Progress columns
+  are now capped to a compact width so the Name column absorbs the remaining
+  space (Status is a narrow icon column).
 - **Clearer delete confirmation.** The Downloads delete dialog now reads
   "Remove from Download Station" and explains what happens to the data: completed
   (or seeding) tasks keep their files on the NAS and only the task is removed,
