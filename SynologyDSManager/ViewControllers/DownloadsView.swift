@@ -154,23 +154,25 @@ struct DownloadsView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
             Table(sortedTasks, selection: $selection, sortOrder: $sortOrder) {
+                // Name is the only uncapped column, so all spare width goes to
+                // it; the rest are capped to stay compact.
                 TableColumn("Name", value: \.title) { task in
                     Text(task.title)
                         .truncationMode(.middle)
                         .help(task.title)
                 }
-                .width(min: 140, ideal: 200)
+                .width(min: 160, ideal: 320)
 
                 TableColumn("Progress", value: \.fractionComplete) { task in
                     ProgressCell(task: task)
                 }
-                .width(min: 90, ideal: 120)
+                .width(min: 90, ideal: 120, max: 160)
 
                 TableColumn("Size", value: \.size) { task in
                     Text(prettifyBytesCount(bytesCount: Double(task.size)))
                         .monospacedDigit()
                 }
-                .width(min: 64, ideal: 80)
+                .width(min: 64, ideal: 74, max: 90)
 
                 TableColumn("Status", value: \.status) { task in
                     Image(systemName: task.statusSymbol)
@@ -178,13 +180,13 @@ struct DownloadsView: View {
                         .help(task.statusLabel)
                         .frame(maxWidth: .infinity, alignment: .center)
                 }
-                .width(min: 44, ideal: 52)
+                .width(56)
 
                 TableColumn("Speed", value: \.downloadSpeed) { task in
                     Text(prettifySpeed(speed: Double(task.downloadSpeed)))
                         .monospacedDigit()
                 }
-                .width(min: 64, ideal: 80)
+                .width(min: 70, ideal: 78, max: 92)
             }
             .contextMenu(forSelectionType: DSMTask.ID.self) { ids in
                 contextMenu(for: ids)
