@@ -50,7 +50,7 @@ See `MODERNIZATION_PLAN.md` for the per-phase task checklist.
 
 - **Product**: native macOS app + Safari extension that drives a Synology NAS's
   Download Station over its HTTP API.
-- **Current version**: 2.2.0 (build 14). See `CHANGELOG.md` for the per-version
+- **Current version**: 2.2.1 (build 15). See `CHANGELOG.md` for the per-version
   history.
 - **Language / UI**: Swift 5.9. **SwiftUI** for all screens with a fully
   SwiftUI app lifecycle (`@main struct … : App`, `Window` scenes,

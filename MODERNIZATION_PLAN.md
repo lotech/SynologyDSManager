@@ -4,7 +4,7 @@ Living document. Tick boxes as tasks land. When all tasks in a phase are
 complete, move the phase status from **In progress** / **Planned** to
 **Shipped** with the date.
 
-Last updated: 2026-06-03 (Cut version **2.2.0 / build 14** — the accumulated Phase 0–4 work, the SwiftUI `DestinationPicker`, the English String Catalog, and the Local Network usage key. Phase 4 is effectively complete; only the Phase 3c-gated legacy-extension XIB deletion remains.)
+Last updated: 2026-06-12 (Cut version **2.2.1 / build 15** — main-window UX refinements: sortable/multi-select Downloads `Table` with a context menu, Dock-icon finished-count badge, toolbar/title tidy-up, clearer delete dialog, and Add Download failure surfacing. Phase 4 remains effectively complete; only the Phase 3c-gated legacy-extension XIB deletion is outstanding.)
 
 ---
 

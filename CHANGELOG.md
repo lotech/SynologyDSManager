@@ -11,6 +11,8 @@ commit that makes them.
 
 ## [Unreleased]
 
+## [2.2.1] — 2026-06-12
+
 ### Added
 - **Dock icon badge for finished downloads.** The Dock icon now shows a live
   count of tasks currently in the "finished" state, updated each polling cycle
@@ -37,6 +39,7 @@ commit that makes them.
   remain, so you can fix and retry them.
 
 ### Changed
+- **Bumped version to 2.2.1 / build 15.**
 - **Main window tidy-up.** The Settings (gear) button moved from the toolbar's
   leading edge to the far right, in its own toolbar container separate from the
   download actions (a `ToolbarSpacer` on macOS 26+, a divider on older systems).
