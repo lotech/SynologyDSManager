@@ -386,9 +386,35 @@ action_dmg() {
         "$dmg" >/dev/null
 
     # Sign the DMG itself so notarisation has something to verify.
-    info "Code-signing DMG with Developer ID (Team ${team})…"
-    codesign --force --timestamp --sign "Developer ID Application" "$dmg" \
-        || warn "DMG signing failed. Check that 'Developer ID Application' is in your keychain."
+    #
+    # Pin to a specific certificate SHA-1 hash rather than the bare name
+    # "Developer ID Application": if the keychain holds more than one cert with
+    # that common name (e.g. after a renewal, when the old one hasn't expired
+    # yet), `codesign --sign "Developer ID Application"` errors out as
+    # "ambiguous". `security find-identity -v` lists only valid identities.
+    local signing_hash
+    signing_hash="$(security find-identity -v -p codesigning \
+        | grep "Developer ID Application" | grep -F "(${team})" \
+        | head -1 | awk '{print $2}')"
+    if [[ -z "$signing_hash" ]]; then
+        # Fall back to any Developer ID Application identity (team not matched).
+        signing_hash="$(security find-identity -v -p codesigning \
+            | grep "Developer ID Application" | head -1 | awk '{print $2}')"
+    fi
+
+    if [[ -z "$signing_hash" ]]; then
+        warn "No valid 'Developer ID Application' identity in your keychain — DMG left unsigned."
+    else
+        local di_count
+        di_count="$(security find-identity -v -p codesigning | grep -c "Developer ID Application")"
+        if [[ "$di_count" -gt 1 ]]; then
+            info "Multiple Developer ID Application certs found; signing with ${signing_hash}."
+        fi
+        info "Code-signing DMG with Developer ID (Team ${team})…"
+        codesign --force --timestamp --sign "$signing_hash" "$dmg" \
+            && ok "DMG signed (identity ${signing_hash})." \
+            || warn "DMG signing failed. Check that a valid 'Developer ID Application' cert is in your keychain."
+    fi
 
     ok "DMG created: ${dmg}"
 
