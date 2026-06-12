@@ -356,6 +356,53 @@ action_install() {
     [[ "$reply" =~ ^[Yy]$ ]] && open "$dest"
 }
 
+# Report distribution readiness of a built DMG + app: signature validity,
+# notarisation stapling, and the definitive Gatekeeper verdict. Machine-
+# independent — doesn't rely on whether a file happened to be quarantined.
+verify_dmg() {
+    local dmg="$1"
+    local app="$2"
+
+    echo
+    info "Verifying distribution readiness…"
+
+    # 1. DMG signature.
+    if codesign --verify --strict "$dmg" >/dev/null 2>&1; then
+        ok "DMG signature: valid."
+    else
+        warn "DMG signature: not signed or invalid."
+    fi
+
+    # 2. App signature (and which authority signed it).
+    if codesign --verify --deep --strict "$app" >/dev/null 2>&1; then
+        local authority
+        authority="$(codesign -dvv "$app" 2>&1 | sed -nE 's/^Authority=(.*)/\1/p' | head -1)"
+        ok "App signature: valid${authority:+ — ${authority}}."
+    else
+        warn "App signature: invalid."
+    fi
+
+    # 3. Notarisation ticket stapled to the DMG.
+    if xcrun stapler validate "$dmg" >/dev/null 2>&1; then
+        ok "Notarisation: ticket stapled."
+    else
+        warn "Notarisation: no stapled ticket (not notarised, or not yet stapled)."
+    fi
+
+    # 4. Gatekeeper verdict — the check that actually decides what a clean Mac does.
+    local spctl_out
+    spctl_out="$(spctl -a -t open --context context:primary-signature -vv "$dmg" 2>&1)"
+    if grep -q "accepted" <<<"$spctl_out"; then
+        local source
+        source="$(sed -nE 's/.*source=(.*)/\1/p' <<<"$spctl_out" | head -1)"
+        ok "Gatekeeper: accepted${source:+ (source: ${source})}."
+    else
+        warn "Gatekeeper: rejected — a clean Mac will block this until it's both signed AND notarised."
+        sed 's/^/      /' <<<"$spctl_out"
+    fi
+    echo
+}
+
 action_dmg() {
     require_xcodebuild
     local team
@@ -386,9 +433,35 @@ action_dmg() {
         "$dmg" >/dev/null
 
     # Sign the DMG itself so notarisation has something to verify.
-    info "Code-signing DMG with Developer ID (Team ${team})…"
-    codesign --force --timestamp --sign "Developer ID Application" "$dmg" \
-        || warn "DMG signing failed. Check that 'Developer ID Application' is in your keychain."
+    #
+    # Pin to a specific certificate SHA-1 hash rather than the bare name
+    # "Developer ID Application": if the keychain holds more than one cert with
+    # that common name (e.g. after a renewal, when the old one hasn't expired
+    # yet), `codesign --sign "Developer ID Application"` errors out as
+    # "ambiguous". `security find-identity -v` lists only valid identities.
+    local signing_hash
+    signing_hash="$(security find-identity -v -p codesigning \
+        | grep "Developer ID Application" | grep -F "(${team})" \
+        | head -1 | awk '{print $2}')"
+    if [[ -z "$signing_hash" ]]; then
+        # Fall back to any Developer ID Application identity (team not matched).
+        signing_hash="$(security find-identity -v -p codesigning \
+            | grep "Developer ID Application" | head -1 | awk '{print $2}')"
+    fi
+
+    if [[ -z "$signing_hash" ]]; then
+        warn "No valid 'Developer ID Application' identity in your keychain — DMG left unsigned."
+    else
+        local di_count
+        di_count="$(security find-identity -v -p codesigning | grep -c "Developer ID Application")"
+        if [[ "$di_count" -gt 1 ]]; then
+            info "Multiple Developer ID Application certs found; signing with ${signing_hash}."
+        fi
+        info "Code-signing DMG with Developer ID (Team ${team})…"
+        codesign --force --timestamp --sign "$signing_hash" "$dmg" \
+            && ok "DMG signed (identity ${signing_hash})." \
+            || warn "DMG signing failed. Check that a valid 'Developer ID Application' cert is in your keychain."
+    fi
 
     ok "DMG created: ${dmg}"
 
@@ -418,6 +491,8 @@ action_dmg() {
         info "No .notary-profile-name file found — skipping notarisation."
         info "To enable, run 'xcrun notarytool store-credentials' and write the profile name to .notary-profile-name."
     fi
+
+    verify_dmg "$dmg" "$built"
 }
 
 # ----- Menu ----------------------------------------------------------------

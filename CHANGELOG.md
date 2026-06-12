@@ -42,6 +42,11 @@ commit that makes them.
   and on failure shows an alert listing each item that couldn't be added and
   why. Successfully-added items drop out of the field; only the failed lines
   remain, so you can fix and retry them.
+- **`deploy.sh → d` verifies distribution readiness.** After building the DMG
+  (and any notarisation), it auto-runs `codesign`, `xcrun stapler`, and `spctl`
+  and prints a clear pass/fail for the DMG signature, the app signature (and its
+  signing authority), the notarisation ticket, and the Gatekeeper verdict — so
+  "it opened on my Mac" is no longer mistaken for "ready to ship".
 
 ### Changed
 - **Bumped version to 2.2.1 / build 15.**
@@ -59,6 +64,11 @@ commit that makes them.
   Removes the prior implication that files are always deleted.
 
 ### Fixed
+- **`deploy.sh` DMG signing handles duplicate Developer ID certs.** Signing the
+  DMG by the bare name "Developer ID Application" failed as *ambiguous* when the
+  keychain holds more than one cert with that common name (e.g. after a
+  renewal), leaving the DMG unsigned. The script now resolves a specific
+  certificate via `security find-identity` and signs with its hash.
 - **App now shows its name in Force Quit / Finder.** `CFBundleDisplayName` was
   an empty string, which blanked the app's name in the Force Quit window and
   anywhere else the display name is used. Set it to "Synology DS Manager".
