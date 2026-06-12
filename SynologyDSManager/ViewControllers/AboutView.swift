@@ -29,6 +29,7 @@ struct AboutView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
 
             Text("© 2020–2026 SynologyDSManager contributors")
                 .font(.caption)
