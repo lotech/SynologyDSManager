@@ -20,6 +20,14 @@ struct SynologyDSManagerApp: App {
                 .frame(minWidth: 460, minHeight: 260)
         }
         .defaultSize(width: 600, height: 440)
+        .commands {
+            // Replace the app-menu "About" so it opens our custom AboutView
+            // (with the GitHub link + author credits) instead of AppKit's
+            // standard about panel.
+            CommandGroup(replacing: .appInfo) {
+                AboutMenuButton()
+            }
+        }
 
         MenuBarExtra {
             StatusBarMenuContent()
@@ -45,6 +53,19 @@ struct SynologyDSManagerApp: App {
             AboutView()
         }
         .windowResizability(.contentSize)
+    }
+}
+
+// MARK: - About menu item (opens the custom AboutView window)
+
+private struct AboutMenuButton: View {
+    @Environment(\.openWindow) private var openWindow
+
+    var body: some View {
+        Button("About Synology DS Manager") {
+            openWindow(id: "about")
+            NSApp.activate(ignoringOtherApps: true)
+        }
     }
 }
 
