@@ -32,6 +32,13 @@ commit that makes them.
   why. Successfully-added items drop out of the field; only the failed lines
   remain, so you can fix and retry them.
 
+### Changed
+- **Clearer delete confirmation.** The Downloads delete dialog now reads
+  "Remove from Download Station" and explains what happens to the data: completed
+  (or seeding) tasks keep their files on the NAS and only the task is removed,
+  while unfinished downloads discard their partial data. Mixed selections say so.
+  Removes the prior implication that files are always deleted.
+
 ### Fixed
 - **App now shows its name in Force Quit / Finder.** `CFBundleDisplayName` was
   an empty string, which blanked the app's name in the Force Quit window and

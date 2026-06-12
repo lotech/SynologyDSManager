@@ -117,12 +117,12 @@ struct DownloadsView: View {
     var body: some View {
         taskContent
             .safeAreaInset(edge: .bottom, spacing: 0) { bandwidthFooter }
-            .alert("Confirm deletion", isPresented: Binding(
+            .alert("Remove from Download Station", isPresented: Binding(
                 get: { !deleteCandidates.isEmpty },
                 set: { if !$0 { deleteCandidates = [] } }
             )) {
                 Button("Cancel", role: .cancel) { deleteCandidates = [] }
-                Button("Delete", role: .destructive) {
+                Button("Remove", role: .destructive) {
                     performDelete(deleteCandidates)
                     deleteCandidates = []
                 }
@@ -332,9 +332,25 @@ struct DownloadsView: View {
     }
 
     private var deleteMessage: String {
+        let intro: String
         if deleteCandidates.count == 1 {
-            return "Are you sure you want to delete download \"\(deleteCandidates[0].title)\"?"
+            intro = "Remove “\(deleteCandidates[0].title)” from Download Station?"
+        } else {
+            intro = "Remove \(deleteCandidates.count) downloads from Download Station?"
         }
-        return "Are you sure you want to delete \(deleteCandidates.count) downloads?"
+
+        // Download Station only discards on-disk data for tasks that haven't
+        // finished downloading; completed (or seeding) tasks keep their files
+        // on the NAS. Spell that out so "remove" isn't mistaken for "delete files".
+        let completed = deleteCandidates.filter { $0.isFinished || $0.status == "seeding" }
+        let note: String
+        if completed.count == deleteCandidates.count {
+            note = "The files already downloaded to your NAS are kept — only the task is removed."
+        } else if completed.isEmpty {
+            note = "The partially-downloaded data is discarded along with the task."
+        } else {
+            note = "Completed downloads keep their files on the NAS; unfinished ones discard their partial data."
+        }
+        return "\(intro)\n\n\(note)"
     }
 }
