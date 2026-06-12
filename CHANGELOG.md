@@ -12,6 +12,10 @@ commit that makes them.
 ## [Unreleased]
 
 ### Added
+- **Dock icon badge for finished downloads.** The Dock icon now shows a live
+  count of tasks currently in the "finished" state, updated each polling cycle
+  (cleared when none are finished). Visible only when the Dock icon is shown —
+  i.e. when "Hide Dock icon" is turned off in Settings.
 - **Downloads list is now a sortable, selectable table.** The main window
   replaces the fixed-order list with a native macOS `Table`: columns for Name,
   Progress, Size, Status, and Speed, each with click-to-sort headers (the chosen
@@ -34,11 +38,12 @@ commit that makes them.
 
 ### Changed
 - **Main window tidy-up.** The Settings (gear) button moved from the toolbar's
-  leading edge to the far right, set apart from the download actions by a
-  divider, and the window title is now "SynologyDS Manager" instead of
-  "Downloads". The Status, Speed, Size, and Progress columns are now capped to
-  a compact width so the Name column absorbs the remaining space (Status is a
-  narrow icon column).
+  leading edge to the far right, in its own toolbar container separate from the
+  download actions (a `ToolbarSpacer` on macOS 26+, a divider on older systems).
+  The window title is now "Synology DS Manager" (matching the app's display
+  name) instead of "Downloads". The Status, Speed, Size, and Progress columns
+  are now capped to a compact width so the Name column absorbs the remaining
+  space (Status is a narrow icon column).
 - **Clearer delete confirmation.** The Downloads delete dialog now reads
   "Remove from Download Station" and explains what happens to the data: completed
   (or seeding) tasks keep their files on the NAS and only the task is removed,

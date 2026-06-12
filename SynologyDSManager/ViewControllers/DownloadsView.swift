@@ -232,41 +232,42 @@ struct DownloadsView: View {
 
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
-        // Download actions grouped on the trailing edge, with Settings set
-        // apart on the far right by a divider.
-        ToolbarItem(placement: .primaryAction) {
+        // The download actions form one group/container; Settings sits in its
+        // own container on the far right, separated by a toolbar spacer
+        // (macOS 26+) or a divider on older systems.
+        ToolbarItemGroup(placement: .primaryAction) {
             Button { openWindow(id: "add-download") } label: {
                 Label("Add", systemImage: "plus")
             }
             .help("Add download")
-        }
-        ToolbarItem(placement: .primaryAction) {
+
             Button { openWindow(id: "bt-search") } label: {
                 Label("Search", systemImage: "magnifyingglass")
             }
             .help("Search BitTorrent")
-        }
-        ToolbarItem(placement: .primaryAction) {
+
             Button { Task { await AppModel.shared.pauseAll() } } label: {
                 Label("Pause all", systemImage: "pause.fill")
             }
             .help("Pause all downloads")
-        }
-        ToolbarItem(placement: .primaryAction) {
+
             Button { Task { await AppModel.shared.resumeAll() } } label: {
                 Label("Start all", systemImage: "play.fill")
             }
             .help("Resume all downloads")
-        }
-        ToolbarItem(placement: .primaryAction) {
+
             Button { Task { await AppModel.shared.clearFinished() } } label: {
                 Label("Clear finished", systemImage: "eraser.fill")
             }
             .help("Clear finished downloads")
         }
-        ToolbarItem(placement: .primaryAction) {
-            Divider()
+
+        if #available(macOS 26.0, *) {
+            ToolbarSpacer(.fixed, placement: .primaryAction)
+        } else {
+            ToolbarItem(placement: .primaryAction) { Divider() }
         }
+
         ToolbarItem(placement: .primaryAction) {
             Button { openWindow(id: "settings") } label: {
                 Label("Settings", systemImage: "gear")

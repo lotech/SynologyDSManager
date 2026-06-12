@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import AppKit
 import Observation
 import UserNotifications
 
@@ -108,6 +109,14 @@ final class AppModel {
         statusBarTitle = userDefaults.bool(forKey: "hideFromStatusBar")
             ? "↓DS"
             : "↓DS: \(speed)"
+
+        updateDockBadge(finishedCount: newTasks.filter(\.isFinished).count)
+    }
+
+    /// Show the number of finished downloads on the Dock icon (only visible
+    /// when the Dock icon itself is shown — i.e. "Hide Dock icon" is off).
+    private func updateDockBadge(finishedCount: Int) {
+        NSApp.dockTile.badgeLabel = finishedCount > 0 ? String(finishedCount) : nil
     }
 
     // MARK: - Bulk task actions
