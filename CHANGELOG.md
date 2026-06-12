@@ -12,6 +12,10 @@ commit that makes them.
 ## [Unreleased]
 
 ### Added
+- **Dock icon badge for finished downloads.** The Dock icon now shows a live
+  count of tasks currently in the "finished" state, updated each polling cycle
+  (cleared when none are finished). Visible only when the Dock icon is shown —
+  i.e. when "Hide Dock icon" is turned off in Settings.
 - **Downloads list is now a sortable, selectable table.** The main window
   replaces the fixed-order list with a native macOS `Table`: columns for Name,
   Progress, Size, Status, and Speed, each with click-to-sort headers (the chosen
