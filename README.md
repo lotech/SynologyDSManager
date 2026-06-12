@@ -24,11 +24,15 @@ See [`MODERNIZATION_PLAN.md`](./MODERNIZATION_PLAN.md) for the phased roadmap an
 
 ## Features
 
-- Browse, pause, resume, and delete Download Station tasks from a native Mac window
-- Add new tasks from `.torrent` files, magnet links, or direct URLs — in bulk
+- Browse downloads in a native, sortable table (Name, Progress, Size, Status,
+  Speed) with single/multi-selection and a right-click menu to pause, resume,
+  copy the magnet link, or remove tasks
+- Add new tasks from `.torrent` files, magnet links, or direct URLs — in bulk,
+  with per-item failure reporting if the NAS rejects something
 - Pick any shared folder on the NAS as the download destination
 - Search BT trackers directly from the app and enqueue results in one click
-- Menu-bar status item with live bandwidth readout
+- Menu-bar status item with live bandwidth readout, plus an optional Dock-icon
+  badge showing the number of finished downloads
 - 2-step verification (TOTP) supported
 - Safari extension ("Download with Synology DS Manager" from the page context
   menu) — *in progress*; the Web Extension bridge isn't shippable yet, so the
