@@ -11,15 +11,13 @@ commit that makes them.
 
 ## [Unreleased]
 
+## [2.2.1] — 2026-06-12
+
 ### Added
 - **About window now links to the project and credits the authors.** Added a
   "View on GitHub" link and a line — "Originally created by @skavans, and
   updated to Swift by @lotech" — with both handles linking to their GitHub
   profiles.
-
-## [2.2.1] — 2026-06-12
-
-### Added
 - **Dock icon badge for finished downloads.** The Dock icon now shows a live
   count of tasks currently in the "finished" state, updated each polling cycle
   (cleared when none are finished). Visible only when the Dock icon is shown —
