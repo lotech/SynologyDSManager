@@ -348,7 +348,7 @@ struct DownloadsView: View {
         // Download Station only discards on-disk data for tasks that haven't
         // finished downloading; completed (or seeding) tasks keep their files
         // on the NAS. Spell that out so "remove" isn't mistaken for "delete files".
-        let completed = deleteCandidates.filter { $0.isFinished || $0.status == "seeding" }
+        let completed = deleteCandidates.filter(\.isComplete)
         let note: String
         if completed.count == deleteCandidates.count {
             note = "The files already downloaded to your NAS are kept — only the task is removed."
