@@ -89,7 +89,7 @@ final class AppModel {
         }
 
         let isFirst = tasks.isEmpty && finishedTaskTitles.isEmpty
-        for task in newTasks where task.isFinished {
+        for task in newTasks where task.isComplete {
             if !finishedTaskTitles.contains(task.title) {
                 if !isFirst { notifyFinished(title: task.title) }
                 finishedTaskTitles.insert(task.title)
@@ -110,10 +110,7 @@ final class AppModel {
             ? "↓DS"
             : "↓DS: \(speed)"
 
-        // A torrent that has finished *downloading* usually sits in "seeding"
-        // status (still uploading), not "finished" — so count both as complete.
-        let completeCount = newTasks.filter { $0.isFinished || $0.status == "seeding" }.count
-        updateDockBadge(count: completeCount)
+        updateDockBadge(count: newTasks.filter(\.isComplete).count)
     }
 
     /// Show the number of completed downloads on the Dock icon (only visible
@@ -136,7 +133,9 @@ final class AppModel {
 
     func clearFinished() async {
         guard let api else { return }
-        for id in tasks.filter(\.isFinished).map(\.id) { try? await api.deleteTask(id: id) }
+        // "Completed" = finished or seeding (see DSMTask.isComplete), matching
+        // the Dock badge so clearing actually empties it.
+        for id in tasks.filter(\.isComplete).map(\.id) { try? await api.deleteTask(id: id) }
     }
 
     // MARK: - Extension / URL-scheme download

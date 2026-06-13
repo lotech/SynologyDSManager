@@ -53,6 +53,12 @@ struct DSMTask: Decodable, Sendable, Identifiable, Hashable {
     var isFinished: Bool { status == "finished" }
     var isPaused: Bool { status == "paused" }
     var isDownloading: Bool { status == "downloading" }
+    var isSeeding: Bool { status == "seeding" }
+
+    /// The download has completed — either fully `finished` or `seeding`
+    /// (download done, still uploading). Single source of truth for the Dock
+    /// badge count and the clear-finished paths so they can't drift apart.
+    var isComplete: Bool { isFinished || isSeeding }
 }
 
 struct TaskAdditional: Decodable, Sendable, Hashable {

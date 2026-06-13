@@ -22,7 +22,10 @@ commit that makes them.
 - **Dock icon badge for finished downloads.** The Dock icon shows a live count
   of downloads that have completed (status `finished` *or* `seeding` — a torrent
   that finishes downloading typically keeps seeding), updated each polling cycle
-  and cleared when none remain. Visible only when the Dock icon is shown — i.e.
+  and cleared when none remain. The same "completed" definition drives the
+  finished-task notification and the clear-finished paths, so "Clear finished"
+  and auto-clear also remove seeding tasks (which stops them seeding) and the
+  badge empties when you clear. Visible only when the Dock icon is shown — i.e.
   when "Hide Dock icon" is turned off in Settings.
 - **Downloads list is now a sortable, selectable table.** The main window
   replaces the fixed-order list with a native macOS `Table`: columns for Name,
