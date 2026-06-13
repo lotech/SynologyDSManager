@@ -19,10 +19,11 @@ commit that makes them.
   updated to Swift by @lotech" — with both handles linking to their GitHub
   profiles. The app-menu "About" item now opens this custom window instead of
   the standard macOS about panel.
-- **Dock icon badge for finished downloads.** The Dock icon now shows a live
-  count of tasks currently in the "finished" state, updated each polling cycle
-  (cleared when none are finished). Visible only when the Dock icon is shown —
-  i.e. when "Hide Dock icon" is turned off in Settings.
+- **Dock icon badge for finished downloads.** The Dock icon shows a live count
+  of downloads that have completed (status `finished` *or* `seeding` — a torrent
+  that finishes downloading typically keeps seeding), updated each polling cycle
+  and cleared when none remain. Visible only when the Dock icon is shown — i.e.
+  when "Hide Dock icon" is turned off in Settings.
 - **Downloads list is now a sortable, selectable table.** The main window
   replaces the fixed-order list with a native macOS `Table`: columns for Name,
   Progress, Size, Status, and Speed, each with click-to-sort headers (the chosen
