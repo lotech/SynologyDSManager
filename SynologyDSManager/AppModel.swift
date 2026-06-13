@@ -110,13 +110,16 @@ final class AppModel {
             ? "↓DS"
             : "↓DS: \(speed)"
 
-        updateDockBadge(finishedCount: newTasks.filter(\.isFinished).count)
+        // A torrent that has finished *downloading* usually sits in "seeding"
+        // status (still uploading), not "finished" — so count both as complete.
+        let completeCount = newTasks.filter { $0.isFinished || $0.status == "seeding" }.count
+        updateDockBadge(count: completeCount)
     }
 
-    /// Show the number of finished downloads on the Dock icon (only visible
+    /// Show the number of completed downloads on the Dock icon (only visible
     /// when the Dock icon itself is shown — i.e. "Hide Dock icon" is off).
-    private func updateDockBadge(finishedCount: Int) {
-        NSApp.dockTile.badgeLabel = finishedCount > 0 ? String(finishedCount) : nil
+    private func updateDockBadge(count: Int) {
+        NSApp.dockTile.badgeLabel = count > 0 ? String(count) : nil
     }
 
     // MARK: - Bulk task actions
