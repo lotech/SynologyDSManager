@@ -33,8 +33,11 @@ commit that makes them.
   was ever wrong — the licence itself has never changed**, so nobody's
   obligations have been altered by this correction; they were GPL-3.0 all
   along. This matters most for forks: GPL-3.0 is copyleft, so a distributed
-  modified version must also ship its source under GPL-3.0, and that can't be
-  relicensed away since the copyright in the original work is @skavans's.
+  modified version must make its Corresponding Source available under GPL-3.0
+  by one of the routes section 6 permits — shipping it alongside the build, a
+  written offer, or equivalent no-charge access from a network server — and
+  that can't be relicensed away since the copyright in the original work is
+  @skavans's.
   Anyone who forked while the documentation said MIT should note that their
   actual obligations are GPL-3.0.
 
@@ -46,10 +49,17 @@ commit that makes them.
   complete download URLs (and the originating page's address) to the unified
   log via `NSLog`, and the pinned-and-now-unpatched Swifter dependency will not
   be fixed here; each entry describes the exposure and a mitigation. The
-  document also corrects an earlier overstatement of its own: being signed in
-  to the NAS is **not** a precondition for the first two, because
+  document also corrects several overstatements of its own. Being signed in to
+  the NAS is **not** a precondition for the first two, because
   `AppModel.startPolling` starts the web server before it awaits
-  authentication. Anyone continuing to run the app should read that file.
+  authentication. **Quitting the app is a weaker mitigation than it appears**:
+  opening a `synologydsmanager://` URL relaunches the app via Launch Services,
+  and `applicationDidFinishLaunching` then loads stored credentials and starts
+  polling — which restarts the loopback server — so a web page can bring both
+  entry points back up on anyone with saved credentials. And the loopback
+  socket is reachable by **any** local process, including one under a different
+  user account, not only your own. Anyone continuing to run the app should read
+  that file.
 - **Security reports are no longer being accepted.** The GitHub Security
   Advisories channel is unmonitored, so `SECURITY.md` now asks people to fix
   issues in a fork and publish their findings instead of reporting privately

@@ -52,9 +52,14 @@ as "requires an attacker already on your Mac":
   private-network-access restrictions block this in some browsers and versions,
   so treat it as *possible* rather than guaranteed.
 
-Local code running as your user can of course reach both directly. Either way,
-the practical worst case is unwanted downloads queued on your NAS and an app
-that crashes — not code execution on your Mac.
+Local code can of course reach both directly — and note that a loopback TCP
+socket is **not** restricted to the account that opened it. Any process on the
+machine can connect to `127.0.0.1:11863`, including one running under a
+*different* local user account. On a shared or multi-user Mac, "local" does not
+mean "only you".
+
+Either way, the practical worst case is unwanted downloads queued on your NAS
+and an app that crashes — not code execution on your Mac.
 
 **Being signed in is not the gate you might expect.** `AppModel.startPolling`
 sets up the API object and calls `start_webserver()` *before* it awaits
@@ -68,14 +73,26 @@ are configured and polling has started:
   authenticated — a failed login still leaves them reachable, though the
   resulting `createTask` call fails at the NAS.
 
-Both entry points do require the app to be *running*.
+**Quitting the app is a weaker mitigation than it sounds.** Both entry points
+need the app running — but a registered URL scheme *starts* it. Opening a
+`synologydsmanager://` URL hands off to Launch Services, which launches the app
+if it isn't running (the legacy extension's `openAppViaURLScheme` fallback
+depends on exactly this), and `applicationDidFinishLaunching` then loads your
+stored credentials and calls `startPolling` — which starts the loopback server.
+
+So for anyone with saved credentials, a web page can relaunch a quit app and
+bring both entry points back up. Quitting raises the bar; it does not close the
+door. Only a rebuild without these paths, or removing the saved credentials,
+actually does.
 
 ### 1. Unauthenticated loopback HTTP server (`Webserver.swift`)
 
 Once polling starts, it listens on **127.0.0.1 / ::1 port 11863** and accepts
 any local `POST /add_download` request, with no authentication of any kind.
-Any process running as your user — and any script, or any browser page that
-can reach loopback — can enqueue arbitrary download URLs onto your NAS.
+Any process on the machine — yours, another local user account's, a script, or
+a browser page that can reach loopback — can enqueue arbitrary download URLs
+onto your NAS. A loopback socket carries no per-account restriction, so on a
+multi-user Mac this is not confined to your own session.
 
 The handler also force-unwraps the request body and uses `try!` to decode it,
 so a malformed POST crashes the app: a trivially triggered local denial of
@@ -87,10 +104,15 @@ bridge was built and does validate its input (peer code-signature check, scheme
 allowlist, length cap), but Safari-side breakage meant it never went live, so
 this unauthenticated server is still the code path that actually runs.
 
-**Mitigation:** quit the app when you aren't using it, or build your own copy
-with the `start_webserver()` call removed from `AppModel.startPolling`
-(`AppModel.swift`). Removing it costs you only the legacy Safari extension's
-"send to Download Station" path, which is disabled in the UI anyway.
+**Mitigation:** build your own copy with the `start_webserver()` call removed
+from `AppModel.startPolling` (`AppModel.swift`). That costs you only the legacy
+Safari extension's "send to Download Station" path, which is disabled in the UI
+anyway.
+
+Quitting the app helps but does not settle it — see above: a
+`synologydsmanager://` URL relaunches the app, and launch loads your stored
+credentials and starts the server again. Clearing the saved credentials in
+Settings stops that chain, at the price of signing in each time you use it.
 
 ### 2. Unvalidated `synologydsmanager://` URL scheme
 
@@ -115,8 +137,10 @@ Note that the legacy Safari extension falls back to this scheme when the
 loopback POST fails, so removing both leaves that extension with no path to the
 app at all — which is fine, since its feature is disabled in the UI regardless.
 
-Short of rebuilding, quitting the app when you aren't using it is the only
-mitigation.
+Short of rebuilding, there is no clean mitigation for this one. Quitting the app
+does not settle it, because opening the scheme is itself what relaunches the
+app. Clearing your saved credentials is the nearest thing: launch then leaves
+the app unauthenticated, so an enqueue fails at the NAS.
 
 ### 3. The legacy Safari extension logs full URLs to the unified log
 
