@@ -1,10 +1,37 @@
 # Modernisation plan
 
-Living document. Tick boxes as tasks land. When all tasks in a phase are
-complete, move the phase status from **In progress** / **Planned** to
+> ## ⚠️ Closed — this roadmap is no longer being worked on
+>
+> **The project became unmaintained in August 2026** when the maintainer
+> replaced their Synology NAS with an Unraid server, leaving no hardware to
+> develop or test against.
+>
+> This document is now a **historical record**, not a plan. Unticked boxes are
+> **abandoned, not pending** — nobody is working through them and no one is
+> waiting on them. Specifically:
+>
+> - **Phases 0, 1, 2, 4 shipped** and are described accurately below.
+> - **Phase 3** (XPC bridge + Safari Web Extension) got as far as 3a and 3b.
+>   3b's runtime was blocked by a Safari bug outside this project's control,
+>   and **3c** — retiring the legacy extension target and the unauthenticated
+>   `Webserver.swift` — never happened. That unauthenticated loopback server is
+>   therefore **still the live code path** in the shipping app; see
+>   [`SECURITY.md`](./SECURITY.md).
+> - **Phase 5** (Sparkle auto-update, notarised DMGs via CI) was never started.
+>
+> It's left in the repo because it's a genuinely useful map for anyone forking
+> the project: it records what was done, why, and what was deliberately left.
+> If you fork, the highest-value unfinished work is Phase 3c — it closes the
+> app's most significant known security gap.
+
+Formerly a living document: tick boxes as tasks land; when all tasks in a phase
+are complete, move the phase status from **In progress** / **Planned** to
 **Shipped** with the date.
 
-Last updated: 2026-06-12 (Cut version **2.2.1 / build 15** — main-window UX refinements: sortable/multi-select Downloads `Table` with a context menu, Dock-icon finished-count badge, toolbar/title tidy-up, clearer delete dialog, and Add Download failure surfacing. Phase 4 remains effectively complete; only the Phase 3c-gated legacy-extension XIB deletion is outstanding.)
+Last updated: 2026-08-12 (project wound down; roadmap closed — see the notice
+above).
+
+Previous update: 2026-06-12 (Cut version **2.2.1 / build 15** — main-window UX refinements: sortable/multi-select Downloads `Table` with a context menu, Dock-icon finished-count badge, toolbar/title tidy-up, clearer delete dialog, and Add Download failure surfacing. Phase 4 remains effectively complete; only the Phase 3c-gated legacy-extension XIB deletion is outstanding.)
 
 ---
 
@@ -250,7 +277,12 @@ scoped Keychain access.
 - [x] Flipped `SWIFT_STRICT_CONCURRENCY` from `minimal` to `complete`
       — already done in Phase 2a-2d.
 
-## Phase 3 — Safari extension & webserver bridge · **Deferred** (3a + 3b-1 + 3b-2 shipped; 3b-2b-RT blocked, 3c parked)
+## Phase 3 — Safari extension & webserver bridge · **Abandoned** (3a + 3b-1 + 3b-2 shipped; 3b-2b-RT blocked by Safari, 3c never landed)
+
+> **3c was the security-relevant half and it did not ship.** `Webserver.swift`
+> — the unauthenticated loopback HTTP server on port 11863 — is still live in
+> the shipping app. This is the single highest-value piece of unfinished work
+> in this repository; see [`SECURITY.md`](./SECURITY.md).
 
 > **Deferred 2026-05-29.** The XPC bridge and Web Extension are
 > structurally complete and shipped, but the service worker won't start
@@ -557,9 +589,14 @@ test bundle was already there, and the plan explicitly required `Observation`).
       ported to SwiftUI in slice 1; no `swiftapps.skavans.ru` reference
       remains in any Swift source)
 
-## Phase 5 — Release engineering · **Planned**
+## Phase 5 — Release engineering · **Abandoned** (never started)
 
 Goal: signed, notarised, auto-updating releases cut by CI.
+
+**None of this was built.** Releases stayed manual via `./deploy.sh → d`,
+which does sign and (optionally) notarise a DMG locally. There is no Sparkle
+integration, so **installed copies will never self-update** — a fork taking
+this on would need to add the appcast itself.
 
 The version number is already at **2.2.0** (build 14) in the project and
 `CHANGELOG.md`; what's still missing is the *release engineering* — none of

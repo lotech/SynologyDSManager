@@ -5,6 +5,12 @@ title: "[Bug] "
 labels: bug
 ---
 
+> ⚠️ **This project is unmaintained and bug reports are not being monitored.**
+> The maintainer no longer has a Synology NAS to test against, so no fixes will
+> ship. See [`README.md`](../../README.md). You are welcome to open an issue as
+> a note for other users, but please don't expect a reply — forking is the
+> supported path forward.
+
 ## Summary
 
 <!-- One-line description of the issue. -->

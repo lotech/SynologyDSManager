@@ -1,8 +1,44 @@
 # SynologyDSManager
 
-A native macOS app (and eventually a Safari extension) for managing a Synology DownloadStation remotely.
+> ## ⚠️ This project is no longer maintained
+>
+> **Status: unmaintained as of August 2026.**
+>
+> I've replaced my Synology NAS with an Unraid server, so I no longer have any
+> Synology hardware to develop or test against. Without a NAS to point it at I
+> can't verify a single change, so rather than let the project drift into
+> untested commits I'm stopping here.
+>
+> **The app still works.** Version 2.2.1 is functional against DSM 6.2+ and
+> there are no known broken features. Nothing is being taken away — the code,
+> the history, and the releases stay up.
+>
+> What "unmaintained" means in practice:
+>
+> - **No new features, bug fixes, or security patches** will ship, including
+>   for the known issues listed in [`SECURITY.md`](./SECURITY.md).
+> - **Issues and pull requests are not being monitored.** Please don't expect a
+>   reply.
+> - **No security reports, please.** See [`SECURITY.md`](./SECURITY.md) — there
+>   is no one on the other end to triage or fix them.
+> - **Nothing will be verified against future macOS or DSM releases.** Expect it
+>   to break eventually, most likely when Apple retires an API it depends on or
+>   Synology changes the Download Station API.
+>
+> **Forks are welcome and encouraged.** The licence is MIT and the code is in
+> good shape — Phase 2 rewrote all networking and storage onto Apple's own
+> SDKs, and it ships with 33 unit tests. If you want to carry it forward,
+> fork it; you don't need to ask. See
+> [`MODERNIZATION_PLAN.md`](./MODERNIZATION_PLAN.md) for what was left undone.
+>
+> If you are *using* the app, please read the
+> [known unfixed security issues](./SECURITY.md#known-unfixed-issues) before
+> deciding to keep it installed.
 
-This is a maintained fork of the excellent original project by
+A native macOS app for managing a Synology DownloadStation remotely. (A Safari
+extension was planned and partly built, but never shipped — see below.)
+
+This was a maintained fork of the excellent original project by
 [**Anton (@skavans)**](https://github.com/skavans), which lived at
 [**skavans/SynologyDSManager**](https://github.com/skavans/SynologyDSManager) from
 2020 through 2023. Anton built the whole app — the DSM API client, the Cocoa
@@ -13,14 +49,17 @@ working for sellers in Russia in 2022, Anton open-sourced the project rather
 than letting it fade away. That generosity is the only reason this fork
 exists, and the only reason the code has a second life.
 
-Goals of this fork:
+Goals of this fork were:
 
-- modernise the codebase (SwiftUI, Swift concurrency, current macOS APIs)
-- run a full security audit and fix the outstanding issues
-- add new features after the modernisation baseline is in place
+- modernise the codebase (SwiftUI, Swift concurrency, current macOS APIs) —
+  **done**
+- run a full security audit and fix the outstanding issues — **mostly done**;
+  see [`SECURITY.md`](./SECURITY.md) for what was left unfixed
+- add new features after the modernisation baseline is in place — **partly
+  done**, and stopped here
 
-See [`MODERNIZATION_PLAN.md`](./MODERNIZATION_PLAN.md) for the phased roadmap and
-[`CHANGELOG.md`](./CHANGELOG.md) for a running list of changes.
+See [`MODERNIZATION_PLAN.md`](./MODERNIZATION_PLAN.md) for the phased roadmap
+(now closed) and [`CHANGELOG.md`](./CHANGELOG.md) for the full list of changes.
 
 ## Features
 
@@ -35,14 +74,18 @@ See [`MODERNIZATION_PLAN.md`](./MODERNIZATION_PLAN.md) for the phased roadmap an
   badge showing the number of finished downloads
 - 2-step verification (TOTP) supported
 - Safari extension ("Download with Synology DS Manager" from the page context
-  menu) — *in progress*; the Web Extension bridge isn't shippable yet, so the
-  feature is disabled in the UI for now
+  menu) — *never finished*. The Web Extension bridge was blocked by a
+  Safari-side bug (see `CLAUDE.md`) and the feature stayed disabled in the UI.
+  It will not be completed here.
 
 ## Requirements
 
 - macOS 14 (Sonoma) or newer
 - Xcode 15 or newer to build
 - A reachable Synology DSM 6.2+ installation with Download Station installed
+
+Last verified against macOS 26.x and DSM 7.x in mid-2026. Nothing beyond that
+has been tested, and nothing will be — see the status notice at the top.
 
 ## Building
 
@@ -75,9 +118,11 @@ third-party Swift package. The app's DSM client, TLS pinning, Keychain
 access, and all response parsing are now done against Apple's own
 SDKs. One third-party dep remains — **Swifter** — used by
 `Webserver.swift` to host the loopback HTTP bridge to the Safari
-extension. Phase 3 replaces the whole bridge with an `NSXPCConnection`
-+ Safari Web Extension pairing, at which point Swifter comes out too
-and the project has zero third-party runtime dependencies.
+extension. Phase 3 was to replace the whole bridge with an
+`NSXPCConnection` + Safari Web Extension pairing, taking Swifter out
+with it and leaving zero third-party runtime dependencies. That work
+was blocked and is now abandoned, so **Swifter remains a dependency**
+and will not receive updates from this repo.
 
 Dropped during modernisation:
 - Alamofire, SwiftyJSON — replaced by `URLSession` + `async/await` +
@@ -119,7 +164,8 @@ SynologyDSManager/            # Main macOS app target
   KeychainStore.swift         # SecItem* wrapper (Phase 2b)
   Settings.swift              # StoredCredentials + Keychain persistence
   Shared.swift                # Stateless utility helpers (bytes/speed formatting)
-  Webserver.swift             # Loopback HTTP bridge — removed in Phase 3
+  Webserver.swift             # Loopback HTTP bridge — unauthenticated; was to be
+                              #   removed in Phase 3, which never landed
   ViewControllers/            # SwiftUI views, one per screen, + DestinationPicker
   Localizable.xcstrings       # English String Catalog (localisation scaffolding)
 
@@ -134,16 +180,27 @@ SynologyDSManagerTests/       # macOS unit-test bundle hosted by the app
 
 ## Contributing
 
-Issues and PRs are welcome. Please read [`CLAUDE.md`](./CLAUDE.md) for a short
-orientation to how the codebase is structured and the conventions we're moving
-towards, and check [`MODERNIZATION_PLAN.md`](./MODERNIZATION_PLAN.md) to see where
-your change fits.
+**This repository is no longer accepting contributions.** Issues and pull
+requests aren't being monitored, so anything opened here will likely sit
+unanswered.
+
+If you want to keep the project alive, **fork it** — that's the intended path
+forward and no permission is needed. [`CLAUDE.md`](./CLAUDE.md) is a short
+orientation to how the codebase is structured and the conventions it follows,
+and [`MODERNIZATION_PLAN.md`](./MODERNIZATION_PLAN.md) records both what
+shipped and what was still outstanding when work stopped.
 
 ## Security
 
-Report security issues privately via GitHub Security Advisories rather than
-public issues, especially anything involving credential handling, TLS, the local
-HTTP bridge, or the Safari extension's URL-scheme fallback.
+**No security reports, please, and do not expect security fixes.** The project
+is unmaintained: there is no one triaging reports and no patches will ship.
+
+[`SECURITY.md`](./SECURITY.md) documents the known unfixed issues — most
+notably an **unauthenticated loopback HTTP server on port 11863** that any
+local process can post download URLs to, and a `synologydsmanager://` URL
+scheme that enqueues downloads without validation. Both are local-only, both
+are documented, and neither will be fixed here. Read that file before deciding
+whether to keep the app installed.
 
 ## Acknowledgements
 

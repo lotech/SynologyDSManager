@@ -11,6 +11,29 @@ commit that makes them.
 
 ## [Unreleased]
 
+### Changed
+- **The project is now unmaintained.** The maintainer has replaced their
+  Synology NAS with an Unraid server and no longer has hardware to develop or
+  test against, so development stops at 2.2.1. The app still works and nothing
+  has been removed, but there will be no further features, bug fixes, or
+  security patches, and issues and pull requests are not being monitored.
+  Forks are welcome — the licence is MIT. `README.md`, `SECURITY.md`,
+  `MODERNIZATION_PLAN.md`, and the issue/PR templates have been updated to say
+  so, and the abandoned roadmap phases (3c and 5) are marked as abandoned
+  rather than pending.
+
+### Security
+- **Known unfixed issues are now documented explicitly** in `SECURITY.md`
+  rather than described as scheduled for a future phase. The unauthenticated
+  loopback HTTP server on port 11863 (`Webserver.swift`), the unvalidated
+  `synologydsmanager://` URL scheme, and the pinned-and-now-unpatched Swifter
+  dependency will not be fixed here; each entry describes the exposure and a
+  mitigation. Anyone continuing to run the app should read that file.
+- **Security reports are no longer being accepted.** The GitHub Security
+  Advisories channel is unmonitored, so `SECURITY.md` now asks people to fix
+  issues in a fork and publish their findings instead of reporting privately
+  into a channel nobody reads.
+
 ## [2.2.1] — 2026-06-12
 
 ### Added

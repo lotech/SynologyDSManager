@@ -3,6 +3,22 @@
 Orientation file for future Claude Code sessions working on this repo. If you're a
 human, `README.md` is a better starting point.
 
+## ⚠️ Project status: unmaintained (August 2026)
+
+**Active development has stopped.** The maintainer replaced their Synology NAS
+with an Unraid server and no longer has hardware to test against. No further
+features, fixes, or security patches will ship from this repository.
+
+The code is functional as of 2.2.1 and is left in place. The rest of this file
+remains accurate as a description of **how the codebase is built**, and is kept
+for anyone forking the project. Read the roadmap sections below as a historical
+record of what shipped and what didn't — not as a plan anyone is working
+through. The remaining phases (3c and 5) are **abandoned, not pending**.
+
+If you are an agent picking this repo up in a fork: the conventions section is
+still the right guide, and `SECURITY.md` lists the known unfixed issues, which
+are the most valuable things to address first.
+
 ## Modernisation status snapshot
 
 - ✅ **Phase 0** — project hygiene, CI, SHA-pinned Actions, SECURITY.md
@@ -42,9 +58,13 @@ human, `README.md` is a better starting point.
   so Phase 4 stays open only as a link to that. (A future iOS port would
   refactor the portable network/keychain core into a shared package at that
   point.)
-- ⏳ **Phase 5** — release engineering (Sparkle, notarised DMGs via CI).
+- ❌ **Phase 5** — release engineering (Sparkle, notarised DMGs via CI).
+  **Abandoned, never started.** Manual notarised DMGs via `./deploy.sh → d`
+  were as far as this got.
 
-See `MODERNIZATION_PLAN.md` for the per-phase task checklist.
+Phases 3c and 5 are now closed as **abandoned** rather than pending — see the
+project-status notice above. See `MODERNIZATION_PLAN.md` for the per-phase task
+checklist as it stood when work stopped.
 
 ## Project at a glance
 
@@ -331,11 +351,17 @@ When in doubt, leak nothing.
   hook itself is broken and you're fixing it in the same PR.
 
 **Security disclosures:**
-- Accept reports via GitHub Security Advisories (private), not public issues.
-- Keep a brief `SECURITY.md` policy at the repo root (planned as a Phase 0
-  follow-up).
+- *Historical:* reports were accepted via GitHub Security Advisories (private),
+  not public issues. **This no longer applies** — the repo is unmaintained and
+  the advisory channel is not monitored. `SECURITY.md` now says so explicitly
+  and lists the known unfixed issues instead.
+- If you fork this, restore a real disclosure channel in `SECURITY.md` and
+  point it at yourself.
 
 ## How to land a change
+
+> **Not applicable in this repository any more** — it is unmaintained and not
+> accepting changes. Kept as the workflow a fork should adopt.
 
 1. Work on a feature branch; never push directly to `main`.
 2. Add a bullet under `## [Unreleased]` in `CHANGELOG.md` describing the
