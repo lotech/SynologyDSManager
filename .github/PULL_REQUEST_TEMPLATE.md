@@ -1,6 +1,6 @@
 > ⚠️ **This project is unmaintained and pull requests are not being reviewed
 > or merged.** The maintainer no longer has a Synology NAS to verify changes
-> against. See [`README.md`](../README.md) — forking is the supported path
+> against. See [`README.md`](https://github.com/lotech/SynologyDSManager/blob/main/README.md) — forking is the supported path
 > forward, and no permission is needed. This template is kept for the benefit
 > of forks.
 
