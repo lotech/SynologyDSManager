@@ -1,6 +1,12 @@
-# Blank issues are disabled so that everyone opening an issue passes through a
-# template carrying the unmaintained notice, and sees the contact links below
-# on this chooser page first.
+# NOTE: Issues are currently switched OFF for this repository (Settings →
+# Features → Issues), so this file and the templates beside it are inert —
+# there is no issue chooser to render them on. They are kept so that the
+# unmaintained notice is already in place if Issues is ever switched back on,
+# and so forks inherit it.
+#
+# When Issues is on: blank issues are disabled so everyone opening one passes
+# through a template carrying the notice, and sees the contact links below on
+# the chooser page first.
 blank_issues_enabled: false
 
 contact_links:
