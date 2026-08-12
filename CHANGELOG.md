@@ -17,10 +17,26 @@ commit that makes them.
   test against, so development stops at 2.2.1. The app still works and nothing
   has been removed, but there will be no further features, bug fixes, or
   security patches, and issues and pull requests are not being monitored.
-  Forks are welcome — the licence is MIT. `README.md`, `SECURITY.md`,
+  Forks are welcome — the licence is GPL-3.0. `README.md`, `SECURITY.md`,
   `MODERNIZATION_PLAN.md`, and the issue/PR templates have been updated to say
   so, and the abandoned roadmap phases (3c and 5) are marked as abandoned
   rather than pending.
+
+### Fixed
+- **Corrected the project's stated licence: it is GPL-3.0, not MIT.** The
+  `README.md` licence section, `SECURITY.md`, the issue-chooser links, and the
+  `NSHumanReadableCopyright` string in all three targets' `Info.plist` files
+  described the project as MIT licensed. That was wrong. The `LICENSE` file has
+  contained the GNU General Public License v3.0 for the entire history of this
+  fork, and the upstream project `skavans/SynologyDSManager` ships a
+  byte-identical GPL-3.0 `LICENSE`, which this fork inherits. **Only the prose
+  was ever wrong — the licence itself has never changed**, so nobody's
+  obligations have been altered by this correction; they were GPL-3.0 all
+  along. This matters most for forks: GPL-3.0 is copyleft, so a distributed
+  modified version must also ship its source under GPL-3.0, and that can't be
+  relicensed away since the copyright in the original work is @skavans's.
+  Anyone who forked while the documentation said MIT should note that their
+  actual obligations are GPL-3.0.
 
 ### Security
 - **Known unfixed issues are now documented explicitly** in `SECURITY.md`

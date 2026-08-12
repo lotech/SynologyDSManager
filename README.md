@@ -25,10 +25,10 @@
 >   to break eventually, most likely when Apple retires an API it depends on or
 >   Synology changes the Download Station API.
 >
-> **Forks are welcome and encouraged.** The licence is MIT and the code is in
-> good shape — Phase 2 rewrote all networking and storage onto Apple's own
-> SDKs, and it ships with 33 unit tests. If you want to carry it forward,
-> fork it; you don't need to ask. See
+> **Forks are welcome and encouraged.** The licence is GPL-3.0 (copyleft —
+> keep your fork's source open) and the code is in good shape: Phase 2 rewrote
+> all networking and storage onto Apple's own SDKs, and it ships with 33 unit
+> tests. If you want to carry it forward, fork it; you don't need to ask. See
 > [`MODERNIZATION_PLAN.md`](./MODERNIZATION_PLAN.md) for what was left undone.
 >
 > If you are *using* the app, please read the
@@ -208,8 +208,8 @@ Enormous thanks to **[Anton (@skavans)](https://github.com/skavans)** — withou
 their work there would be nothing to modernise. They wrote the original macOS
 app and Safari extension over several years, shipped it as a paid product to
 real customers, incorporated customer feature requests, and then made the
-decision to release the whole thing under MIT when continuing the commercial
-side became impractical. That is not a small thing to give away.
+decision to open-source the whole thing under GPL-3.0 when continuing the
+commercial side became impractical. That is not a small thing to give away.
 
 The original project — which still contains the history, context, and earlier
 user reviews — lives at:
@@ -228,11 +228,25 @@ you are running is built on years of their work.
 
 ## Licence
 
-MIT — see [`LICENSE`](./LICENSE).
+**GNU General Public License v3.0** — see [`LICENSE`](./LICENSE), which is the
+authoritative copy.
 
 - Original app, Safari extension, and surrounding code: © 2020–2023
   Anton ([@skavans](https://github.com/skavans)).
 - Modernisation work (2024–present): © SynologyDSManager contributors.
 
-Both sets of work are released under the MIT licence; the `LICENSE` file in
-this repository is the authoritative copy.
+Both sets of work are under GPL-3.0. The upstream project
+[`skavans/SynologyDSManager`](https://github.com/skavans/SynologyDSManager)
+ships a byte-identical GPL-3.0 `LICENSE`, and this fork inherits it.
+
+> **Note for forkers:** GPL-3.0 is a copyleft licence. If you distribute a
+> modified version, you must release your source under GPL-3.0 as well. That
+> is not optional and it cannot be relicensed away — not by this fork and not
+> by yours — because the copyright in the original work is Anton's.
+>
+> Earlier revisions of this README, `SECURITY.md`, and the apps' `Info.plist`
+> copyright strings incorrectly described the project as MIT licensed. That
+> was a documentation error, corrected in August 2026. **The `LICENSE` file
+> has been GPL-3.0 for the entire history of both this fork and the upstream
+> project** — the licence never changed, only the prose describing it. If you
+> forked while the docs said MIT, your obligations are GPL-3.0.

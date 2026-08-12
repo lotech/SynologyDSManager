@@ -17,8 +17,9 @@ please don't.
 
 If you find a vulnerability in this code, the useful things to do are:
 
-- **Fork the repository and fix it there.** The licence is MIT. Publish your
-  fork so other users have somewhere to go.
+- **Fork the repository and fix it there.** The licence is GPL-3.0, so you're
+  free to — and your fork's source has to stay open too. Publish it so other
+  users have somewhere to go.
 - **Publish your findings** once you're satisfied users can act on them. There
   is no disclosure embargo to coordinate here — nobody is working on a fix, so
   the usual reason to hold a report private doesn't apply. The only people
@@ -135,7 +136,10 @@ unmaintained.
 
 ## Additional context
 
-- The project is MIT licensed. See [`LICENSE`](./LICENSE).
+- The project is licensed under **GPL-3.0**. See [`LICENSE`](./LICENSE).
+  (Earlier revisions of this file described it as MIT — that was a
+  documentation error, corrected in August 2026. The `LICENSE` file itself has
+  always been GPL-3.0.)
 - [`MODERNIZATION_PLAN.md`](./MODERNIZATION_PLAN.md) records the security work
   that shipped (TLS pinning, Keychain hardening, dependency removal) and the
   work that didn't (webserver removal, URL-scheme validation).
