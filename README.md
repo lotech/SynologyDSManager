@@ -25,8 +25,9 @@
 >   to break eventually, most likely when Apple retires an API it depends on or
 >   Synology changes the Download Station API.
 >
-> **Forks are welcome and encouraged.** The licence is GPL-3.0 (copyleft —
-> keep your fork's source open) and the code is in good shape: Phase 2 rewrote
+> **Forks are welcome and encouraged.** The licence is GPL-3.0 (copyleft — a
+> private fork carries no publishing obligation, but if you distribute a build
+> you must offer its source too) and the code is in good shape: Phase 2 rewrote
 > all networking and storage onto Apple's own SDKs, and it ships with 33 unit
 > tests. If you want to carry it forward, fork it; you don't need to ask. See
 > [`MODERNIZATION_PLAN.md`](./MODERNIZATION_PLAN.md) for what was left undone.
@@ -74,9 +75,13 @@ See [`MODERNIZATION_PLAN.md`](./MODERNIZATION_PLAN.md) for the phased roadmap
   badge showing the number of finished downloads
 - 2-step verification (TOTP) supported
 - Safari extension ("Download with Synology DS Manager" from the page context
-  menu) — *never finished*. The Web Extension bridge was blocked by a
-  Safari-side bug (see `CLAUDE.md`) and the feature stayed disabled in the UI.
-  It will not be completed here.
+  menu) — the *replacement* Web Extension was never finished, blocked by a
+  Safari-side bug (see `CLAUDE.md`), so the feature stays disabled in the app's
+  UI and won't be completed here. **The older legacy Safari App Extension does
+  still ship**, embedded in the app bundle, and can be switched on in Safari →
+  Settings → Extensions independently of that UI toggle. If you enable it, note
+  that it writes complete download URLs to the unified log — see
+  [known unfixed issue 3](./SECURITY.md#known-unfixed-issues).
 
 ## Requirements
 
@@ -200,9 +205,11 @@ is unmaintained: there is no one triaging reports and no patches will ship.
 can post download URLs to (and crash the app through), a `synologydsmanager://`
 URL scheme that enqueues downloads without validation, the legacy Safari
 extension **writing complete download URLs to the unified log**, and a frozen
-Swifter dependency. All are local-only, all are documented with a mitigation,
-and none will be fixed here. Read that file before deciding whether to keep the
-app installed.
+Swifter dependency. Nothing listens on a network-reachable port — but the
+entry points being local doesn't mean an attacker has to be: a website you
+visit can invoke the URL-scheme handler with no foothold on your Mac at all.
+Each is documented with a mitigation, and none will be fixed here. Read that
+file before deciding whether to keep the app installed.
 
 ## Acknowledgements
 

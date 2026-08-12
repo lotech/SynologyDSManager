@@ -18,8 +18,9 @@ please don't.
 If you find a vulnerability in this code, the useful things to do are:
 
 - **Fork the repository and fix it there.** The licence is GPL-3.0, so you're
-  free to — and your fork's source has to stay open too. Publish it so other
-  users have somewhere to go.
+  free to. Private forks carry no publishing obligation; if you *distribute*
+  your build, you must offer its source under GPL-3.0 too. Publishing it
+  anyway gives other users somewhere to go.
 - **Publish your findings** once you're satisfied users can act on them. There
   is no disclosure embargo to coordinate here — nobody is working on a fix, so
   the usual reason to hold a report private doesn't apply. The only people
@@ -35,9 +36,25 @@ These were identified during the modernisation audit and are **shipping in
 2.2.1 unfixed**. They will not be fixed in this repository. Anyone running or
 forking the app should read this list.
 
-All of them require **local access to your Mac** — i.e. code already running
-under your user account. None is remotely exploitable across the network. That's
-a meaningful limit, but on a shared or compromised machine it isn't much of one.
+**The entry points are local; the trigger need not be.** Nothing here listens on
+a network-reachable port — the HTTP server binds loopback only, so it is not
+reachable from your LAN or the internet. But "local entry point" is not the same
+as "requires an attacker already on your Mac":
+
+- **A website you visit can invoke the `synologydsmanager://` handler** (issue
+  2). That is a plain scheme hand-off through Launch Services with no
+  same-origin check anywhere in the path, so an attacker needs no foothold on
+  your machine at all — just a page you open.
+- **A page in your browser may also be able to POST to the loopback server**
+  (issue 1). This one is browser-dependent: the response is opaque
+  cross-origin, but a fire-and-forget request still reaches the handler, which
+  is enough both to enqueue a download and to trigger the crash. Recent
+  private-network-access restrictions block this in some browsers and versions,
+  so treat it as *possible* rather than guaranteed.
+
+Local code running as your user can of course reach both directly. Either way,
+the practical worst case is unwanted downloads queued on your NAS and an app
+that crashes — not code execution on your Mac.
 
 **Being signed in is not the gate you might expect.** `AppModel.startPolling`
 sets up the API object and calls `start_webserver()` *before* it awaits

@@ -28,5 +28,6 @@ contact_links:
   - name: 🍴 Fork this project
     url: https://github.com/lotech/SynologyDSManager/fork
     about: >-
-      GPL-3.0 licensed, no permission needed — keep your fork's source open.
-      This is the recommended way to get a bug fixed or a feature built.
+      GPL-3.0 licensed, no permission needed. Keep it private if you like; if
+      you distribute a build, its source must go with it. This is the
+      recommended way to get a bug fixed or a feature built.
