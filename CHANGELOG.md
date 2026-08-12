@@ -42,9 +42,14 @@ commit that makes them.
 - **Known unfixed issues are now documented explicitly** in `SECURITY.md`
   rather than described as scheduled for a future phase. The unauthenticated
   loopback HTTP server on port 11863 (`Webserver.swift`), the unvalidated
-  `synologydsmanager://` URL scheme, and the pinned-and-now-unpatched Swifter
-  dependency will not be fixed here; each entry describes the exposure and a
-  mitigation. Anyone continuing to run the app should read that file.
+  `synologydsmanager://` URL scheme, the legacy Safari extension writing
+  complete download URLs (and the originating page's address) to the unified
+  log via `NSLog`, and the pinned-and-now-unpatched Swifter dependency will not
+  be fixed here; each entry describes the exposure and a mitigation. The
+  document also corrects an earlier overstatement of its own: being signed in
+  to the NAS is **not** a precondition for the first two, because
+  `AppModel.startPolling` starts the web server before it awaits
+  authentication. Anyone continuing to run the app should read that file.
 - **Security reports are no longer being accepted.** The GitHub Security
   Advisories channel is unmonitored, so `SECURITY.md` now asks people to fix
   issues in a fork and publish their findings instead of reporting privately

@@ -8,12 +8,16 @@
 
 //  ⚠️ SECURITY — KNOWN UNFIXED ISSUE. READ BEFORE REUSING THIS FILE.
 //
-//  This is an UNAUTHENTICATED HTTP server. While the app is signed in it
+//  This is an UNAUTHENTICATED HTTP server. From the moment polling starts it
 //  accepts any local `POST /add_download` and forwards the URL straight to
 //  the NAS, with no authentication of the caller whatsoever. Any process
 //  running as the user — any script, any page that can reach loopback — can
 //  enqueue arbitrary downloads. The handler also force-unwraps the request
 //  body and `try!`s the decode, so a malformed POST crashes the app.
+//
+//  Note the ordering in AppModel.startPolling: this server is started BEFORE
+//  authentication is awaited, so the crash above is reachable even when the
+//  NAS never accepted the user's credentials. Being signed in is not a gate.
 //
 //  It binds to loopback only, so it is not reachable from the LAN.
 //

@@ -195,12 +195,14 @@ shipped and what was still outstanding when work stopped.
 **No security reports, please, and do not expect security fixes.** The project
 is unmaintained: there is no one triaging reports and no patches will ship.
 
-[`SECURITY.md`](./SECURITY.md) documents the known unfixed issues — most
-notably an **unauthenticated loopback HTTP server on port 11863** that any
-local process can post download URLs to, and a `synologydsmanager://` URL
-scheme that enqueues downloads without validation. Both are local-only, both
-are documented, and neither will be fixed here. Read that file before deciding
-whether to keep the app installed.
+[`SECURITY.md`](./SECURITY.md) documents the known unfixed issues — an
+**unauthenticated loopback HTTP server on port 11863** that any local process
+can post download URLs to (and crash the app through), a `synologydsmanager://`
+URL scheme that enqueues downloads without validation, the legacy Safari
+extension **writing complete download URLs to the unified log**, and a frozen
+Swifter dependency. All are local-only, all are documented with a mitigation,
+and none will be fixed here. Read that file before deciding whether to keep the
+app installed.
 
 ## Acknowledgements
 

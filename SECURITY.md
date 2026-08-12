@@ -36,15 +36,26 @@ These were identified during the modernisation audit and are **shipping in
 forking the app should read this list.
 
 All of them require **local access to your Mac** — i.e. code already running
-under your user account. None is remotely exploitable across the network.
-Both entry points are also only live once the app is running *and* signed in
-to your NAS, since each bails out if there's no authenticated API session.
-That's a meaningful limit, but on a shared or compromised machine it isn't
-much of one.
+under your user account. None is remotely exploitable across the network. That's
+a meaningful limit, but on a shared or compromised machine it isn't much of one.
+
+**Being signed in is not the gate you might expect.** `AppModel.startPolling`
+sets up the API object and calls `start_webserver()` *before* it awaits
+authentication, which happens asynchronously afterwards. So once credentials
+are configured and polling has started:
+
+- the **crash (denial of service)** in issue 1 is reachable regardless of
+  whether the NAS ever accepted your credentials, because `Webserver.swift`
+  force-decodes the request body before any session check; and
+- the **enqueue** paths only check that an API object exists, not that it is
+  authenticated — a failed login still leaves them reachable, though the
+  resulting `createTask` call fails at the NAS.
+
+Both entry points do require the app to be *running*.
 
 ### 1. Unauthenticated loopback HTTP server (`Webserver.swift`)
 
-Once the app signs in, it listens on **127.0.0.1 / ::1 port 11863** and accepts
+Once polling starts, it listens on **127.0.0.1 / ::1 port 11863** and accepts
 any local `POST /add_download` request, with no authentication of any kind.
 Any process running as your user — and any script, or any browser page that
 can reach loopback — can enqueue arbitrary download URLs onto your NAS.
@@ -75,10 +86,51 @@ local app, can cause a download to be enqueued by handing macOS a
 `createTask` with no scheme allowlist or length limit. Hardening this was also
 deferred to Phase 3.
 
-**Mitigation:** same as above — the scheme only does anything while the app is
-running and signed in.
+**Mitigation:** this one needs its own fix — **removing `start_webserver()` does
+nothing for it.** The scheme is registered independently, via `CFBundleURLTypes`
+in `SynologyDSManager/Info.plist`, and handled independently in
+`AppDelegate.application(_:open:)`. To close it in your own build, delete the
+`CFBundleURLTypes` entry from `Info.plist` (which unregisters the scheme with
+Launch Services), or drop the `case "synologydsmanager":` branch from the
+handler, or add validation there — an allowlist of `http`/`https`/`magnet` plus
+a length cap, mirroring what `Bridge/SynologyBridgeService.swift` already does.
+Note that the legacy Safari extension falls back to this scheme when the
+loopback POST fails, so removing both leaves that extension with no path to the
+app at all — which is fine, since its feature is disabled in the UI regardless.
 
-### 3. Swifter is a pinned, unpatched dependency
+Short of rebuilding, quitting the app when you aren't using it is the only
+mitigation.
+
+### 3. The legacy Safari extension logs full URLs to the unified log
+
+`SafariExtensionHandler.messageReceived` (in the bundled
+`SynologyDSManager Extension` target) stringifies the entire `userInfo`
+dictionary and passes it to `NSLog`, together with the URL of the page the
+message came from:
+
+```swift
+NSLog("The extension received a message (\(messageName)) from a script injected
+       into (\(String(describing: properties?.url))) with userInfo (\(userInfoDescription))")
+```
+
+`userInfo` carries the complete download URL under its `URL` key. So every link
+you send via that extension — including signed/pre-authenticated URLs with
+tokens or credentials in the query string, and the address of the page you sent
+it from — lands in the unified log, readable by other processes and captured in
+sysdiagnose bundles.
+
+This only fires if you have the legacy extension enabled in Safari. The feature
+is disabled in the main app's UI, but the extension target is still built and
+embedded in the app bundle, so it can be enabled in Safari's settings
+independently. Retiring that target was Phase 3c's job — abandoned.
+
+**Mitigation:** disable "Synology DS Manager" in Safari → Settings → Extensions.
+
+For completeness, `Webserver.swift` also uses bare `print(...)` for its startup
+and error paths, against the project's own "no `print` for diagnostics"
+convention. Those lines log a port number and an error description, not URLs.
+
+### 4. Swifter is a pinned, unpatched dependency
 
 **Swifter** is the one remaining third-party runtime dependency, and it is the
 library serving the loopback HTTP server above. It's pinned in
@@ -100,8 +152,11 @@ addressed during the modernisation and are believed sound:
   outright.
 - **Session IDs** (`_sid`) go in the POST body and the session cookie, never in
   a URL query string. Unit tests guard against a regression there.
-- **Logging** goes through `os.Logger` and excludes passwords, OTP codes,
-  session IDs, and full request URLs.
+- **Logging in the main app's networking and auth code** goes through
+  `os.Logger` via `AppLogger` and excludes passwords, OTP codes, session IDs,
+  and full request URLs. **This does not extend to the whole codebase** — see
+  issue 3 above, where the legacy Safari extension `NSLog`s complete download
+  URLs.
 
 These were verified by the 33 unit tests in `SynologyDSManagerTests/`, which
 still pass. They are not a guarantee — just a statement of where the audit got
