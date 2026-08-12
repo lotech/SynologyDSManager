@@ -248,9 +248,12 @@ Both sets of work are under GPL-3.0. The upstream project
 [`skavans/SynologyDSManager`](https://github.com/skavans/SynologyDSManager)
 ships a byte-identical GPL-3.0 `LICENSE`, and this fork inherits it.
 
-> **Note for forkers:** GPL-3.0 is a copyleft licence. If you distribute a
-> modified version, you must release your source under GPL-3.0 as well. That
-> is not optional and it cannot be relicensed away — not by this fork and not
+> **Note for forkers:** GPL-3.0 is a copyleft licence. Keeping a fork private
+> commits you to nothing. If you *distribute* a modified version, you must make
+> its Corresponding Source available under GPL-3.0 — by any of the routes
+> section 6 of the licence allows, which includes shipping the source alongside
+> the build, a written offer, or equivalent access from a network server. That
+> much is not optional and cannot be relicensed away — not by this fork and not
 > by yours — because the copyright in the original work is Anton's.
 >
 > Earlier revisions of this README, `SECURITY.md`, and the apps' `Info.plist`

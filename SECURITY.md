@@ -175,9 +175,17 @@ addressed during the modernisation and are believed sound:
   issue 3 above, where the legacy Safari extension `NSLog`s complete download
   URLs.
 
-These were verified by the 33 unit tests in `SynologyDSManagerTests/`, which
-still pass. They are not a guarantee — just a statement of where the audit got
-to before work stopped.
+**How much of that is actually tested, precisely:** only the `_sid` bullet. The
+33 tests in `SynologyDSManagerTests/` cover `SynologyAPI`'s request and session
+behaviour — including explicit regression guards that a session ID never
+reaches a request URL — plus the XPC bridge's input validation. The suite
+contains **no** reference to `KeychainStore`, `SynologyTrustEvaluator`, or
+`AppLogger`, so the Keychain-accessibility, TLS-pinning, and logging claims
+above rest on **reading the code, not on executing it**.
+
+Treat them accordingly: they are audit findings from a maintainer who has now
+stopped, not test-backed guarantees, and nothing re-checks them from here. If
+you fork, they are the first things worth writing tests around.
 
 ## Repository hygiene
 

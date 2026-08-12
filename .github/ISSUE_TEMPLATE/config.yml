@@ -29,5 +29,6 @@ contact_links:
     url: https://github.com/lotech/SynologyDSManager/fork
     about: >-
       GPL-3.0 licensed, no permission needed. Keep it private if you like; if
-      you distribute a build, its source must go with it. This is the
-      recommended way to get a bug fixed or a feature built.
+      you distribute a build, make its Corresponding Source available by any of
+      the routes GPLv3 section 6 allows. The recommended way to get a bug fixed
+      or a feature built.
