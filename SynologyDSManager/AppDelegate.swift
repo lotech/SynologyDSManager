@@ -197,6 +197,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     // MARK: - URL / file open
 
+    /// ⚠️ Known unfixed issue: the `synologydsmanager://` scheme below is
+    /// callable by any website or local app, and the caller is not
+    /// authenticated. The URL's *shape* is checked (host, query item), but the
+    /// extracted `downloadURL` value is passed to the NAS with no scheme
+    /// allowlist and no length cap — unlike the XPC bridge in `Bridge/`, which
+    /// validates both. Hardening this was deferred to Phase 3, which was
+    /// abandoned. See SECURITY.md ("Known unfixed issues").
     @MainActor
     func application(_ application: NSApplication, open urls: [URL]) {
         var torrentPaths: [String] = []
