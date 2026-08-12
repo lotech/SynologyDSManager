@@ -2,6 +2,10 @@
 #
 # deploy.sh — interactive helper for SynologyDSManager maintainers.
 #
+# NOTE: this project is UNMAINTAINED as of August 2026 — no further releases
+# will be cut from this repository. The script still works and is kept for
+# anyone building from source or maintaining a fork. See README.md.
+#
 # Run from the repo root:  ./deploy.sh
 # Options are single-key; no Enter required.
 #
@@ -514,6 +518,11 @@ print_menu() {
     cat <<EOF
 ${BOLD}SynologyDSManager — deploy.sh${RESET}
 ${DIM}$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo '(no git branch)') · ${status_line}${DIM}${RESET}
+
+${YELLOW}⚠  This project is UNMAINTAINED (since August 2026).${RESET}
+${DIM}   No further fixes or features will ship upstream, and known security
+   issues are documented but unfixed — see SECURITY.md. Building still
+   works; if you are carrying this forward, work from your own fork.${RESET}
 
   ${BOLD}p${RESET}   Pull main from origin
   ${BOLD}o${RESET}   Open in Xcode

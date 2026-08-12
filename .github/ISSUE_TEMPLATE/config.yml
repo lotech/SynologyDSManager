@@ -1,0 +1,26 @@
+# Blank issues are disabled so that everyone opening an issue passes through a
+# template carrying the unmaintained notice, and sees the contact links below
+# on this chooser page first.
+blank_issues_enabled: false
+
+contact_links:
+  - name: ⚠️ This project is UNMAINTAINED — please read before opening anything
+    url: https://github.com/lotech/SynologyDSManager#readme
+    about: >-
+      Development stopped in August 2026. The maintainer replaced their Synology
+      NAS and has no hardware to test against, so no fixes or features will
+      ship and issues are not monitored. The app still works; forking is the
+      supported path forward.
+
+  - name: 🔒 Known unfixed security issues (read instead of reporting)
+    url: https://github.com/lotech/SynologyDSManager/blob/main/SECURITY.md#known-unfixed-issues
+    about: >-
+      Security reports are not being accepted or monitored. The known unfixed
+      issues are documented, each with a mitigation — what you have found may
+      already be listed there.
+
+  - name: 🍴 Fork this project
+    url: https://github.com/lotech/SynologyDSManager/fork
+    about: >-
+      MIT licensed, no permission needed. This is the recommended way to get a
+      bug fixed or a feature built.
