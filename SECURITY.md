@@ -287,9 +287,12 @@ reason since June 2026 (`project.pbxproj` is `objectVersion` 70 while
 red X masked the other.
 
 Note the fix is **not** a rename: `AppModel.api` is `private(set)`, so a test
-cannot assign to it. A fork will need a deliberate test seam — an internal
-setter, an injected dependency, or `@testable` access — which is a production
-change, not a test-file edit.
+cannot assign to it, and `@testable` does not change that — it exposes
+`internal` declarations to the test module but does not widen a `private(set)`
+setter, and the file already imports `@testable` today. A fork has to change
+production code: widen the setter (drop `private(set)`, or add an internal
+setter method), or inject the API so tests can supply their own. Either way it
+is a production change, not a test-file edit.
 
 So every security claim in this section rests on **reading the code, not on
 executing it** — the `_sid` behaviour no less than the Keychain, TLS and

@@ -13,9 +13,13 @@
 //  the compile failure was masked by an already-red build.
 //
 //  Fixing it is NOT a rename: `AppModel.api` is `private(set)`, so a test
-//  cannot assign to it. A fork needs to add a deliberate test seam to
-//  AppModel — an internal setter, an injected dependency, or @testable
-//  access — and then point these three sites at it.
+//  cannot assign to it. Note @testable does NOT help — this file already
+//  imports @testable (below) and that changes nothing, because @testable
+//  raises `internal` declarations into the test module's view but does not
+//  widen a `private(set)` setter. A fork has to change production code:
+//  either widen the setter (drop `private(set)`, or add an internal
+//  setter method), or inject the API so the tests can supply their own.
+//  Then point these three sites at whichever seam was added.
 //
 //  The project is unmaintained and this was found without a Mac to compile
 //  on, so the repair is left to whoever forks. The tests below are otherwise
