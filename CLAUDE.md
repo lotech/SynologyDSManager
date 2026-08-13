@@ -13,7 +13,9 @@ The code is functional as of 2.2.1 and is left in place. The rest of this file
 remains accurate as a description of **how the codebase is built**, and is kept
 for anyone forking the project. Read the roadmap sections below as a historical
 record of what shipped and what didn't — not as a plan anyone is working
-through. The remaining phases (3c and 5) are **abandoned, not pending**.
+through. **Every unticked box is abandoned, not pending**: Phase 3 and Phase 5
+as phases, plus one clean-up task each left over in Phases 0, 2 and 4. Nothing
+below is waiting on anyone, and nothing is scheduled to resume.
 
 If you are an agent picking this repo up in a fork: the conventions section is
 still the right guide, and `SECURITY.md` lists the known unfixed issues, which
@@ -21,8 +23,14 @@ are the most valuable things to address first.
 
 ## Modernisation status snapshot
 
-- ✅ **Phase 0** — project hygiene, CI, SHA-pinned Actions, SECURITY.md
-- ✅ **Phase 1** — macOS 13 floor, deprecated-API migration, `@main`
+Statuses below mirror `MODERNIZATION_PLAN.md`'s phase headings exactly. If the
+two ever disagree, the plan is the record and this snapshot is the stale copy.
+
+- ✅ **Phase 0** — project hygiene, CI, SHA-pinned Actions, SECURITY.md.
+  *Shipped, 1 task abandoned* — the SwiftLint/SwiftFormat CI jobs were never
+  made blocking; both still end in `|| true`.
+- ✅ **Phase 1** — macOS 13 floor, deprecated-API migration, `@main`.
+  *Shipped*, no loose ends.
 - ✅ **Phase 2** — all networking + storage rewritten: `SynologyAPI` actor on
   `URLSession`+`async/await`, typed Codable DTOs, raw-public-key pinning
   (TOFU — not RFC 7469 SPKI; see `SECURITY.md`),
@@ -31,9 +39,12 @@ are the most valuable things to address first.
   and the project builds warning-free. 33 unit tests were written; note they
   do **not** currently run — the test target has not compiled since Phase 4
   slice 1, and CI cannot open the project at all. See `SECURITY.md`.
-- ⏸️ **Phase 3** — Safari Web Extension + XPC bridge replacing the
+  *Shipped, 1 task abandoned* — the last `print(…)` sites never moved to
+  `os.Logger`; they are in `Webserver.swift`, which Phase 3c would have
+  deleted.
+- ❌ **Phase 3** — Safari Web Extension + XPC bridge replacing the
   unauthenticated loopback HTTP server; Swifter dep goes with it.
-  **Deferred 2026-05-29.** **3a + 3b shipped**: XPC scaffolding, the Web
+  **Abandoned.** **3a + 3b shipped**: XPC scaffolding, the Web
   Extension source tree, the main-app-side Mach service wiring, the Web
   Extension Xcode target itself, and the bundled toolbar icons.
   Build-side path (Safari → extension handler → XPC → main app → DSM) is
@@ -43,26 +54,27 @@ are the most valuable things to address first.
   subsystem silently refuses to start the service worker (`background.js`)
   on macOS 26.x + Safari 26.x. Believed Safari-side, but **unproven**: the
   clean-room experiment that would separate a Safari bug from a divergence in
-  our own bundle was never run. See the blocker note below.
-  See the *"Known blocker"* note below. Rather than block the roadmap on
-  Apple, active work has moved to Phase 4. Phase 3c (retire the legacy
-  target + `Webserver.swift`) stays parked behind the runtime blocker, so
-  the unauthenticated loopback server stays in place until there's a
-  working replacement. Revisit when a Safari/macOS point release unblocks
-  the worker.
-- 🚧 **Phase 4** — SwiftUI + Observation; retire `Shared.swift` globals.
-  **Effectively complete.** Pure macOS rewrite. App lifecycle is now fully
+  our own bundle was never run — see the *"Known blocker"* note below.
+  Work moved to Phase 4 at the time rather than block the roadmap on an
+  unfinished diagnosis, and then stopped altogether. **3c never landed**, so
+  the legacy target and the unauthenticated loopback server are still what
+  ships — that is the repo's most significant known security gap and the
+  highest-value thing for a fork to take on. Nobody is waiting on a Safari
+  release; if you want this working, the clean-room test is where to start.
+- ✅ **Phase 4** — SwiftUI + Observation; retire `Shared.swift` globals.
+  **Shipped, 1 task abandoned.** Pure macOS rewrite. App lifecycle is now fully
   SwiftUI: `@main struct SynologyDSManagerApp: App` with `Window` scenes +
   `MenuBarExtra` and an `@NSApplicationDelegateAdaptor` for AppKit hooks.
   All screens are SwiftUI; the globals moved to `AppModel`; SF Symbols and
   the English String Catalog are in; `Main.storyboard` and every main-app
   XIB are deleted (so the app ships zero storyboards/XIBs). One small AppKit
   hosting shim remains — `ChooseDestHostingController`, used by
-  `DestinationPicker` for the Choose Destination sheet. The one open task —
-  deleting the last `.xib` (the legacy extension's) — is gated on Phase 3c,
-  so Phase 4 stays open only as a link to that. (A future iOS port would
-  refactor the portable network/keychain core into a shared package at that
-  point.)
+  `DestinationPicker` for the Choose Destination sheet. The one unfinished
+  task — deleting the last `.xib` (the legacy extension's) — was gated on
+  Phase 3c; with 3c abandoned that gate never opens, so the task is abandoned
+  too rather than pending. There is no remaining SwiftUI work. (A future iOS
+  port would refactor the portable network/keychain core into a shared package
+  at that point.)
 - ❌ **Phase 5** — release engineering (Sparkle, notarised DMGs via CI).
   **Abandoned after 1 of 4 tasks.** The notarisation step does exist —
   `deploy.sh`'s `action_dmg` runs `notarytool submit --wait` then
@@ -85,8 +97,9 @@ checklist as it stood when work stopped.
   been deleted. A few AppKit shims remain: `@NSApplicationDelegateAdaptor`
   for URL/file-open hooks, `ChooseDestHostingController` (`NSHostingController`)
   for the Choose Destination sheet, and `NSApplication` for dock-icon policy.
-  The only XIB left in the repo belongs to the parked legacy Safari App
-  Extension (`SynologyDSManager Extension`), retired wholesale in Phase 3c.
+  The only XIB left in the repo belongs to the legacy Safari App Extension
+  (`SynologyDSManager Extension`), which Phase 3c would have retired
+  wholesale — 3c was abandoned, so it still ships.
 - **Min OS**: macOS 14 (app and test bundle — bumped from 13 in Phase 4
   slice 1 to enable `@Observable` from the Observation framework).
 - **Build system**: Xcode project (`SynologyDSManager.xcodeproj`), SwiftPM for
@@ -201,10 +214,13 @@ subsystem silently refuses to execute `background.js`. Symptoms:
 - Reference extensions (1Password for Safari, etc.) run fine in
   the same Safari, so the WebExtension runtime itself is alive.
 
-Runtime bring-up tracked as a separate follow-up. Everything
-upstream of this — target compile, `.appex` embed, install,
-signing, pluginkit registration, ClientAuthorization, Mach
-service, LaunchAgent registration — all works as designed.
+Runtime bring-up was never completed and is not tracked by
+anyone — the project stopped here. Everything upstream of this
+— target compile, `.appex` embed, install, signing, pluginkit
+registration, ClientAuthorization, Mach service, LaunchAgent
+registration — all works as designed, so a fork inherits a
+bridge that is one working service worker away from usable.
+The unrun clean-room test is the first thing to try.
 
 ## Conventions
 
@@ -386,8 +402,12 @@ When in doubt, leak nothing.
    in the phase are done.
 4. Open a PR against `main` using the template.
 5. CI runs build + SwiftLint + SwiftFormat check (the lint/format jobs are
-   non-blocking today — they become blocking once the repo is fully
-   formatted, tracked as a Phase 0 follow-up task).
+   non-blocking — both end in `|| true`. Making them blocking was a Phase 0
+   task that was never done and now won't be). Note the build job itself has
+   been failing since June 2026 regardless: `project.pbxproj` is
+   `objectVersion` 70 while `ci.yml` pins Xcode 15.4, so `xcodebuild` cannot
+   open the project. A fork should fix or delete that workflow before relying
+   on it.
 
 ## Important security notes to remember
 
