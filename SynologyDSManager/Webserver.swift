@@ -78,6 +78,9 @@ func start_webserver() {
     // meant to go away entirely in Phase 3c; Phase 3c was abandoned, so the
     // loopback bind is the only thing limiting exposure here.
     server.listenAddressIPv4 = "127.0.0.1"
+    // Dead configuration: `forceIPv4: true` below means Swifter only opens an
+    // IPv4 socket, so nothing ever binds [::1]:11863. Kept as-is because
+    // removing it would imply an IPv6 listener exists to reconfigure.
     server.listenAddressIPv6 = "::1"
 
     do {

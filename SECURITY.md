@@ -87,7 +87,9 @@ actually does.
 
 ### 1. Unauthenticated loopback HTTP server (`Webserver.swift`)
 
-Once polling starts, it listens on **127.0.0.1 / ::1 port 11863** and accepts
+Once polling starts, it listens on **127.0.0.1 port 11863** — IPv4 only, since
+`server.start(…, forceIPv4: true, …)` means the `listenAddressIPv6 = "::1"`
+line above it never takes effect and nothing binds `[::1]:11863` — and accepts
 any local `POST /add_download` request, with no authentication of any kind.
 Any process on the machine — yours, another local user account's, a script, or
 a browser page that can reach loopback — can enqueue arbitrary download URLs
@@ -142,8 +144,11 @@ in `SynologyDSManager/Info.plist`, and handled independently in
 `AppDelegate.application(_:open:)`. To close it in your own build, delete the
 `CFBundleURLTypes` entry from `Info.plist` (which unregisters the scheme with
 Launch Services), or drop the `case "synologydsmanager":` branch from the
-handler, or add validation there — an allowlist of `http`/`https`/`magnet` plus
-a length cap, mirroring what `Bridge/SynologyBridgeService.swift` already does.
+handler, or add validation there — a scheme allowlist plus a length cap,
+mirroring `SynologyBridgeService.sanitised`. Copy its list in full if you go
+that route: `http://`, `https://`, `ftp://`, `ftps://`, `magnet:` and `ed2k://`.
+Trimming it to just the web schemes would break legitimate FTP and ed2k
+downloads, which `SynologyAPI.createTask` accepts.
 Note that the legacy Safari extension falls back to this scheme when the
 loopback POST fails, so removing both leaves that extension with no path to the
 app at all — which is fine, since its feature is disabled in the UI regardless.
@@ -243,22 +248,27 @@ you fork, they are the first things worth writing tests around.
 ## Repository hygiene
 
 For anyone auditing or forking: this repository was swept before being wound
-down and contains no credentials, API tokens, private keys, Apple Developer
-Team IDs, provisioning profiles, notarisation credentials, LAN IP addresses, or
-NAS hostnames — in the working tree or in the git history.
+down — working tree and every blob in the git history — and contains no
+credentials, API tokens, private keys, provisioning profiles, notarisation
+credentials, LAN IP addresses, or NAS hostnames.
+
+**One exception, on Apple Developer Team IDs:** the sweep found exactly one,
+noted below. No Team ID belonging to *this* fork's maintainer appears anywhere,
+in the tree or the history.
 
 Signing configuration deliberately keeps Team IDs out of version control via
 the `Signing.xcconfig` → gitignored `Signing.local.xcconfig` cascade. If you
 fork this, keep that arrangement: put your own Team ID in
 `Signing.local.xcconfig` only.
 
-One historical note, disclosed for completeness: the upstream author's Apple
-Team ID (`GVS9699BGK`) appears in two older revisions of `CHANGELOG.md` and
-`MODERNIZATION_PLAN.md`, in entries describing its removal from the project
-file. It is redacted in the current tree. This is not treated as a leak —
-Apple Team IDs are not secret and appear in the code signature of every app
-that team has ever shipped — so the history has been left intact rather than
-rewritten.
+**The exception, stated plainly:** the *upstream* author's Apple Team ID
+(`GVS9699BGK`) does appear in the git history — in two older revisions of
+`CHANGELOG.md` and `MODERNIZATION_PLAN.md`, in entries describing its removal
+from the project file. It is redacted in the current tree, but it is still
+retrievable from history, so "no Team IDs anywhere" would be false. It is not
+treated as a leak — Apple Team IDs are not secret and appear in the code
+signature of every app that team has ever shipped — so the history has been
+left intact rather than rewritten.
 
 ## Supported versions
 
