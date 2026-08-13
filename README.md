@@ -162,7 +162,7 @@ SynologyDSManager/            # Main macOS app target
   Network/                    # DSM API client (Phase 2a)
     SynologyAPI.swift         #   Actor, URLSession + async/await
     SynologyAPIModels.swift   #   Codable DTOs
-    SynologyTrustEvaluator.swift # SPKI pinning (RFC 7469)
+    SynologyTrustEvaluator.swift # Trust-on-first-use key pinning (see SECURITY.md)
     SynologyError.swift       #   Typed error surface + DSM code mapping
     AppLogger.swift           #   os.Logger categories
   Bridge/                     # XPC bridge to the Safari Web Extension (Phase 3a/3b)

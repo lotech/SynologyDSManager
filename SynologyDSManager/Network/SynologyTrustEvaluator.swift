@@ -181,11 +181,20 @@ final class SynologyTrustEvaluator: NSObject, URLSessionDelegate, @unchecked Sen
 
     // MARK: - Fingerprint extraction
 
-    /// Extract the leaf certificate from `SecTrust`, grab its Subject
-    /// Public Key Info, and return its SHA-256 digest base64-encoded.
-    /// This is the RFC 7469 "pin-sha256" value — the standard primitive
-    /// for cert pinning that survives leaf-cert rotation as long as the
-    /// same keypair is reused.
+    /// Extract the leaf certificate's public key from `SecTrust` and return
+    /// the SHA-256 digest of its raw encoding, base64-encoded. Like a
+    /// `pin-sha256` value, it survives leaf-cert rotation while the keypair
+    /// is reused, which is what the pinning here needs.
+    ///
+    /// ⚠️ It is **not** the RFC 7469 `pin-sha256` value, despite what this
+    /// comment claimed until August 2026. RFC 7469 hashes the DER-encoded
+    /// `SubjectPublicKeyInfo` — algorithm identifier and all —  whereas
+    /// `SecKeyCopyExternalRepresentation` returns the bare key encoding
+    /// (PKCS#1 `RSAPublicKey` for RSA, an X9.63 point for EC). The digest is
+    /// self-consistent, so approve-then-compare works, but it will not match
+    /// the value produced by standard `pin-sha256` tooling for the same
+    /// certificate. A fork wanting interoperability must build the full SPKI
+    /// DER structure before hashing.
     static func spkiSHA256Base64(from trust: SecTrust) -> String? {
         guard let chain = SecTrustCopyCertificateChain(trust) as? [SecCertificate],
               let leaf = chain.first else {

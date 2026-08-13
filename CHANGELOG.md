@@ -42,6 +42,23 @@ commit that makes them.
   actual obligations are GPL-3.0.
 
 ### Security
+- **The TLS pinning description was overstated, and is now accurate.** Earlier
+  documentation (and `SynologyTrustEvaluator`'s own doc comment) described it as
+  SPKI pinning producing RFC 7469 `pin-sha256` values, with mismatches refused
+  outright. Neither held up. The evaluator asks the system first and returns
+  `.useCredential` as soon as `SecTrustEvaluateWithError` succeeds — **before**
+  loading the stored pins — so a certificate chaining to any trusted CA is
+  accepted even when a different key is already pinned for that host; the
+  refusal applies only on the self-signed path. And the fingerprint hashes
+  `SecKeyCopyExternalRepresentation`'s raw key encoding, not the DER
+  `SubjectPublicKeyInfo`, so it will not match standard `pin-sha256` tooling.
+  The behaviour is unchanged — only the description was wrong.
+- **Documented that there is no way to clear saved credentials.** Settings only
+  offers "Connect and save settings"; there is no sign-out, and
+  `KeychainStore.delete(key:)` has no caller. `SECURITY.md` now gives the
+  manual Keychain Access / `security delete-generic-password` route, which
+  matters because deleting the item is the only real mitigation for the
+  relaunch chain described above.
 - **Known unfixed issues are now documented explicitly** in `SECURITY.md`
   rather than described as scheduled for a future phase. The unauthenticated
   loopback HTTP server on port 11863 (`Webserver.swift`), the unvalidated

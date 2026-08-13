@@ -111,8 +111,16 @@ anyway.
 
 Quitting the app helps but does not settle it — see above: a
 `synologydsmanager://` URL relaunches the app, and launch loads your stored
-credentials and starts the server again. Clearing the saved credentials in
-Settings stops that chain, at the price of signing in each time you use it.
+credentials and starts the server again.
+
+Removing the stored credentials breaks that chain, but **the app gives you no
+way to do it.** Settings offers only "Connect and save settings", which writes
+the Keychain item after a successful login; there is no sign-out or clear
+action, and `KeychainStore.delete(key:)` — which exists — has no caller
+anywhere in the codebase. To actually remove it, use **Keychain Access** (or
+`security delete-generic-password -s com.skavans.synologyDSManager`) and delete
+the `com.skavans.synologyDSManager` entry by hand. Adding a real sign-out
+action is a good first change for a fork.
 
 ### 2. Unvalidated `synologydsmanager://` URL scheme
 
@@ -139,8 +147,9 @@ app at all — which is fine, since its feature is disabled in the UI regardless
 
 Short of rebuilding, there is no clean mitigation for this one. Quitting the app
 does not settle it, because opening the scheme is itself what relaunches the
-app. Clearing your saved credentials is the nearest thing: launch then leaves
-the app unauthenticated, so an enqueue fails at the NAS.
+app. Deleting the Keychain item by hand is the nearest thing — see issue 1's
+mitigation for how, since the app provides no way — after which a launch leaves
+the app unauthenticated and an enqueue fails at the NAS.
 
 ### 3. The legacy Safari extension logs full URLs to the unified log
 
@@ -187,10 +196,27 @@ addressed during the modernisation and are believed sound:
 - **Credentials** are stored in the Keychain via a direct `SecItem*` wrapper
   with `.whenUnlockedThisDeviceOnly` accessibility. Session IDs are never
   persisted across launches.
-- **TLS** is never disabled. Self-signed NAS certificates are handled by
-  explicit, user-confirmed SPKI pinning (RFC 7469) in
-  `SynologyTrustEvaluator`, with mismatches against an existing pin refused
-  outright.
+- **TLS** is never disabled, and self-signed NAS certificates are handled by
+  explicit, user-confirmed trust-on-first-use pinning in
+  `SynologyTrustEvaluator` rather than by blanket acceptance. Two limits on
+  that, both real and neither fixed:
+  - **The pin does not constrain CA-issued certificates.** The evaluator asks
+    the system first, and returns `.useCredential` the moment
+    `SecTrustEvaluateWithError` succeeds — before it ever loads the stored
+    pins. A certificate that chains to any system-trusted CA for your host is
+    therefore accepted *even if you have already pinned a different key for
+    it*. Pin mismatch is refused outright only on the path where system trust
+    has already failed, i.e. for self-signed certs. Anyone able to obtain a
+    publicly-trusted certificate for your NAS's hostname — plausible for a
+    DDNS name under an attacker's control — bypasses the pin silently.
+  - **The fingerprint is not an RFC 7469 `pin-sha256` value**, despite earlier
+    revisions of this file calling it one. `spkiSHA256Base64` hashes the output
+    of `SecKeyCopyExternalRepresentation`, which is the raw key encoding, not
+    the DER `SubjectPublicKeyInfo` that RFC 7469 specifies. It is internally
+    consistent, so first-use approval and later comparison work — but the
+    string shown at approval time will **not** match what standard
+    `pin-sha256` tooling computes for the same certificate, so don't try to
+    verify it that way.
 - **Session IDs** (`_sid`) go in the POST body and the session cookie, never in
   a URL query string. Unit tests guard against a regression there.
 - **Logging in the main app's networking and auth code** goes through
