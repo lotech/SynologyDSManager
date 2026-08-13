@@ -2,6 +2,32 @@
 //  SynologyBridgeTests.swift
 //  SynologyDSManagerTests
 //
+//  ⚠️ THIS FILE DOES NOT COMPILE — and it takes the whole test target
+//  with it, including the SynologyAPI `_sid` regression guards.
+//
+//  Three sites assign to a global `synologyAPI` — in `setUp()`, in
+//  `tearDown()`, and in `test_enqueueDownload_whenNotSignedIn_repliesFalse()`
+//  (grep for `synologyAPI =`). That global was
+//  deleted in Phase 4 slice 1 (commit e140847), which moved the client to
+//  `AppModel.shared.api`; this file was never updated to match. It went
+//  unnoticed because CI has been unable to open the project since June 2026
+//  for an unrelated reason (objectVersion 70 vs the pinned Xcode 15.4), so
+//  the compile failure was masked by an already-red build.
+//
+//  Fixing it is NOT a rename: `AppModel.api` is `private(set)`, so a test
+//  cannot assign to it. Note @testable does NOT help — this file already
+//  imports @testable (below) and that changes nothing, because @testable
+//  raises `internal` declarations into the test module's view but does not
+//  widen a `private(set)` setter. A fork has to change production code:
+//  either widen the setter (drop `private(set)`, or add an internal
+//  setter method), or inject the API so the tests can supply their own.
+//  Then point these three sites at whichever seam was added.
+//
+//  The project is unmaintained and this was found without a Mac to compile
+//  on, so the repair is left to whoever forks. The tests below are otherwise
+//  sound and worth recovering: they are the only executable check on the
+//  bridge's URL validation. See SECURITY.md.
+//
 //  Tests for the Phase 3a XPC bridge surface. Covers the things we
 //  can exercise in a unit-test bundle without a second process:
 //

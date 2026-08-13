@@ -3,18 +3,48 @@
 Orientation file for future Claude Code sessions working on this repo. If you're a
 human, `README.md` is a better starting point.
 
+## ⚠️ Project status: unmaintained (August 2026)
+
+**Active development has stopped.** The maintainer replaced their Synology NAS
+with an Unraid server and no longer has hardware to test against. No further
+features, fixes, or security patches will ship from this repository.
+
+The code is functional as of 2.2.1 and is left in place. The rest of this file
+remains accurate as a description of **how the codebase is built**, and is kept
+for anyone forking the project. Read the roadmap sections below as a historical
+record of what shipped and what didn't — not as a plan anyone is working
+through. **Every unticked box is abandoned, not pending**: Phase 3 and Phase 5
+as phases, plus one clean-up task each left over in Phases 0, 2 and 4. Nothing
+below is waiting on anyone, and nothing is scheduled to resume.
+
+If you are an agent picking this repo up in a fork: the conventions section is
+still the right guide, and `SECURITY.md` lists the known unfixed issues, which
+are the most valuable things to address first.
+
 ## Modernisation status snapshot
 
-- ✅ **Phase 0** — project hygiene, CI, SHA-pinned Actions, SECURITY.md
-- ✅ **Phase 1** — macOS 13 floor, deprecated-API migration, `@main`
+Statuses below mirror `MODERNIZATION_PLAN.md`'s phase headings exactly. If the
+two ever disagree, the plan is the record and this snapshot is the stale copy.
+
+- ✅ **Phase 0** — project hygiene, CI, SHA-pinned Actions, SECURITY.md.
+  *Shipped, 1 task abandoned* — the SwiftLint/SwiftFormat CI jobs were never
+  made blocking; both still end in `|| true`.
+- ✅ **Phase 1** — macOS 13 floor, deprecated-API migration, `@main`.
+  *Shipped*, no loose ends.
 - ✅ **Phase 2** — all networking + storage rewritten: `SynologyAPI` actor on
-  `URLSession`+`async/await`, typed Codable DTOs, SPKI pinning (TOFU),
+  `URLSession`+`async/await`, typed Codable DTOs, raw-public-key pinning
+  (TOFU — not RFC 7469 SPKI; see `SECURITY.md`),
   SecItem-based Keychain wrapper. Alamofire + SwiftyJSON + KeychainAccess
   all gone from `Package.resolved`. `SWIFT_STRICT_CONCURRENCY = complete`
-  and the project builds warning-free. 33 unit tests run in CI on every PR.
-- ⏸️ **Phase 3** — Safari Web Extension + XPC bridge replacing the
+  and the project builds warning-free. 33 unit tests were written; note they
+  do **not** currently run — the test target has not compiled since Phase 4
+  slice 1, and CI cannot open the project at all. See `SECURITY.md`.
+  *Shipped, 1 task abandoned* — the last `print(…)` sites never moved to
+  `os.Logger`; they are in `Webserver.swift`, which Phase 3c would have
+  deleted.
+- ❌ **Phase 3** — Safari Web Extension + XPC bridge replacing the
   unauthenticated loopback HTTP server; Swifter dep goes with it.
-  **Deferred 2026-05-29.** **3a + 3b shipped**: XPC scaffolding, the Web
+  **Abandoned.** **3a + 3b shipped**: XPC scaffolding, the Web
   Extension source tree, the main-app-side Mach service wiring, the Web
   Extension Xcode target itself, and the bundled toolbar icons.
   Build-side path (Safari → extension handler → XPC → main app → DSM) is
@@ -22,29 +52,38 @@ human, `README.md` is a better starting point.
   extension, pluginkit indexes it, ClientAuthorization + Mach service +
   LaunchAgent are all live. **Runtime is blocked**: Safari's WebExtension
   subsystem silently refuses to start the service worker (`background.js`)
-  on macOS 26.x + Safari 26.x — a Safari-side bug we can't fix from here.
-  See the *"Known blocker"* note below. Rather than block the roadmap on
-  Apple, active work has moved to Phase 4. Phase 3c (retire the legacy
-  target + `Webserver.swift`) stays parked behind the runtime blocker, so
-  the unauthenticated loopback server stays in place until there's a
-  working replacement. Revisit when a Safari/macOS point release unblocks
-  the worker.
-- 🚧 **Phase 4** — SwiftUI + Observation; retire `Shared.swift` globals.
-  **Effectively complete.** Pure macOS rewrite. App lifecycle is now fully
+  on macOS 26.x + Safari 26.x. Believed Safari-side, but **unproven**: the
+  clean-room experiment that would separate a Safari bug from a divergence in
+  our own bundle was never run — see the *"Known blocker"* note below.
+  Work moved to Phase 4 at the time rather than block the roadmap on an
+  unfinished diagnosis, and then stopped altogether. **3c never landed**, so
+  the legacy target and the unauthenticated loopback server are still what
+  ships — that is the repo's most significant known security gap and the
+  highest-value thing for a fork to take on. Nobody is waiting on a Safari
+  release; if you want this working, the clean-room test is where to start.
+- ✅ **Phase 4** — SwiftUI + Observation; retire `Shared.swift` globals.
+  **Shipped, 1 task abandoned.** Pure macOS rewrite. App lifecycle is now fully
   SwiftUI: `@main struct SynologyDSManagerApp: App` with `Window` scenes +
   `MenuBarExtra` and an `@NSApplicationDelegateAdaptor` for AppKit hooks.
   All screens are SwiftUI; the globals moved to `AppModel`; SF Symbols and
   the English String Catalog are in; `Main.storyboard` and every main-app
   XIB are deleted (so the app ships zero storyboards/XIBs). One small AppKit
   hosting shim remains — `ChooseDestHostingController`, used by
-  `DestinationPicker` for the Choose Destination sheet. The one open task —
-  deleting the last `.xib` (the legacy extension's) — is gated on Phase 3c,
-  so Phase 4 stays open only as a link to that. (A future iOS port would
-  refactor the portable network/keychain core into a shared package at that
-  point.)
-- ⏳ **Phase 5** — release engineering (Sparkle, notarised DMGs via CI).
+  `DestinationPicker` for the Choose Destination sheet. The one unfinished
+  task — deleting the last `.xib` (the legacy extension's) — was gated on
+  Phase 3c; with 3c abandoned that gate never opens, so the task is abandoned
+  too rather than pending. There is no remaining SwiftUI work. (A future iOS
+  port would refactor the portable network/keychain core into a shared package
+  at that point.)
+- ❌ **Phase 5** — release engineering (Sparkle, notarised DMGs via CI).
+  **Abandoned after 1 of 4 tasks.** The notarisation step does exist —
+  `deploy.sh`'s `action_dmg` runs `notarytool submit --wait` then
+  `stapler staple` — but it is manual. Sparkle, the CI release pipeline, and a
+  formally cut tagged release were never started.
 
-See `MODERNIZATION_PLAN.md` for the per-phase task checklist.
+Phases 3c and 5 are now closed as **abandoned** rather than pending — see the
+project-status notice above. See `MODERNIZATION_PLAN.md` for the per-phase task
+checklist as it stood when work stopped.
 
 ## Project at a glance
 
@@ -58,8 +97,9 @@ See `MODERNIZATION_PLAN.md` for the per-phase task checklist.
   been deleted. A few AppKit shims remain: `@NSApplicationDelegateAdaptor`
   for URL/file-open hooks, `ChooseDestHostingController` (`NSHostingController`)
   for the Choose Destination sheet, and `NSApplication` for dock-icon policy.
-  The only XIB left in the repo belongs to the parked legacy Safari App
-  Extension (`SynologyDSManager Extension`), retired wholesale in Phase 3c.
+  The only XIB left in the repo belongs to the legacy Safari App Extension
+  (`SynologyDSManager Extension`), which Phase 3c would have retired
+  wholesale — 3c was abandoned, so it still ships.
 - **Min OS**: macOS 14 (app and test bundle — bumped from 13 in Phase 4
   slice 1 to enable `@Observable` from the Observation framework).
 - **Build system**: Xcode project (`SynologyDSManager.xcodeproj`), SwiftPM for
@@ -75,7 +115,12 @@ See `MODERNIZATION_PLAN.md` for the per-phase task checklist.
   - `SynologyDSManagerTests` — macOS unit-test bundle hosted by the main
     app, `URLProtocol`-based fake transport. 33 tests total — 23 of
     `SynologyAPI` (`SynologyAPITests.swift`) + 10 of the XPC bridge
-    (`SynologyBridgeTests.swift`)
+    (`SynologyBridgeTests.swift`). ⚠️ **Does not compile.**
+    `SynologyBridgeTests.swift` assigns in three places (`setUp`, `tearDown`,
+    `test_enqueueDownload_whenNotSignedIn_repliesFalse`) to the global `synologyAPI`
+    that Phase 4 slice 1 deleted. One target, so this blocks the `SynologyAPI`
+    tests too. `AppModel.api` is `private(set)`, so fixing it needs a
+    production test seam, not a rename.
 
 ## Core files (main target)
 
@@ -88,7 +133,7 @@ See `MODERNIZATION_PLAN.md` for the per-phase task checklist.
 | `Bridge/ClientAuthorization.swift` | Peer code-signature validation via `auditToken` + `SecCodeCopyGuestWithAttributes` + `SecRequirementCreateWithString`. Refuses connections whose peer isn't our own native messaging host signed by our Team ID. |
 | `Network/SynologyAPI.swift` | DSM API client. Actor-isolated, `URLSession` + `async/await`, typed errors, `_sid` in POST body (never URL). Add new endpoints here. |
 | `Network/SynologyAPIModels.swift` | `Codable` DTOs for DSM responses. Keep 1:1 with DSM's wire format; translate into richer app types at the call site, not here. |
-| `Network/SynologyTrustEvaluator.swift` | `URLSessionDelegate` that performs SPKI pinning (RFC 7469 "pin-sha256"). First-use fingerprints are handed to `firstUseDecision` for UI approval (TOFU); mismatches against an existing pin are refused outright. |
+| `Network/SynologyTrustEvaluator.swift` | `URLSessionDelegate` performing trust-on-first-use public-key pinning. First-use fingerprints go to `firstUseDecision` for UI approval. Two caveats worth knowing before you rely on it: system trust is evaluated **first** and short-circuits, so a CA-valid cert is accepted even when a different key is already pinned for that host — pin mismatch is refused only on the self-signed path; and the fingerprint is a SHA-256 of the raw key encoding, **not** the RFC 7469 `pin-sha256` digest of the DER `SubjectPublicKeyInfo`. See `SECURITY.md`. |
 | `Network/SynologyError.swift` | Typed error surface (`SynologyError`) plus DSM-error-code→message mapping. Add new failure modes here, not `NSError`. |
 | `Network/AppLogger.swift` | `os.Logger` categories — `network`, `auth`, `security`, `keychain`. Always use these; never `print(…)` in shipped code. |
 | `Settings.swift` | `StoredCredentials` type + Keychain persistence via the in-house `KeychainStore`. Phase 2b replaced the KeychainAccess dependency with a direct `SecItem*` wrapper. |
@@ -170,10 +215,13 @@ subsystem silently refuses to execute `background.js`. Symptoms:
 - Reference extensions (1Password for Safari, etc.) run fine in
   the same Safari, so the WebExtension runtime itself is alive.
 
-Runtime bring-up tracked as a separate follow-up. Everything
-upstream of this — target compile, `.appex` embed, install,
-signing, pluginkit registration, ClientAuthorization, Mach
-service, LaunchAgent registration — all works as designed.
+Runtime bring-up was never completed and is not tracked by
+anyone — the project stopped here. Everything upstream of this
+— target compile, `.appex` embed, install, signing, pluginkit
+registration, ClientAuthorization, Mach service, LaunchAgent
+registration — all works as designed, so a fork inherits a
+bridge that is one working service worker away from usable.
+The unrun clean-room test is the first thing to try.
 
 ## Conventions
 
@@ -187,7 +235,11 @@ service, LaunchAgent registration — all works as designed.
 - **Keychain access** must use `.whenUnlockedThisDeviceOnly` accessibility at
   minimum. Never persist session IDs across launches.
 - **TLS**: never disable trust evaluation. Self-signed NAS certs are handled
-  via explicit, user-confirmed SPKI pinning in `SynologyTrustEvaluator`.
+  via explicit, user-confirmed **raw-public-key** pinning in
+  `SynologyTrustEvaluator` — not RFC 7469 SPKI, and it does not constrain
+  CA-issued certs, since system trust short-circuits before pins are read.
+  Both limits are documented in `SECURITY.md`; don't restate this as "SPKI
+  pinning".
 - **Logging**: never log passwords, OTP codes, session IDs, or full request
   URLs / bodies containing `_sid`.
 - **Concurrency**: `SWIFT_STRICT_CONCURRENCY = complete`. Actor-isolated
@@ -331,11 +383,17 @@ When in doubt, leak nothing.
   hook itself is broken and you're fixing it in the same PR.
 
 **Security disclosures:**
-- Accept reports via GitHub Security Advisories (private), not public issues.
-- Keep a brief `SECURITY.md` policy at the repo root (planned as a Phase 0
-  follow-up).
+- *Historical:* reports were accepted via GitHub Security Advisories (private),
+  not public issues. **This no longer applies** — the repo is unmaintained and
+  the advisory channel is not monitored. `SECURITY.md` now says so explicitly
+  and lists the known unfixed issues instead.
+- If you fork this, restore a real disclosure channel in `SECURITY.md` and
+  point it at yourself.
 
 ## How to land a change
+
+> **Not applicable in this repository any more** — it is unmaintained and not
+> accepting changes. Kept as the workflow a fork should adopt.
 
 1. Work on a feature branch; never push directly to `main`.
 2. Add a bullet under `## [Unreleased]` in `CHANGELOG.md` describing the
@@ -345,8 +403,12 @@ When in doubt, leak nothing.
    in the phase are done.
 4. Open a PR against `main` using the template.
 5. CI runs build + SwiftLint + SwiftFormat check (the lint/format jobs are
-   non-blocking today — they become blocking once the repo is fully
-   formatted, tracked as a Phase 0 follow-up task).
+   non-blocking — both end in `|| true`. Making them blocking was a Phase 0
+   task that was never done and now won't be). Note the build job itself has
+   been failing since June 2026 regardless: `project.pbxproj` is
+   `objectVersion` 70 while `ci.yml` pins Xcode 15.4, so `xcodebuild` cannot
+   open the project. A fork should fix or delete that workflow before relying
+   on it.
 
 ## Important security notes to remember
 
@@ -355,8 +417,10 @@ When in doubt, leak nothing.
 - The `synologydsmanager://` URL scheme is trusted by `AppDelegate` without
   validation. Do not widen what it accepts until Phase 3.
 - Never put credentials or `_sid` in URL query strings. `SynologyAPI` keeps the
-  session ID in the POST body (and the session cookie) — preserve that; the
-  unit tests guard against a SID ever leaking into a request URL.
+  session ID in the POST body (and the session cookie) — preserve that. Unit
+  tests guarding against a SID leaking into a request URL are written, but are
+  not running: the test target doesn't compile (see the target layout above),
+  so treat this invariant as unenforced until that is fixed.
 
 ## Where the modernisation plan lives
 

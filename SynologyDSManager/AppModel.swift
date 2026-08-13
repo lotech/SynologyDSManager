@@ -55,6 +55,16 @@ final class AppModel {
         let newAPI = SynologyAPI(credentials: credentials.apiCredentials, trustEvaluator: trustEvaluator)
         api = newAPI
 
+        // ⚠️ Starts an UNAUTHENTICATED loopback HTTP server on port 11863 that
+        // any local process can POST download URLs to. Known unfixed issue —
+        // read the header of Webserver.swift and SECURITY.md before relying on
+        // this.
+        //
+        // Deleting this one call disables the server and costs no functionality:
+        // the legacy extension already treats a failed POST as a fall-through to
+        // openAppViaURLScheme, so its enqueue path keeps working via the URL
+        // scheme. Note that this is also why removing the server does NOT close
+        // the URL-scheme exposure — that one needs its own fix.
         start_webserver()
 
         pollingTask = Task { [weak self] in
@@ -141,6 +151,14 @@ final class AppModel {
     // MARK: - Extension / URL-scheme download
 
     func enqueueDownload(url: String) {
+        // ⚠️ `api` being non-nil means startPolling ran — NOT that the session
+        // authenticated; that happens asynchronously afterwards. And the
+        // notification below is posted unconditionally, before createTask is
+        // even dispatched, so a caller reaching this method raises a "Download
+        // started" banner whether or not anything downloads. Combined with the
+        // unauthenticated callers in Webserver.swift and AppDelegate's URL
+        // scheme, that is a spoofed-notification vector — see SECURITY.md.
+        // A fork should post this only after createTask succeeds.
         guard let api else { return }
         let content = UNMutableNotificationContent()
         content.title = "Download started"

@@ -185,8 +185,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
                 Only trust this certificate if you recognise the fingerprint below.
 
-                SHA-256 (SPKI):
+                SHA-256 of the public key:
                 \(spkiBase64)
+
+                (This is a hash of the raw public key, not an RFC 7469 \
+                "pin-sha256" value — standard SPKI tooling will compute a \
+                different string for the same certificate.)
                 """
                 alert.addButton(withTitle: "Trust")
                 alert.addButton(withTitle: "Cancel")
@@ -197,6 +201,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     // MARK: - URL / file open
 
+    /// ⚠️ Known unfixed issue: the `synologydsmanager://` scheme below is
+    /// callable by any website or local app, and the caller is not
+    /// authenticated. The URL's *shape* is checked (host, query item), but the
+    /// extracted `downloadURL` value is passed to the NAS with no scheme
+    /// allowlist and no length cap — unlike the XPC bridge in `Bridge/`, which
+    /// validates both. Hardening this was deferred to Phase 3, which was
+    /// abandoned. See SECURITY.md ("Known unfixed issues").
     @MainActor
     func application(_ application: NSApplication, open urls: [URL]) {
         var torrentPaths: [String] = []

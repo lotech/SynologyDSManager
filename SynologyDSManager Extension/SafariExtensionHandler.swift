@@ -24,6 +24,14 @@ class SafariExtensionHandler: SFSafariExtensionHandler {
         // is `@Sendable` under strict concurrency — capturing the raw
         // dictionary into the closure would warn. The string version
         // is a plain `String` so it crosses the boundary cleanly.
+        // ⚠️ KNOWN UNFIXED ISSUE: this logs the full userInfo — which contains
+        // the complete download URL, tokens and all — plus the address of the
+        // originating page, to the unified log via NSLog. Readable by other
+        // processes and captured in sysdiagnose bundles. It contradicts the
+        // project's own logging rules; the app's networking code redacts, this
+        // does not. Unfixed because the project is unmaintained as of August
+        // 2026 and retiring this target was Phase 3c's job. In a fork: delete
+        // this NSLog. See SECURITY.md ("Known unfixed issues").
         let userInfoDescription = "\(userInfo ?? [:])"
         page.getPropertiesWithCompletionHandler { properties in
             NSLog("The extension received a message (\(messageName)) from a script injected into (\(String(describing: properties?.url))) with userInfo (\(userInfoDescription))")

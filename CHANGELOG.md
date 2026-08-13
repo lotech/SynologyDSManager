@@ -11,6 +11,99 @@ commit that makes them.
 
 ## [Unreleased]
 
+### Changed
+- **The project is now unmaintained.** The maintainer has replaced their
+  Synology NAS with an Unraid server and no longer has hardware to develop or
+  test against, so development stops at 2.2.1. The app still works and nothing
+  has been removed, but there will be no further features, bug fixes, or
+  security patches, and issues and pull requests are not being monitored.
+  Forks are welcome — the licence is GPL-3.0. `README.md`, `SECURITY.md`,
+  `MODERNIZATION_PLAN.md`, and the issue/PR templates have been updated to say
+  so, and the abandoned roadmap phases (3c and 5) are marked as abandoned
+  rather than pending.
+
+### Fixed
+- **Corrected the project's stated licence: it is GPL-3.0, not MIT.** The
+  `README.md` licence section, `SECURITY.md`, the issue-chooser links, and the
+  `NSHumanReadableCopyright` string in all three targets' `Info.plist` files
+  described the project as MIT licensed. That was wrong. The `LICENSE` file has
+  contained the GNU General Public License v3.0 for the entire history of this
+  fork, and the upstream project `skavans/SynologyDSManager` ships a
+  byte-identical GPL-3.0 `LICENSE`, which this fork inherits. **Only the prose
+  was ever wrong — the licence itself has never changed**, so nobody's
+  obligations have been altered by this correction; they were GPL-3.0 all
+  along. This matters most for forks: GPL-3.0 is copyleft, so a distributed
+  modified version must make its Corresponding Source available under GPL-3.0
+  by one of the routes section 6 permits — shipping it alongside the build, a
+  written offer, or equivalent no-charge access from a network server — and
+  that can't be relicensed away since the copyright in the original work is
+  @skavans's.
+  Anyone who forked while the documentation said MIT should note that their
+  actual obligations are GPL-3.0.
+
+### Security
+- **The TLS pinning description was overstated, and is now accurate.** Earlier
+  documentation (and `SynologyTrustEvaluator`'s own doc comment) described it as
+  SPKI pinning producing RFC 7469 `pin-sha256` values, with mismatches refused
+  outright. Neither held up. The evaluator asks the system first and returns
+  `.useCredential` as soon as `SecTrustEvaluateWithError` succeeds — **before**
+  loading the stored pins — so a certificate chaining to any trusted CA is
+  accepted even when a different key is already pinned for that host; the
+  refusal applies only on the self-signed path. And the fingerprint hashes
+  `SecKeyCopyExternalRepresentation`'s raw key encoding, not the DER
+  `SubjectPublicKeyInfo`, so it will not match standard `pin-sha256` tooling.
+  The behaviour is unchanged — only the description was wrong. Corrected in the
+  **first-use trust dialog** (which labelled the value `SHA-256 (SPKI)` and so
+  invited users to verify it with tooling that would never agree),
+  `SynologyTrustEvaluator`'s file header, its `spkiSHA256Base64` and
+  `pins(for:)` doc comments and its step-2 comment, `AppLogger`'s `security`
+  category comment, `SynologyAPI`'s header, `SECURITY.md`, `README.md`, and
+  `CLAUDE.md`. The Phase 2a task in `MODERNIZATION_PLAN.md`
+  carries a superseded note inline. The four "SPKI" mentions in the **2.2.0**
+  block below are historical records of what was believed at the time and are
+  left as written — the most detailed one is marked superseded, and this entry
+  supersedes all of them. The identifiers `spkiSHA256Base64` and the
+  `synologyPinnedSPKIs` defaults key keep their names — renaming the latter
+  would need a stored-pin migration — but neither asserts RFC conformance.
+- **Documented a spoofed-notification vector, and corrected where a failed
+  enqueue actually fails.** `AppModel.enqueueDownload` posts its "Download
+  started" notification unconditionally, *before* dispatching `createTask`, so
+  either unauthenticated entry point can raise arbitrarily many false download
+  banners even when no session exists and nothing downloads. `SECURITY.md`
+  previously said such an enqueue "fails at the NAS"; it doesn't reach the NAS
+  at all — `createTask` calls `requireAuth()` and throws locally. Both are now
+  described accurately, the worst-case summary includes the notification
+  effect, and `AppModel` carries an inline note suggesting a fork post the
+  notification only after `createTask` succeeds.
+- **Documented that there is no way to clear saved credentials.** Settings only
+  offers "Connect and save settings"; there is no sign-out, and
+  `KeychainStore.delete(key:)` has no caller. `SECURITY.md` now gives the
+  manual Keychain Access / `security delete-generic-password` route, which
+  matters because deleting the item is the only real mitigation for the
+  relaunch chain described above.
+- **Known unfixed issues are now documented explicitly** in `SECURITY.md`
+  rather than described as scheduled for a future phase. The unauthenticated
+  loopback HTTP server on port 11863 (`Webserver.swift`), the unvalidated
+  `synologydsmanager://` URL scheme, the legacy Safari extension writing
+  complete download URLs (and the originating page's address) to the unified
+  log via `NSLog`, and the pinned-and-now-unpatched Swifter dependency will not
+  be fixed here; each entry describes the exposure and a mitigation. The
+  document also corrects several overstatements of its own. Being signed in to
+  the NAS is **not** a precondition for the first two, because
+  `AppModel.startPolling` starts the web server before it awaits
+  authentication. **Quitting the app is a weaker mitigation than it appears**:
+  opening a `synologydsmanager://` URL relaunches the app via Launch Services,
+  and `applicationDidFinishLaunching` then loads stored credentials and starts
+  polling — which restarts the loopback server — so a web page can bring both
+  entry points back up on anyone with saved credentials. And the loopback
+  socket is reachable by **any** local process, including one under a different
+  user account, not only your own. Anyone continuing to run the app should read
+  that file.
+- **Security reports are no longer being accepted.** The GitHub Security
+  Advisories channel is unmonitored, so `SECURITY.md` now asks people to fix
+  issues in a fork and publish their findings instead of reporting privately
+  into a channel nobody reads.
+
 ## [2.2.1] — 2026-06-12
 
 ### Added
@@ -375,6 +468,11 @@ commit that makes them.
     cert, the observed fingerprint is passed to `pendingApproval` so the UI
     can prompt the user. Approved pins are persisted per-host in
     `UserDefaults`. Mismatches against an existing pin are refused.
+    *(**Superseded, August 2026** — kept as the historical record, but two
+    claims here are wrong: the digest is of the raw public key, not the DER
+    `SubjectPublicKeyInfo`, so it is not an RFC 7469 value; and mismatches are
+    refused only when system trust has already failed, since system trust is
+    evaluated first and short-circuits. See `SECURITY.md`.)*
   - `SynologyError.swift`: typed `LocalizedError` enum covering transport,
     HTTP, decoder, DSM API, authentication, trust, and torrent-read
     failures, with a `SynologyErrorCode.message(for:)` mapping for DSM's

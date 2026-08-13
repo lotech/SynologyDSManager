@@ -26,8 +26,9 @@ enum AppLogger {
     static let auth = Logger(subsystem: subsystem, category: "auth")
 
     /// TLS trust evaluation decisions — pinning hits, pinning misses,
-    /// first-time-use prompts. SPKI fingerprints are safe to log;
-    /// certificate bodies are not.
+    /// first-time-use prompts. Public-key fingerprints are safe to log
+    /// (hashes of the raw key encoding, not RFC 7469 SPKI digests — see
+    /// `SynologyTrustEvaluator.spkiSHA256Base64`); certificate bodies are not.
     static let security = Logger(subsystem: subsystem, category: "security")
 
     /// Keychain read/write outcomes (success/failure + OSStatus). Never log

@@ -11,12 +11,18 @@
 //  ------
 //  Many home Synology installs use a self-signed cert on the default
 //  `5001` HTTPS port, so "always require system trust" would break real
-//  users. The strategy instead is **trust on first use + SPKI pinning**:
+//  users. The strategy instead is **trust on first use + public-key
+//  pinning**:
 //
 //    1. If the server's cert chains to a system-trusted root, accept
-//       (standard `URLSession` behaviour).
+//       (standard `URLSession` behaviour). NOTE: this short-circuits —
+//       step 2's pins are never consulted on this path, so a CA-valid
+//       cert is accepted even when a different key is pinned for the
+//       host. The pin constrains self-signed certs only.
 //    2. Otherwise, look up a **pin** (a SHA-256 hash of the leaf cert's
-//       Subject Public Key Info) for this host:
+//       raw public-key encoding — NOT the RFC 7469 `pin-sha256` digest
+//       of the DER SubjectPublicKeyInfo; see `spkiSHA256Base64`) for
+//       this host:
 //       * pin matches  → accept
 //       * pin present but doesn't match → reject
 //       * no pin → reject, and pass the observed fingerprint to the UI
@@ -97,7 +103,9 @@ final class SynologyTrustEvaluator: NSObject, URLSessionDelegate, @unchecked Sen
         }
     }
 
-    /// Return the set of SPKI hashes (base64) currently pinned for the host.
+    /// Return the set of public-key hashes (base64) currently pinned for the
+    /// host. See `spkiSHA256Base64` for what is actually hashed — it is not
+    /// an RFC 7469 SPKI digest despite the stored key's name.
     func pins(for host: String) -> Set<String> {
         queue.sync { Set(storedPins()[host] ?? []) }
     }
@@ -129,7 +137,8 @@ final class SynologyTrustEvaluator: NSObject, URLSessionDelegate, @unchecked Sen
             return
         }
 
-        // Step 2: system rejected. Compute the SPKI fingerprint and check pins.
+        // Step 2: system rejected. Compute the key fingerprint and check pins.
+        // Reached ONLY when system trust failed — see the note in step 1.
         guard let spki = Self.spkiSHA256Base64(from: serverTrust) else {
             AppLogger.security.error("Could not extract SPKI from server trust for \(host, privacy: .private)")
             completionHandler(.cancelAuthenticationChallenge, nil)
@@ -181,11 +190,20 @@ final class SynologyTrustEvaluator: NSObject, URLSessionDelegate, @unchecked Sen
 
     // MARK: - Fingerprint extraction
 
-    /// Extract the leaf certificate from `SecTrust`, grab its Subject
-    /// Public Key Info, and return its SHA-256 digest base64-encoded.
-    /// This is the RFC 7469 "pin-sha256" value — the standard primitive
-    /// for cert pinning that survives leaf-cert rotation as long as the
-    /// same keypair is reused.
+    /// Extract the leaf certificate's public key from `SecTrust` and return
+    /// the SHA-256 digest of its raw encoding, base64-encoded. Like a
+    /// `pin-sha256` value, it survives leaf-cert rotation while the keypair
+    /// is reused, which is what the pinning here needs.
+    ///
+    /// ⚠️ It is **not** the RFC 7469 `pin-sha256` value, despite what this
+    /// comment claimed until August 2026. RFC 7469 hashes the DER-encoded
+    /// `SubjectPublicKeyInfo` — algorithm identifier and all —  whereas
+    /// `SecKeyCopyExternalRepresentation` returns the bare key encoding
+    /// (PKCS#1 `RSAPublicKey` for RSA, an X9.63 point for EC). The digest is
+    /// self-consistent, so approve-then-compare works, but it will not match
+    /// the value produced by standard `pin-sha256` tooling for the same
+    /// certificate. A fork wanting interoperability must build the full SPKI
+    /// DER structure before hashing.
     static func spkiSHA256Base64(from trust: SecTrust) -> String? {
         guard let chain = SecTrustCopyCertificateChain(trust) as? [SecCertificate],
               let leaf = chain.first else {

@@ -8,8 +8,10 @@
 //    * `async/await` (no completion-handler pyramids)
 //    * typed `Codable` models (no SwiftyJSON)
 //    * typed `SynologyError` (no stringly-typed `NSError` descriptions)
-//    * `SynologyTrustEvaluator` for TLS — SPKI pinning with user approval
-//      for first-use self-signed certs; no trust-disabling bypass
+//    * `SynologyTrustEvaluator` for TLS — raw-public-key pinning (NOT
+//      RFC 7469 SPKI; see its `spkiSHA256Base64`) with user approval for
+//      first-use self-signed certs; no trust-disabling bypass. Note the
+//      pin does not constrain CA-issued certs — see SECURITY.md
 //    * `_sid` in POST body rather than URL query (keeps the session ID
 //      out of proxy logs, referer headers, and crash reports)
 //

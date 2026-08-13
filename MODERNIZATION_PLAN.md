@@ -1,14 +1,56 @@
 # Modernisation plan
 
-Living document. Tick boxes as tasks land. When all tasks in a phase are
-complete, move the phase status from **In progress** / **Planned** to
+> ## ⚠️ Closed — this roadmap is no longer being worked on
+>
+> **The project became unmaintained in August 2026** when the maintainer
+> replaced their Synology NAS with an Unraid server, leaving no hardware to
+> develop or test against.
+>
+> This document is now a **historical record**, not a plan. Unticked boxes are
+> **abandoned, not pending** — nobody is working through them and no one is
+> waiting on them.
+>
+> **Every remaining unticked box was checked against the tree in August 2026**
+> and is genuinely outstanding — none is merely stale bookkeeping. Two that
+> *were* stale have been ticked (both Phase 1 items, and Phase 5's notarisation
+> step), so a forker can now read an empty checkbox as real remaining work
+> rather than something to go and verify. Specifically:
+>
+> - **Phases 0, 1, 2 and 4 met their goals.** Phase 1 is a clean sweep; phases
+>   0, 2 and 4 each carry exactly one unticked clean-up item, now abandoned.
+>   Their headings say which, so the checklists and the summary agree.
+> - **Phase 3** (XPC bridge + Safari Web Extension) got as far as 3a and 3b.
+>   3b's runtime was blocked by a failure believed — but never proven — to be
+>   Safari's rather than ours (the clean-room test that would settle it is
+>   still unticked, so don't assume it is Apple's to fix),
+>   and **3c** — retiring the legacy extension target and the unauthenticated
+>   `Webserver.swift` — never happened. That unauthenticated loopback server is
+>   therefore **still the live code path** in the shipping app; see
+>   [`SECURITY.md`](./SECURITY.md).
+> - **Phase 5** (release engineering) built 1 of its 4 tasks: `deploy.sh` does
+>   notarise and staple a DMG on request. Sparkle auto-update, the CI release
+>   pipeline, and a formally cut tagged release were never started.
+>
+> It's left in the repo because it's a genuinely useful map for anyone forking
+> the project: it records what was done, why, and what was deliberately left.
+> If you fork, the highest-value unfinished work is Phase 3c — it closes the
+> app's most significant known security gap.
+
+Formerly a living document: tick boxes as tasks land; when all tasks in a phase
+are complete, move the phase status from **In progress** / **Planned** to
 **Shipped** with the date.
 
-Last updated: 2026-06-12 (Cut version **2.2.1 / build 15** — main-window UX refinements: sortable/multi-select Downloads `Table` with a context menu, Dock-icon finished-count badge, toolbar/title tidy-up, clearer delete dialog, and Add Download failure surfacing. Phase 4 remains effectively complete; only the Phase 3c-gated legacy-extension XIB deletion is outstanding.)
+Last updated: 2026-08-12 (project wound down; roadmap closed — see the notice
+above).
+
+Previous update: 2026-06-12 (Cut version **2.2.1 / build 15** — main-window UX refinements: sortable/multi-select Downloads `Table` with a context menu, Dock-icon finished-count badge, toolbar/title tidy-up, clearer delete dialog, and Add Download failure surfacing. Phase 4 remains effectively complete; only the Phase 3c-gated legacy-extension XIB deletion is outstanding.)
 
 ---
 
-## Phase 0 — Project hygiene · **In progress**
+## Phase 0 — Project hygiene · **Shipped, 1 task abandoned**
+
+> Everything below is ticked except flipping the SwiftLint/SwiftFormat CI jobs
+> to blocking, which never happened and now never will.
 
 Goal: a clean, lintable, CI-backed baseline for everything that follows.
 
@@ -43,7 +85,11 @@ Goal: a clean, lintable, CI-backed baseline for everything that follows.
 - [ ] Flip SwiftLint / SwiftFormat CI jobs to blocking once the repo is
       fully formatted (follow-up PR)
 
-## Phase 1 — Platform baseline · **In progress**
+## Phase 1 — Platform baseline · **Shipped**
+
+> All tasks complete. The last two were finished under later phases and their
+> boxes here went unticked for months — corrected August 2026 after a check of
+> the tree confirmed neither survives in any Swift source.
 
 Goal: compile cleanly against modern Xcode on a modern macOS deployment
 target, replacing the deprecated APIs we can do without further design work.
@@ -60,12 +106,20 @@ target, replacing the deprecated APIs we can do without further design work.
 - [x] Fix `protocol LoadableView: class` → `AnyObject`
 - [x] Enable `SWIFT_STRICT_CONCURRENCY = minimal` (will be bumped to
       `complete` after Phase 2)
-- [ ] Remove the dead `registerEvent(…)` analytics stub — blocked until the
-      networking rewrite touches every call site (Phase 2)
-- [ ] Remove the `swiftapps.skavans.ru` mailto and `synoboost.com` link from
-      Settings / BT Search — Phase 4 when we rewrite those screens
+- [x] Remove the dead `registerEvent(…)` analytics stub — blocked until the
+      networking rewrite touches every call site (Phase 2). **Done in Phase 2a**
+      (see the Phase 2 log below); no `registerEvent` remains in any Swift
+      source.
+- [x] Remove the `swiftapps.skavans.ru` mailto and `synoboost.com` link from
+      Settings / BT Search — Phase 4 when we rewrite those screens. **Done in
+      Phase 4** (see its log below); neither string remains in any Swift
+      source.
 
-## Phase 2 — Networking & storage rewrite · **Shipped · 2026-04-23**
+## Phase 2 — Networking & storage rewrite · **Shipped · 2026-04-23** (1 task abandoned)
+
+> The rewrite is complete. The one unticked item — replacing the last `print(…)`
+> sites with `os.Logger` — is abandoned; those sites are in `Webserver.swift`,
+> which Phase 3c would have deleted. See `SECURITY.md`.
 
 Goal: no Alamofire, no SwiftyJSON, typed models, proper TLS, properly
 scoped Keychain access.
@@ -80,6 +134,11 @@ scoped Keychain access.
       leaf certificate; on first connect, hand the observed fingerprint to
       the UI for explicit user approval, with the pin persisted thereafter
       (`SynologyDSManager/Network/SynologyTrustEvaluator.swift`)
+      **— superseded:** "SPKI" is a misnomer for what shipped. It pins a
+      hash of the *raw public key*, not the DER `SubjectPublicKeyInfo`, so
+      the value is not an RFC 7469 `pin-sha256`; and system trust is
+      evaluated first, so the pin never constrains CA-issued certs. See
+      `SECURITY.md`.
 - [x] Move `_sid` out of URL query strings (session cookie, form body on
       `SYNO.API.Auth logout`)
 - [x] Typed error surface (`SynologyError`) with DSM error-code → message
@@ -250,14 +309,21 @@ scoped Keychain access.
 - [x] Flipped `SWIFT_STRICT_CONCURRENCY` from `minimal` to `complete`
       — already done in Phase 2a-2d.
 
-## Phase 3 — Safari extension & webserver bridge · **Deferred** (3a + 3b-1 + 3b-2 shipped; 3b-2b-RT blocked, 3c parked)
+## Phase 3 — Safari extension & webserver bridge · **Abandoned** (3a + 3b-1 + 3b-2 shipped; 3b-2b-RT blocked by Safari, 3c never landed)
+
+> **3c was the security-relevant half and it did not ship.** `Webserver.swift`
+> — the unauthenticated loopback HTTP server on port 11863 — is still live in
+> the shipping app. This is the single highest-value piece of unfinished work
+> in this repository; see [`SECURITY.md`](./SECURITY.md).
 
 > **Deferred 2026-05-29.** The XPC bridge and Web Extension are
 > structurally complete and shipped, but the service worker won't start
-> on macOS 26.x / Safari 26.x (3b-2b-RT) — a Safari-side bug we can't fix
-> from here. Rather than block the whole roadmap on Apple, active work
-> moves to **Phase 4** (SwiftUI rewrite), which is independent of the
-> bridge. Phase 3c (retiring `Webserver.swift` and the legacy extension
+> on macOS 26.x / Safari 26.x (3b-2b-RT). The evidence points at Safari
+> rather than at our bundle, but that was never confirmed — the clean-room
+> test below is the experiment that would settle it, and it was never run.
+> Rather than block the whole roadmap on a diagnosis we hadn't finished,
+> active work moves to **Phase 4** (SwiftUI rewrite), which is independent
+> of the bridge. Phase 3c (retiring `Webserver.swift` and the legacy extension
 > target) stays blocked behind 3b-2b-RT: we keep the unauthenticated
 > loopback server until there's a working replacement. Revisit when a
 > Safari/macOS point release unblocks the worker, or when an Apple
@@ -468,7 +534,7 @@ Out-of-scope-until-asked. The original Chrome extension is referenced
 in the README but isn't in this repo. If a user wants it revived, it'd
 follow the same MV3 + native-messaging-host shape as 3b.
 
-## Phase 4 — SwiftUI rewrite · **In progress** (effectively complete; one task parked behind Phase 3c)
+## Phase 4 — SwiftUI rewrite · **Shipped, 1 task abandoned** (the last `.xib` deletion was gated on Phase 3c)
 
 Goal: storyboards out, SwiftUI in — screen by screen, behind
 `NSHostingController` so we can ship as we go. Scope is a **pure macOS**
@@ -483,8 +549,12 @@ point, not now.
 > only unchecked item — deleting the *last* `.xib`
 > (`SafariExtensionViewController.xib`) — is gated on retiring the legacy
 > extension target in **Phase 3c**, which is itself parked behind the
-> Safari service-worker runtime blocker. So Phase 4 stays *In progress*
-> only as a bookkeeping link to 3c; there is no further SwiftUI work to do.
+> Safari service-worker runtime blocker.
+>
+> **Final status (August 2026):** with Phase 3c abandoned, that gate will
+> never open, so the `.xib` deletion is abandoned rather than pending and the
+> phase is closed as *Shipped, 1 task abandoned*. There was never any further
+> SwiftUI work to do.
 
 ### Phase 4 slice 1 — AppModel foundation + Settings screen · **Shipped 2026-05-29**
 
@@ -557,9 +627,18 @@ test bundle was already there, and the plan explicitly required `Observation`).
       ported to SwiftUI in slice 1; no `swiftapps.skavans.ru` reference
       remains in any Swift source)
 
-## Phase 5 — Release engineering · **Planned**
+## Phase 5 — Release engineering · **Abandoned** (1 of 4 tasks built)
 
 Goal: signed, notarised, auto-updating releases cut by CI.
+
+**Almost none of this was built — but not none.** The notarisation step
+*does* exist: `deploy.sh`'s `action_dmg` runs `xcrun notarytool submit --wait`
+against a keychain profile and then `xcrun stapler staple`, and the build
+verifies the stapled ticket afterwards. What never happened is the automation
+around it — no Sparkle, no CI pipeline, no tagged release cut through one.
+Releases stayed manual via `./deploy.sh → d`, and since there is no Sparkle
+integration, **installed copies will never self-update**; a fork taking this on
+would need to add the appcast itself.
 
 The version number is already at **2.2.0** (build 14) in the project and
 `CHANGELOG.md`; what's still missing is the *release engineering* — none of
@@ -567,7 +646,10 @@ these versions has been cut as a tagged, signed, notarised GitHub Release yet.
 
 - [ ] Add Sparkle 2 with an EdDSA-signed appcast hosted on GitHub Pages or
       Releases
-- [ ] Notarisation script + `xcrun stapler` step
+- [x] Notarisation script + `xcrun stapler` step — **done**, in `deploy.sh`
+      (`action_dmg`): optional `notarytool submit --wait` via a keychain
+      profile, then `stapler staple`, with a `stapler validate` check in the
+      post-build verification. Manual rather than CI-driven.
 - [ ] GitHub Action that on tag-push builds, signs, notarises, and attaches
       the DMG to a Release
 - [ ] Cut the first formally signed + notarised tagged release (`v2.2.0` or
