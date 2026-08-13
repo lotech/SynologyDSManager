@@ -11,12 +11,18 @@
 //  ------
 //  Many home Synology installs use a self-signed cert on the default
 //  `5001` HTTPS port, so "always require system trust" would break real
-//  users. The strategy instead is **trust on first use + SPKI pinning**:
+//  users. The strategy instead is **trust on first use + public-key
+//  pinning**:
 //
 //    1. If the server's cert chains to a system-trusted root, accept
-//       (standard `URLSession` behaviour).
+//       (standard `URLSession` behaviour). NOTE: this short-circuits —
+//       step 2's pins are never consulted on this path, so a CA-valid
+//       cert is accepted even when a different key is pinned for the
+//       host. The pin constrains self-signed certs only.
 //    2. Otherwise, look up a **pin** (a SHA-256 hash of the leaf cert's
-//       Subject Public Key Info) for this host:
+//       raw public-key encoding — NOT the RFC 7469 `pin-sha256` digest
+//       of the DER SubjectPublicKeyInfo; see `spkiSHA256Base64`) for
+//       this host:
 //       * pin matches  → accept
 //       * pin present but doesn't match → reject
 //       * no pin → reject, and pass the observed fingerprint to the UI

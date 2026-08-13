@@ -105,9 +105,12 @@ allowlist, length cap), but Safari-side breakage meant it never went live, so
 this unauthenticated server is still the code path that actually runs.
 
 **Mitigation:** build your own copy with the `start_webserver()` call removed
-from `AppModel.startPolling` (`AppModel.swift`). That costs you only the legacy
-Safari extension's "send to Download Station" path, which is disabled in the UI
-anyway.
+from `AppModel.startPolling` (`AppModel.swift`). This costs you **nothing** in
+functionality: the legacy extension treats a failed loopback POST as a
+fall-through to `openAppViaURLScheme`, so its "send to Download Station" path
+keeps working over the URL scheme. By the same token, removing the server does
+**not** close issue 2 — the two paths are independent and each needs its own
+fix.
 
 Quitting the app helps but does not settle it — see above: a
 `synologydsmanager://` URL relaunches the app, and launch loads your stored

@@ -36,8 +36,11 @@
 > [known unfixed security issues](./SECURITY.md#known-unfixed-issues) before
 > deciding to keep it installed.
 
-A native macOS app for managing a Synology DownloadStation remotely. (A Safari
-extension was planned and partly built, but never shipped — see below.)
+A native macOS app for managing a Synology DownloadStation remotely. It also
+bundles a legacy Safari App Extension, which ships and can be enabled in Safari
+even though the app's own UI toggle for it is disabled — see the features list
+and [known unfixed issue 3](./SECURITY.md#known-unfixed-issues). Its intended
+replacement, a Safari Web Extension, was partly built and never finished.
 
 This was a maintained fork of the excellent original project by
 [**Anton (@skavans)**](https://github.com/skavans), which lived at

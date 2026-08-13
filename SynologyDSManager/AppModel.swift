@@ -58,9 +58,13 @@ final class AppModel {
         // ⚠️ Starts an UNAUTHENTICATED loopback HTTP server on port 11863 that
         // any local process can POST download URLs to. Known unfixed issue —
         // read the header of Webserver.swift and SECURITY.md before relying on
-        // this. Removing this one call disables the server; the only thing lost
-        // is the legacy Safari extension's enqueue path, which is disabled in
-        // the UI anyway.
+        // this.
+        //
+        // Deleting this one call disables the server and costs no functionality:
+        // the legacy extension already treats a failed POST as a fall-through to
+        // openAppViaURLScheme, so its enqueue path keeps working via the URL
+        // scheme. Note that this is also why removing the server does NOT close
+        // the URL-scheme exposure — that one needs its own fix.
         start_webserver()
 
         pollingTask = Task { [weak self] in

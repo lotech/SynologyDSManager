@@ -10,7 +10,9 @@
 > **abandoned, not pending** — nobody is working through them and no one is
 > waiting on them. Specifically:
 >
-> - **Phases 0, 1, 2, 4 shipped** and are described accurately below.
+> - **Phases 0, 1, 2 and 4 met their goals**, but none is a clean sweep: each
+>   carries one or two unticked clean-up items, now abandoned. Their headings
+>   say which, so the checklists and the summary agree.
 > - **Phase 3** (XPC bridge + Safari Web Extension) got as far as 3a and 3b.
 >   3b's runtime was blocked by a Safari bug outside this project's control,
 >   and **3c** — retiring the legacy extension target and the unauthenticated
@@ -35,7 +37,10 @@ Previous update: 2026-06-12 (Cut version **2.2.1 / build 15** — main-window UX
 
 ---
 
-## Phase 0 — Project hygiene · **In progress**
+## Phase 0 — Project hygiene · **Shipped, 1 task abandoned**
+
+> Everything below is ticked except flipping the SwiftLint/SwiftFormat CI jobs
+> to blocking, which never happened and now never will.
 
 Goal: a clean, lintable, CI-backed baseline for everything that follows.
 
@@ -70,7 +75,10 @@ Goal: a clean, lintable, CI-backed baseline for everything that follows.
 - [ ] Flip SwiftLint / SwiftFormat CI jobs to blocking once the repo is
       fully formatted (follow-up PR)
 
-## Phase 1 — Platform baseline · **In progress**
+## Phase 1 — Platform baseline · **Shipped, 2 tasks abandoned**
+
+> The deployment-target and deprecated-API work all landed. Two clean-up items
+> below stayed unticked and are abandoned.
 
 Goal: compile cleanly against modern Xcode on a modern macOS deployment
 target, replacing the deprecated APIs we can do without further design work.
@@ -92,7 +100,11 @@ target, replacing the deprecated APIs we can do without further design work.
 - [ ] Remove the `swiftapps.skavans.ru` mailto and `synoboost.com` link from
       Settings / BT Search — Phase 4 when we rewrite those screens
 
-## Phase 2 — Networking & storage rewrite · **Shipped · 2026-04-23**
+## Phase 2 — Networking & storage rewrite · **Shipped · 2026-04-23** (1 task abandoned)
+
+> The rewrite is complete. The one unticked item — replacing the last `print(…)`
+> sites with `os.Logger` — is abandoned; those sites are in `Webserver.swift`,
+> which Phase 3c would have deleted. See `SECURITY.md`.
 
 Goal: no Alamofire, no SwiftyJSON, typed models, proper TLS, properly
 scoped Keychain access.
@@ -500,7 +512,7 @@ Out-of-scope-until-asked. The original Chrome extension is referenced
 in the README but isn't in this repo. If a user wants it revived, it'd
 follow the same MV3 + native-messaging-host shape as 3b.
 
-## Phase 4 — SwiftUI rewrite · **In progress** (effectively complete; one task parked behind Phase 3c)
+## Phase 4 — SwiftUI rewrite · **Shipped, 1 task abandoned** (the last `.xib` deletion was gated on Phase 3c)
 
 Goal: storyboards out, SwiftUI in — screen by screen, behind
 `NSHostingController` so we can ship as we go. Scope is a **pure macOS**

@@ -185,8 +185,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
                 Only trust this certificate if you recognise the fingerprint below.
 
-                SHA-256 (SPKI):
+                SHA-256 of the public key:
                 \(spkiBase64)
+
+                (This is a hash of the raw public key, not an RFC 7469 \
+                "pin-sha256" value — standard SPKI tooling will compute a \
+                different string for the same certificate.)
                 """
                 alert.addButton(withTitle: "Trust")
                 alert.addButton(withTitle: "Cancel")

@@ -52,7 +52,10 @@ commit that makes them.
   refusal applies only on the self-signed path. And the fingerprint hashes
   `SecKeyCopyExternalRepresentation`'s raw key encoding, not the DER
   `SubjectPublicKeyInfo`, so it will not match standard `pin-sha256` tooling.
-  The behaviour is unchanged — only the description was wrong.
+  The behaviour is unchanged — only the description was wrong. Corrected
+  everywhere it appeared, including the **first-use trust dialog**, which
+  labelled the value `SHA-256 (SPKI)` and so invited users to verify it with
+  tooling that would never agree.
 - **Documented that there is no way to clear saved credentials.** Settings only
   offers "Connect and save settings"; there is no sign-out, and
   `KeychainStore.delete(key:)` has no caller. `SECURITY.md` now gives the
