@@ -8,7 +8,13 @@
 >
 > This document is now a **historical record**, not a plan. Unticked boxes are
 > **abandoned, not pending** — nobody is working through them and no one is
-> waiting on them. Specifically:
+> waiting on them.
+>
+> **Every remaining unticked box was checked against the tree in August 2026**
+> and is genuinely outstanding — none is merely stale bookkeeping. Two that
+> *were* stale have been ticked (both Phase 1 items, and Phase 5's notarisation
+> step), so a forker can now read an empty checkbox as real remaining work
+> rather than something to go and verify. Specifically:
 >
 > - **Phases 0, 1, 2 and 4 met their goals.** Phase 1 is a clean sweep; phases
 >   0, 2 and 4 each carry exactly one unticked clean-up item, now abandoned.
@@ -19,7 +25,9 @@
 >   `Webserver.swift` — never happened. That unauthenticated loopback server is
 >   therefore **still the live code path** in the shipping app; see
 >   [`SECURITY.md`](./SECURITY.md).
-> - **Phase 5** (Sparkle auto-update, notarised DMGs via CI) was never started.
+> - **Phase 5** (release engineering) built 1 of its 4 tasks: `deploy.sh` does
+>   notarise and staple a DMG on request. Sparkle auto-update, the CI release
+>   pipeline, and a formally cut tagged release were never started.
 >
 > It's left in the repo because it's a genuinely useful map for anyone forking
 > the project: it records what was done, why, and what was deliberately left.
@@ -537,8 +545,12 @@ point, not now.
 > only unchecked item — deleting the *last* `.xib`
 > (`SafariExtensionViewController.xib`) — is gated on retiring the legacy
 > extension target in **Phase 3c**, which is itself parked behind the
-> Safari service-worker runtime blocker. So Phase 4 stays *In progress*
-> only as a bookkeeping link to 3c; there is no further SwiftUI work to do.
+> Safari service-worker runtime blocker.
+>
+> **Final status (August 2026):** with Phase 3c abandoned, that gate will
+> never open, so the `.xib` deletion is abandoned rather than pending and the
+> phase is closed as *Shipped, 1 task abandoned*. There was never any further
+> SwiftUI work to do.
 
 ### Phase 4 slice 1 — AppModel foundation + Settings screen · **Shipped 2026-05-29**
 
@@ -611,14 +623,18 @@ test bundle was already there, and the plan explicitly required `Observation`).
       ported to SwiftUI in slice 1; no `swiftapps.skavans.ru` reference
       remains in any Swift source)
 
-## Phase 5 — Release engineering · **Abandoned** (never started)
+## Phase 5 — Release engineering · **Abandoned** (1 of 4 tasks built)
 
 Goal: signed, notarised, auto-updating releases cut by CI.
 
-**None of this was built.** Releases stayed manual via `./deploy.sh → d`,
-which does sign and (optionally) notarise a DMG locally. There is no Sparkle
-integration, so **installed copies will never self-update** — a fork taking
-this on would need to add the appcast itself.
+**Almost none of this was built — but not none.** The notarisation step
+*does* exist: `deploy.sh`'s `action_dmg` runs `xcrun notarytool submit --wait`
+against a keychain profile and then `xcrun stapler staple`, and the build
+verifies the stapled ticket afterwards. What never happened is the automation
+around it — no Sparkle, no CI pipeline, no tagged release cut through one.
+Releases stayed manual via `./deploy.sh → d`, and since there is no Sparkle
+integration, **installed copies will never self-update**; a fork taking this on
+would need to add the appcast itself.
 
 The version number is already at **2.2.0** (build 14) in the project and
 `CHANGELOG.md`; what's still missing is the *release engineering* — none of
@@ -626,7 +642,10 @@ these versions has been cut as a tagged, signed, notarised GitHub Release yet.
 
 - [ ] Add Sparkle 2 with an EdDSA-signed appcast hosted on GitHub Pages or
       Releases
-- [ ] Notarisation script + `xcrun stapler` step
+- [x] Notarisation script + `xcrun stapler` step — **done**, in `deploy.sh`
+      (`action_dmg`): optional `notarytool submit --wait` via a keychain
+      profile, then `stapler staple`, with a `stapler validate` check in the
+      post-build verification. Manual rather than CI-driven.
 - [ ] GitHub Action that on tag-push builds, signs, notarises, and attaches
       the DMG to a Release
 - [ ] Cut the first formally signed + notarised tagged release (`v2.2.0` or
