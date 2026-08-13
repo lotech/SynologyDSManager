@@ -119,6 +119,11 @@ scoped Keychain access.
       leaf certificate; on first connect, hand the observed fingerprint to
       the UI for explicit user approval, with the pin persisted thereafter
       (`SynologyDSManager/Network/SynologyTrustEvaluator.swift`)
+      **— superseded:** "SPKI" is a misnomer for what shipped. It pins a
+      hash of the *raw public key*, not the DER `SubjectPublicKeyInfo`, so
+      the value is not an RFC 7469 `pin-sha256`; and system trust is
+      evaluated first, so the pin never constrains CA-issued certs. See
+      `SECURITY.md`.
 - [x] Move `_sid` out of URL query strings (session cookie, form body on
       `SYNO.API.Auth logout`)
 - [x] Typed error surface (`SynologyError`) with DSM error-code → message

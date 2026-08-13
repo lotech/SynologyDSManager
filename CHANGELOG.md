@@ -52,10 +52,18 @@ commit that makes them.
   refusal applies only on the self-signed path. And the fingerprint hashes
   `SecKeyCopyExternalRepresentation`'s raw key encoding, not the DER
   `SubjectPublicKeyInfo`, so it will not match standard `pin-sha256` tooling.
-  The behaviour is unchanged — only the description was wrong. Corrected
-  everywhere it appeared, including the **first-use trust dialog**, which
-  labelled the value `SHA-256 (SPKI)` and so invited users to verify it with
-  tooling that would never agree.
+  The behaviour is unchanged — only the description was wrong. Corrected in
+  every current description: the **first-use trust dialog** (which labelled the
+  value `SHA-256 (SPKI)` and so invited users to verify it with tooling that
+  would never agree), `SynologyTrustEvaluator`'s file header and
+  `spkiSHA256Base64` doc comment, `SynologyAPI`'s header, `SECURITY.md`,
+  `README.md`, and `CLAUDE.md`. The Phase 2a task in `MODERNIZATION_PLAN.md`
+  carries a superseded note inline. The four "SPKI" mentions in the **2.2.0**
+  block below are historical records of what was believed at the time and are
+  left as written — the most detailed one is marked superseded, and this entry
+  supersedes all of them. The identifiers `spkiSHA256Base64` and the
+  `synologyPinnedSPKIs` defaults key keep their names — renaming the latter
+  would need a stored-pin migration — but neither asserts RFC conformance.
 - **Documented that there is no way to clear saved credentials.** Settings only
   offers "Connect and save settings"; there is no sign-out, and
   `KeychainStore.delete(key:)` has no caller. `SECURITY.md` now gives the
@@ -449,6 +457,11 @@ commit that makes them.
     cert, the observed fingerprint is passed to `pendingApproval` so the UI
     can prompt the user. Approved pins are persisted per-host in
     `UserDefaults`. Mismatches against an existing pin are refused.
+    *(**Superseded, August 2026** — kept as the historical record, but two
+    claims here are wrong: the digest is of the raw public key, not the DER
+    `SubjectPublicKeyInfo`, so it is not an RFC 7469 value; and mismatches are
+    refused only when system trust has already failed, since system trust is
+    evaluated first and short-circuits. See `SECURITY.md`.)*
   - `SynologyError.swift`: typed `LocalizedError` enum covering transport,
     HTTP, decoder, DSM API, authentication, trust, and torrent-read
     failures, with a `SynologyErrorCode.message(for:)` mapping for DSM's

@@ -160,7 +160,7 @@ Dropped during modernisation:
 ```
 SynologyDSManager/            # Main macOS app target
   AppDelegate.swift           # @main SwiftUI App lifecycle + AppDelegate adaptor;
-                              #   installs the SPKI approval handler
+                              #   installs the certificate approval handler
   AppModel.swift              # @Observable app model (state + polling loop)
   Network/                    # DSM API client (Phase 2a)
     SynologyAPI.swift         #   Actor, URLSession + async/await

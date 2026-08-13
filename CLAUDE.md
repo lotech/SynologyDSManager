@@ -24,7 +24,8 @@ are the most valuable things to address first.
 - ✅ **Phase 0** — project hygiene, CI, SHA-pinned Actions, SECURITY.md
 - ✅ **Phase 1** — macOS 13 floor, deprecated-API migration, `@main`
 - ✅ **Phase 2** — all networking + storage rewritten: `SynologyAPI` actor on
-  `URLSession`+`async/await`, typed Codable DTOs, SPKI pinning (TOFU),
+  `URLSession`+`async/await`, typed Codable DTOs, raw-public-key pinning
+  (TOFU — not RFC 7469 SPKI; see `SECURITY.md`),
   SecItem-based Keychain wrapper. Alamofire + SwiftyJSON + KeychainAccess
   all gone from `Package.resolved`. `SWIFT_STRICT_CONCURRENCY = complete`
   and the project builds warning-free. 33 unit tests run in CI on every PR.
@@ -207,7 +208,11 @@ service, LaunchAgent registration — all works as designed.
 - **Keychain access** must use `.whenUnlockedThisDeviceOnly` accessibility at
   minimum. Never persist session IDs across launches.
 - **TLS**: never disable trust evaluation. Self-signed NAS certs are handled
-  via explicit, user-confirmed SPKI pinning in `SynologyTrustEvaluator`.
+  via explicit, user-confirmed **raw-public-key** pinning in
+  `SynologyTrustEvaluator` — not RFC 7469 SPKI, and it does not constrain
+  CA-issued certs, since system trust short-circuits before pins are read.
+  Both limits are documented in `SECURITY.md`; don't restate this as "SPKI
+  pinning".
 - **Logging**: never log passwords, OTP codes, session IDs, or full request
   URLs / bodies containing `_sid`.
 - **Concurrency**: `SWIFT_STRICT_CONCURRENCY = complete`. Actor-isolated

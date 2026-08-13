@@ -103,7 +103,9 @@ final class SynologyTrustEvaluator: NSObject, URLSessionDelegate, @unchecked Sen
         }
     }
 
-    /// Return the set of SPKI hashes (base64) currently pinned for the host.
+    /// Return the set of public-key hashes (base64) currently pinned for the
+    /// host. See `spkiSHA256Base64` for what is actually hashed — it is not
+    /// an RFC 7469 SPKI digest despite the stored key's name.
     func pins(for host: String) -> Set<String> {
         queue.sync { Set(storedPins()[host] ?? []) }
     }
@@ -135,7 +137,8 @@ final class SynologyTrustEvaluator: NSObject, URLSessionDelegate, @unchecked Sen
             return
         }
 
-        // Step 2: system rejected. Compute the SPKI fingerprint and check pins.
+        // Step 2: system rejected. Compute the key fingerprint and check pins.
+        // Reached ONLY when system trust failed — see the note in step 1.
         guard let spki = Self.spkiSHA256Base64(from: serverTrust) else {
             AppLogger.security.error("Could not extract SPKI from server trust for \(host, privacy: .private)")
             completionHandler(.cancelAuthenticationChallenge, nil)
