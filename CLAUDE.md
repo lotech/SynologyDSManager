@@ -116,7 +116,8 @@ checklist as it stood when work stopped.
     app, `URLProtocol`-based fake transport. 33 tests total — 23 of
     `SynologyAPI` (`SynologyAPITests.swift`) + 10 of the XPC bridge
     (`SynologyBridgeTests.swift`). ⚠️ **Does not compile.**
-    `SynologyBridgeTests.swift:48,53,126` assign to the global `synologyAPI`
+    `SynologyBridgeTests.swift` assigns in three places (`setUp`, `tearDown`,
+    `test_enqueueDownload_whenNotSignedIn_repliesFalse`) to the global `synologyAPI`
     that Phase 4 slice 1 deleted. One target, so this blocks the `SynologyAPI`
     tests too. `AppModel.api` is `private(set)`, so fixing it needs a
     production test seam, not a rename.

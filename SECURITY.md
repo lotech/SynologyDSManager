@@ -276,7 +276,9 @@ validation. As *source*, those guards are real and they are good.
 But **the test target has not compiled since Phase 4 slice 1** (commit
 `e140847`). That commit removed the app-wide mutable global `synologyAPI` and
 moved the client to `AppModel.shared.api`; `SynologyBridgeTests.swift` was
-never updated and still assigns to the deleted global at lines 48, 53 and 126.
+never updated and still assigns to the deleted global in three places — its
+`setUp()`, its `tearDown()`, and
+`test_enqueueDownload_whenNotSignedIn_repliesFalse()`.
 Because both test files belong to the single `SynologyDSManagerTests` target,
 that compile error stops the **whole bundle** — so the `SynologyAPI` tests, the
 `_sid` guards included, have not executed either.

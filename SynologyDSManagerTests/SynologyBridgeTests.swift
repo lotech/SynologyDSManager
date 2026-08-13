@@ -5,7 +5,9 @@
 //  ⚠️ THIS FILE DOES NOT COMPILE — and it takes the whole test target
 //  with it, including the SynologyAPI `_sid` regression guards.
 //
-//  Lines 48, 53 and 126 assign to a global `synologyAPI`. That global was
+//  Three sites assign to a global `synologyAPI` — in `setUp()`, in
+//  `tearDown()`, and in `test_enqueueDownload_whenNotSignedIn_repliesFalse()`
+//  (grep for `synologyAPI =`). That global was
 //  deleted in Phase 4 slice 1 (commit e140847), which moved the client to
 //  `AppModel.shared.api`; this file was never updated to match. It went
 //  unnoticed because CI has been unable to open the project since June 2026
