@@ -58,8 +58,9 @@ machine can connect to `127.0.0.1:11863`, including one running under a
 *different* local user account. On a shared or multi-user Mac, "local" does not
 mean "only you".
 
-Either way, the practical worst case is unwanted downloads queued on your NAS
-and an app that crashes — not code execution on your Mac.
+Either way, the practical worst case is unwanted downloads queued on your NAS,
+spoofed "Download started" notifications (see below — these fire even when no
+download occurs), and an app that crashes. Not code execution on your Mac.
 
 **Being signed in is not the gate you might expect.** `AppModel.startPolling`
 sets up the API object and calls `start_webserver()` *before* it awaits
@@ -70,8 +71,15 @@ are configured and polling has started:
   whether the NAS ever accepted your credentials, because `Webserver.swift`
   force-decodes the request body before any session check; and
 - the **enqueue** paths only check that an API object exists, not that it is
-  authenticated — a failed login still leaves them reachable, though the
-  resulting `createTask` call fails at the NAS.
+  authenticated. A failed login still leaves them reachable. The download
+  itself won't happen — `createTask` calls `requireAuth()` first and throws
+  locally, so nothing is ever sent to the NAS — but the *notification* does:
+  `AppModel.enqueueDownload` posts its "Download started" alert **before**
+  dispatching the call, unconditionally. So with notifications allowed, either
+  entry point lets an attacker raise arbitrarily many false "Download started"
+  banners on your Mac while no session exists and nothing is downloading.
+  Deceptive rather than dangerous, but it is the one effect a user actually
+  sees, so it is worth naming.
 
 **Quitting the app is a weaker mitigation than it sounds.** Both entry points
 need the app running — but a registered URL scheme *starts* it. Opening a
@@ -156,8 +164,13 @@ app at all — which is fine, since its feature is disabled in the UI regardless
 Short of rebuilding, there is no clean mitigation for this one. Quitting the app
 does not settle it, because opening the scheme is itself what relaunches the
 app. Deleting the Keychain item by hand is the nearest thing — see issue 1's
-mitigation for how, since the app provides no way — after which a launch leaves
-the app unauthenticated and an enqueue fails at the NAS.
+mitigation for how, since the app provides no way.
+
+With no stored credentials, a launch never calls `startPolling`, so no API
+object is created, `enqueueDownload` returns at its first `guard`, and neither
+a download nor a spoofed notification results. It's an all-or-nothing lever
+though: *wrong* stored credentials are worse than none, since the API object
+still exists and the fake notifications still fire while nothing downloads.
 
 ### 3. The legacy Safari extension logs full URLs to the unified log
 

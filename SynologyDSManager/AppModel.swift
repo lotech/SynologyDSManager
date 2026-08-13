@@ -151,6 +151,14 @@ final class AppModel {
     // MARK: - Extension / URL-scheme download
 
     func enqueueDownload(url: String) {
+        // ⚠️ `api` being non-nil means startPolling ran — NOT that the session
+        // authenticated; that happens asynchronously afterwards. And the
+        // notification below is posted unconditionally, before createTask is
+        // even dispatched, so a caller reaching this method raises a "Download
+        // started" banner whether or not anything downloads. Combined with the
+        // unauthenticated callers in Webserver.swift and AppDelegate's URL
+        // scheme, that is a spoofed-notification vector — see SECURITY.md.
+        // A fork should post this only after createTask succeeds.
         guard let api else { return }
         let content = UNMutableNotificationContent()
         content.title = "Download started"

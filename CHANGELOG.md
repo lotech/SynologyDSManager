@@ -65,6 +65,16 @@ commit that makes them.
   supersedes all of them. The identifiers `spkiSHA256Base64` and the
   `synologyPinnedSPKIs` defaults key keep their names — renaming the latter
   would need a stored-pin migration — but neither asserts RFC conformance.
+- **Documented a spoofed-notification vector, and corrected where a failed
+  enqueue actually fails.** `AppModel.enqueueDownload` posts its "Download
+  started" notification unconditionally, *before* dispatching `createTask`, so
+  either unauthenticated entry point can raise arbitrarily many false download
+  banners even when no session exists and nothing downloads. `SECURITY.md`
+  previously said such an enqueue "fails at the NAS"; it doesn't reach the NAS
+  at all — `createTask` calls `requireAuth()` and throws locally. Both are now
+  described accurately, the worst-case summary includes the notification
+  effect, and `AppModel` carries an inline note suggesting a fork post the
+  notification only after `createTask` succeeds.
 - **Documented that there is no way to clear saved credentials.** Settings only
   offers "Connect and save settings"; there is no sign-out, and
   `KeychainStore.delete(key:)` has no caller. `SECURITY.md` now gives the
