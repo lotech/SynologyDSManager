@@ -20,7 +20,9 @@
 >   0, 2 and 4 each carry exactly one unticked clean-up item, now abandoned.
 >   Their headings say which, so the checklists and the summary agree.
 > - **Phase 3** (XPC bridge + Safari Web Extension) got as far as 3a and 3b.
->   3b's runtime was blocked by a Safari bug outside this project's control,
+>   3b's runtime was blocked by a failure believed — but never proven — to be
+>   Safari's rather than ours (the clean-room test that would settle it is
+>   still unticked, so don't assume it is Apple's to fix),
 >   and **3c** — retiring the legacy extension target and the unauthenticated
 >   `Webserver.swift` — never happened. That unauthenticated loopback server is
 >   therefore **still the live code path** in the shipping app; see
@@ -316,10 +318,12 @@ scoped Keychain access.
 
 > **Deferred 2026-05-29.** The XPC bridge and Web Extension are
 > structurally complete and shipped, but the service worker won't start
-> on macOS 26.x / Safari 26.x (3b-2b-RT) — a Safari-side bug we can't fix
-> from here. Rather than block the whole roadmap on Apple, active work
-> moves to **Phase 4** (SwiftUI rewrite), which is independent of the
-> bridge. Phase 3c (retiring `Webserver.swift` and the legacy extension
+> on macOS 26.x / Safari 26.x (3b-2b-RT). The evidence points at Safari
+> rather than at our bundle, but that was never confirmed — the clean-room
+> test below is the experiment that would settle it, and it was never run.
+> Rather than block the whole roadmap on a diagnosis we hadn't finished,
+> active work moves to **Phase 4** (SwiftUI rewrite), which is independent
+> of the bridge. Phase 3c (retiring `Webserver.swift` and the legacy extension
 > target) stays blocked behind 3b-2b-RT: we keep the unauthenticated
 > loopback server until there's a working replacement. Revisit when a
 > Safari/macOS point release unblocks the worker, or when an Apple

@@ -132,8 +132,23 @@ the Keychain item after a successful login; there is no sign-out or clear
 action, and `KeychainStore.delete(key:)` — which exists — has no caller
 anywhere in the codebase. To actually remove it, use **Keychain Access** (or
 `security delete-generic-password -s com.skavans.synologyDSManager`) and delete
-the `com.skavans.synologyDSManager` entry by hand. Adding a real sign-out
-action is a good first change for a fork.
+the `com.skavans.synologyDSManager` entry by hand.
+
+> ⚠️ **Then quit the app — deleting the item does nothing to a running
+> process.** Credentials are read exactly once, by `applicationDidFinishLaunching`
+> at launch. Nothing re-reads the Keychain afterwards and there is **no teardown
+> path in the app at all**: no sign-out, no `stopPolling`, nothing that clears
+> `AppModel.api` or stops the loopback listener. (`SynologyAPI.logout()` is
+> implemented but has no production caller — only a test calls it.) So a running,
+> authenticated app keeps its in-memory session ID, keeps polling, and keeps
+> serving `127.0.0.1:11863` after you delete the item. **Deletion takes effect at
+> the next launch, not immediately.** Delete the item *and then quit the app*, or
+> you have changed nothing about your current exposure.
+
+Adding a real sign-out action — one that clears the Keychain item, nils the API
+object, and stops the server — is the single most useful change a fork could
+make here, and the absence of one is why every mitigation in this document ends
+up saying "rebuild it".
 
 ### 2. Unvalidated `synologydsmanager://` URL scheme
 
@@ -168,9 +183,11 @@ mitigation for how, since the app provides no way.
 
 With no stored credentials, a launch never calls `startPolling`, so no API
 object is created, `enqueueDownload` returns at its first `guard`, and neither
-a download nor a spoofed notification results. It's an all-or-nothing lever
-though: *wrong* stored credentials are worse than none, since the API object
-still exists and the fake notifications still fire while nothing downloads.
+a download nor a spoofed notification results — **on that next launch.** As
+issue 1's mitigation notes, deleting the item does not disturb an app that is
+already running; quit it as well. It's also an all-or-nothing lever: *wrong*
+stored credentials are worse than none, since the API object still exists and
+the fake notifications still fire while nothing downloads.
 
 ### 3. The legacy Safari extension logs full URLs to the unified log
 

@@ -80,9 +80,10 @@ See [`MODERNIZATION_PLAN.md`](./MODERNIZATION_PLAN.md) for the phased roadmap
   badge showing the number of finished downloads
 - 2-step verification (TOTP) supported
 - Safari extension ("Download with Synology DS Manager" from the page context
-  menu) — the *replacement* Web Extension was never finished, blocked by a
-  Safari-side bug (see `CLAUDE.md`), so the feature stays disabled in the app's
-  UI and won't be completed here. **The older legacy Safari App Extension does
+  menu) — the *replacement* Web Extension was never finished: Safari refuses to
+  start its background service worker, a failure that looks Safari-side but was
+  never confirmed as such (see `CLAUDE.md`). The feature stays disabled in the
+  app's UI and won't be completed here. **The older legacy Safari App Extension does
   still ship**, embedded in the app bundle, and can be switched on in Safari →
   Settings → Extensions independently of that UI toggle. If you enable it, note
   that it writes complete download URLs to the unified log — see

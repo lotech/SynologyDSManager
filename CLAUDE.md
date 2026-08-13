@@ -41,7 +41,9 @@ are the most valuable things to address first.
   extension, pluginkit indexes it, ClientAuthorization + Mach service +
   LaunchAgent are all live. **Runtime is blocked**: Safari's WebExtension
   subsystem silently refuses to start the service worker (`background.js`)
-  on macOS 26.x + Safari 26.x — a Safari-side bug we can't fix from here.
+  on macOS 26.x + Safari 26.x. Believed Safari-side, but **unproven**: the
+  clean-room experiment that would separate a Safari bug from a divergence in
+  our own bundle was never run. See the blocker note below.
   See the *"Known blocker"* note below. Rather than block the roadmap on
   Apple, active work has moved to Phase 4. Phase 3c (retire the legacy
   target + `Webserver.swift`) stays parked behind the runtime blocker, so
@@ -62,8 +64,10 @@ are the most valuable things to address first.
   refactor the portable network/keychain core into a shared package at that
   point.)
 - ❌ **Phase 5** — release engineering (Sparkle, notarised DMGs via CI).
-  **Abandoned, never started.** Manual notarised DMGs via `./deploy.sh → d`
-  were as far as this got.
+  **Abandoned after 1 of 4 tasks.** The notarisation step does exist —
+  `deploy.sh`'s `action_dmg` runs `notarytool submit --wait` then
+  `stapler staple` — but it is manual. Sparkle, the CI release pipeline, and a
+  formally cut tagged release were never started.
 
 Phases 3c and 5 are now closed as **abandoned** rather than pending — see the
 project-status notice above. See `MODERNIZATION_PLAN.md` for the per-phase task
