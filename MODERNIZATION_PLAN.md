@@ -10,9 +10,9 @@
 > **abandoned, not pending** — nobody is working through them and no one is
 > waiting on them. Specifically:
 >
-> - **Phases 0, 1, 2 and 4 met their goals**, but none is a clean sweep: each
->   carries one or two unticked clean-up items, now abandoned. Their headings
->   say which, so the checklists and the summary agree.
+> - **Phases 0, 1, 2 and 4 met their goals.** Phase 1 is a clean sweep; phases
+>   0, 2 and 4 each carry exactly one unticked clean-up item, now abandoned.
+>   Their headings say which, so the checklists and the summary agree.
 > - **Phase 3** (XPC bridge + Safari Web Extension) got as far as 3a and 3b.
 >   3b's runtime was blocked by a Safari bug outside this project's control,
 >   and **3c** — retiring the legacy extension target and the unauthenticated
@@ -75,10 +75,11 @@ Goal: a clean, lintable, CI-backed baseline for everything that follows.
 - [ ] Flip SwiftLint / SwiftFormat CI jobs to blocking once the repo is
       fully formatted (follow-up PR)
 
-## Phase 1 — Platform baseline · **Shipped, 2 tasks abandoned**
+## Phase 1 — Platform baseline · **Shipped**
 
-> The deployment-target and deprecated-API work all landed. Two clean-up items
-> below stayed unticked and are abandoned.
+> All tasks complete. The last two were finished under later phases and their
+> boxes here went unticked for months — corrected August 2026 after a check of
+> the tree confirmed neither survives in any Swift source.
 
 Goal: compile cleanly against modern Xcode on a modern macOS deployment
 target, replacing the deprecated APIs we can do without further design work.
@@ -95,10 +96,14 @@ target, replacing the deprecated APIs we can do without further design work.
 - [x] Fix `protocol LoadableView: class` → `AnyObject`
 - [x] Enable `SWIFT_STRICT_CONCURRENCY = minimal` (will be bumped to
       `complete` after Phase 2)
-- [ ] Remove the dead `registerEvent(…)` analytics stub — blocked until the
-      networking rewrite touches every call site (Phase 2)
-- [ ] Remove the `swiftapps.skavans.ru` mailto and `synoboost.com` link from
-      Settings / BT Search — Phase 4 when we rewrite those screens
+- [x] Remove the dead `registerEvent(…)` analytics stub — blocked until the
+      networking rewrite touches every call site (Phase 2). **Done in Phase 2a**
+      (see the Phase 2 log below); no `registerEvent` remains in any Swift
+      source.
+- [x] Remove the `swiftapps.skavans.ru` mailto and `synoboost.com` link from
+      Settings / BT Search — Phase 4 when we rewrite those screens. **Done in
+      Phase 4** (see its log below); neither string remains in any Swift
+      source.
 
 ## Phase 2 — Networking & storage rewrite · **Shipped · 2026-04-23** (1 task abandoned)
 

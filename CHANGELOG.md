@@ -52,12 +52,13 @@ commit that makes them.
   refusal applies only on the self-signed path. And the fingerprint hashes
   `SecKeyCopyExternalRepresentation`'s raw key encoding, not the DER
   `SubjectPublicKeyInfo`, so it will not match standard `pin-sha256` tooling.
-  The behaviour is unchanged — only the description was wrong. Corrected in
-  every current description: the **first-use trust dialog** (which labelled the
-  value `SHA-256 (SPKI)` and so invited users to verify it with tooling that
-  would never agree), `SynologyTrustEvaluator`'s file header and
-  `spkiSHA256Base64` doc comment, `SynologyAPI`'s header, `SECURITY.md`,
-  `README.md`, and `CLAUDE.md`. The Phase 2a task in `MODERNIZATION_PLAN.md`
+  The behaviour is unchanged — only the description was wrong. Corrected in the
+  **first-use trust dialog** (which labelled the value `SHA-256 (SPKI)` and so
+  invited users to verify it with tooling that would never agree),
+  `SynologyTrustEvaluator`'s file header, its `spkiSHA256Base64` and
+  `pins(for:)` doc comments and its step-2 comment, `AppLogger`'s `security`
+  category comment, `SynologyAPI`'s header, `SECURITY.md`, `README.md`, and
+  `CLAUDE.md`. The Phase 2a task in `MODERNIZATION_PLAN.md`
   carries a superseded note inline. The four "SPKI" mentions in the **2.2.0**
   block below are historical records of what was believed at the time and are
   left as written — the most detailed one is marked superseded, and this entry
