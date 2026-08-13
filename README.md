@@ -29,7 +29,9 @@
 > private fork carries no publishing obligation, but if you distribute a build
 > you must offer its source too) and the code is in good shape: Phase 2 rewrote
 > all networking and storage onto Apple's own SDKs, and it ships with 33 unit
-> tests. If you want to carry it forward, fork it; you don't need to ask. See
+> tests — though be aware the test target does not currently compile, and
+> [`SECURITY.md`](./SECURITY.md) explains what that costs you and how to fix
+> it. If you want to carry it forward, fork it; you don't need to ask. See
 > [`MODERNIZATION_PLAN.md`](./MODERNIZATION_PLAN.md) for what was left undone.
 >
 > If you are *using* the app, please read the

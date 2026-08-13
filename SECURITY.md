@@ -239,24 +239,50 @@ addressed during the modernisation and are believed sound:
     `pin-sha256` tooling computes for the same certificate, so don't try to
     verify it that way.
 - **Session IDs** (`_sid`) go in the POST body and the session cookie, never in
-  a URL query string. Unit tests guard against a regression there.
+  a URL query string. Regression guards for this exist in the test suite — but
+  the suite does not currently compile, so they are not running. See below.
 - **Logging in the main app's networking and auth code** goes through
   `os.Logger` via `AppLogger` and excludes passwords, OTP codes, session IDs,
   and full request URLs. **This does not extend to the whole codebase** — see
   issue 3 above, where the legacy Safari extension `NSLog`s complete download
   URLs.
 
-**How much of that is actually tested, precisely:** only the `_sid` bullet. The
-33 tests in `SynologyDSManagerTests/` cover `SynologyAPI`'s request and session
-behaviour — including explicit regression guards that a session ID never
-reaches a request URL — plus the XPC bridge's input validation. The suite
-contains **no** reference to `KeychainStore`, `SynologyTrustEvaluator`, or
-`AppLogger`, so the Keychain-accessibility, TLS-pinning, and logging claims
-above rest on **reading the code, not on executing it**.
+**How much of that is actually tested: none of it, right now.** That is a
+correction to what this file said until August 2026, and it is worth being
+exact about.
 
-Treat them accordingly: they are audit findings from a maintainer who has now
-stopped, not test-backed guarantees, and nothing re-checks them from here. If
-you fork, they are the first things worth writing tests around.
+`SynologyDSManagerTests/` contains 33 tests — 23 covering `SynologyAPI`'s
+request and session behaviour, including explicit regression guards that a
+session ID never reaches a request URL, plus 10 covering the XPC bridge's input
+validation. As *source*, those guards are real and they are good.
+
+But **the test target has not compiled since Phase 4 slice 1** (commit
+`e140847`). That commit removed the app-wide mutable global `synologyAPI` and
+moved the client to `AppModel.shared.api`; `SynologyBridgeTests.swift` was
+never updated and still assigns to the deleted global at lines 48, 53 and 126.
+Because both test files belong to the single `SynologyDSManagerTests` target,
+that compile error stops the **whole bundle** — so the `SynologyAPI` tests, the
+`_sid` guards included, have not executed either.
+
+This went unnoticed because CI has been failing for a separate, unrelated
+reason since June 2026 (`project.pbxproj` is `objectVersion` 70 while
+`ci.yml` pins Xcode 15.4, so `xcodebuild` cannot open the project at all). One
+red X masked the other.
+
+Note the fix is **not** a rename: `AppModel.api` is `private(set)`, so a test
+cannot assign to it. A fork will need a deliberate test seam — an internal
+setter, an injected dependency, or `@testable` access — which is a production
+change, not a test-file edit.
+
+So every security claim in this section rests on **reading the code, not on
+executing it** — the `_sid` behaviour no less than the Keychain, TLS and
+logging ones, which were never covered at all (the suite contains no reference
+to `KeychainStore`, `SynologyTrustEvaluator`, or `AppLogger`).
+
+Treat them accordingly: audit findings from a maintainer who has now stopped,
+not test-backed guarantees, with nothing re-checking them from here. If you
+fork, getting that target to build again is the cheapest security win
+available — the guards are already written.
 
 ## Repository hygiene
 

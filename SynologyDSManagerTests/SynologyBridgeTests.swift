@@ -2,6 +2,26 @@
 //  SynologyBridgeTests.swift
 //  SynologyDSManagerTests
 //
+//  ⚠️ THIS FILE DOES NOT COMPILE — and it takes the whole test target
+//  with it, including the SynologyAPI `_sid` regression guards.
+//
+//  Lines 48, 53 and 126 assign to a global `synologyAPI`. That global was
+//  deleted in Phase 4 slice 1 (commit e140847), which moved the client to
+//  `AppModel.shared.api`; this file was never updated to match. It went
+//  unnoticed because CI has been unable to open the project since June 2026
+//  for an unrelated reason (objectVersion 70 vs the pinned Xcode 15.4), so
+//  the compile failure was masked by an already-red build.
+//
+//  Fixing it is NOT a rename: `AppModel.api` is `private(set)`, so a test
+//  cannot assign to it. A fork needs to add a deliberate test seam to
+//  AppModel — an internal setter, an injected dependency, or @testable
+//  access — and then point these three sites at it.
+//
+//  The project is unmaintained and this was found without a Mac to compile
+//  on, so the repair is left to whoever forks. The tests below are otherwise
+//  sound and worth recovering: they are the only executable check on the
+//  bridge's URL validation. See SECURITY.md.
+//
 //  Tests for the Phase 3a XPC bridge surface. Covers the things we
 //  can exercise in a unit-test bundle without a second process:
 //

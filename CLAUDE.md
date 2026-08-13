@@ -28,7 +28,9 @@ are the most valuable things to address first.
   (TOFU — not RFC 7469 SPKI; see `SECURITY.md`),
   SecItem-based Keychain wrapper. Alamofire + SwiftyJSON + KeychainAccess
   all gone from `Package.resolved`. `SWIFT_STRICT_CONCURRENCY = complete`
-  and the project builds warning-free. 33 unit tests run in CI on every PR.
+  and the project builds warning-free. 33 unit tests were written; note they
+  do **not** currently run — the test target has not compiled since Phase 4
+  slice 1, and CI cannot open the project at all. See `SECURITY.md`.
 - ⏸️ **Phase 3** — Safari Web Extension + XPC bridge replacing the
   unauthenticated loopback HTTP server; Swifter dep goes with it.
   **Deferred 2026-05-29.** **3a + 3b shipped**: XPC scaffolding, the Web
@@ -96,7 +98,11 @@ checklist as it stood when work stopped.
   - `SynologyDSManagerTests` — macOS unit-test bundle hosted by the main
     app, `URLProtocol`-based fake transport. 33 tests total — 23 of
     `SynologyAPI` (`SynologyAPITests.swift`) + 10 of the XPC bridge
-    (`SynologyBridgeTests.swift`)
+    (`SynologyBridgeTests.swift`). ⚠️ **Does not compile.**
+    `SynologyBridgeTests.swift:48,53,126` assign to the global `synologyAPI`
+    that Phase 4 slice 1 deleted. One target, so this blocks the `SynologyAPI`
+    tests too. `AppModel.api` is `private(set)`, so fixing it needs a
+    production test seam, not a rename.
 
 ## Core files (main target)
 
@@ -386,8 +392,10 @@ When in doubt, leak nothing.
 - The `synologydsmanager://` URL scheme is trusted by `AppDelegate` without
   validation. Do not widen what it accepts until Phase 3.
 - Never put credentials or `_sid` in URL query strings. `SynologyAPI` keeps the
-  session ID in the POST body (and the session cookie) — preserve that; the
-  unit tests guard against a SID ever leaking into a request URL.
+  session ID in the POST body (and the session cookie) — preserve that. Unit
+  tests guarding against a SID leaking into a request URL are written, but are
+  not running: the test target doesn't compile (see the target layout above),
+  so treat this invariant as unenforced until that is fixed.
 
 ## Where the modernisation plan lives
 
